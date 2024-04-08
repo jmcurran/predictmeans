@@ -69,9 +69,9 @@ predictmeans <- function (model, modelterm, data=NULL, pairwise=FALSE, atvar=NUL
   # ses <- sqrt(diag(K %*% tcrossprod(vcovm, K)))
   ses <- as.numeric(apply(K, 1, function(x) {y <- matrix(x, nrow=1);sqrt(y %*% tcrossprod(mp$vcov, y))}))
   mt <- data.frame(pm, ses, label)
-  LL <- UL <- NULL	
+  LL <- UL <- NULL
+  bkmt <- mt  # for back transformed  
   
-  bkmt <- mt  # for back transformed
   mean.table <- round(xtabs(pm ~ ., mt[, c("pm", vars)], drop.unused.levels = TRUE), ndecimal)
   se.table <- round(xtabs(ses ~ ., mt[, c("ses", vars)], drop.unused.levels = TRUE), ndecimal+1)
   mean.table[!(n.table)] <- NA
@@ -148,13 +148,28 @@ predictmeans <- function (model, modelterm, data=NULL, pairwise=FALSE, atvar=NUL
       if (length(Df) == 0) {
         if (inherits(model, "lme")) {
           Df <- terms(model$fixDF)[modelterm]
+		  names(Df) <- NULL
+		  mt$Df <- round(Df, 2)
+		  pairDf <- Df
         }else if (inherits(model, "lmerMod")) {
         #  Df <- median(df_term(model, modelterm), na.rm=TRUE)
 		  Df <- mp$df[modelterm]
-        }else Df <- mp$df
+		  names(Df) <- NULL
+		  mt$Df <- round(df_term(model, modelterm), 2)
+		 # if (any(mt$Df <= 0)) mt$Df <- Df
+		  Df_diff <- df_term(model, ctrmatrix=rK)
+		  pairDf <- round(mean(Df_diff), 2)
+		 # Df_diff[Df_diff <= 0] <- 1
+        }else{
+  		 Df <- mp$df
+		 mt$Df <- round(Df, 2)
+		 pairDf <- Df
+		}
         
         if (Df==0) stop("You need provide Df for this model!")
       }
+	  bkmt <- mt  # update bkmt
+	  
       LSD <- round(qt(1 - level/2, df = Df) * SED.out, ndecimal+1)
       names(LSD) <- c("Max.LSD", "Min.LSD", "Aveg.LSD")
       attr(LSD, "For the Same Level of Factor") <- NULL
@@ -180,10 +195,20 @@ predictmeans <- function (model, modelterm, data=NULL, pairwise=FALSE, atvar=NUL
       tvm <- t.p.valuem <- LSDm <- Diffm <- matrix(0, ncol = nK, nrow = nK)
       rownames(tvm) <- colnames(tvm) <- rownames(t.p.valuem) <- colnames(t.p.valuem) <- rownames(LSDm) <- colnames(LSDm) <- rnK
       t.v <- cm/dses
-      if (all(is.null(permlist) || all(permlist%in%c("NULL", "")), adj=="tukey")) p.tukey <- ptukey(sqrt(2)*abs(t.v), nK, Df, lower.tail=FALSE)
+      if (all(is.null(permlist) || all(permlist%in%c("NULL", "")), adj=="tukey")) {
+	    if (inherits(model, "lmerMod")) {
+		  p.tukey <- sapply(1:length(t.v), function(m) ptukey(sqrt(2)*abs(t.v[m]), nK, Df_diff[m], lower.tail=FALSE))
+		}else{
+	      p.tukey <- ptukey(sqrt(2)*abs(t.v), nK, Df, lower.tail=FALSE)
+		}		
+      }
       tvm[upper.tri(tvm)] <- t.v
       if (is.null(permlist) || all(permlist%in%c("NULL", ""))) {
-        t.p.values <- 2 * pt(-abs(t.v), Df)
+	  	if (inherits(model, "lmerMod")) {
+		  t.p.values <- sapply(1:length(t.v), function(m) 2 * pt(-abs(t.v[m]), Df_diff[m])) 
+		}else{
+	      t.p.values <- 2 * pt(-abs(t.v), Df)
+		}
       }else{      
         nsim <- length(permlist[[1]])
         tValue <- function(x, rK){
@@ -219,7 +244,7 @@ predictmeans <- function (model, modelterm, data=NULL, pairwise=FALSE, atvar=NUL
         names(t.p.valuem) <- NULL
 		diag(t.p.valuem) <- 1
         if (is.null(permlist) || all(permlist%in%c("NULL", ""))) {
-          attr(t.p.valuem, "Degree of freedom") <- Df
+          if (!inherits(model, "lmerMod")) attr(t.p.valuem, "Degree of freedom") <- pairDf
           attr(t.p.valuem, "Note") <- paste("The matrix has t-value above the diagonal, p-value (adjusted by '",
                                             adj, "' method) below the diagonal", sep="")
           LSDm.up <- qt(1-level/2, df = Df)*dses
@@ -232,8 +257,7 @@ predictmeans <- function (model, modelterm, data=NULL, pairwise=FALSE, atvar=NUL
           attr(LSDm,"Note") <- paste("LSDs matrix has mean differences (row-col) above the diagonal, LSDs (adjusted by '",
                                      adj, "' method) below the diagonal", sep="")
         }else{
-          attr(t.p.valuem, "Note") <- paste("The matrix has t-value above the diagonal, and ", nsim, " times permutation p-value (adjusted by '",
-                                            adj, "' method) below the diagonal", sep="")       
+          attr(t.p.valuem, "Note") <- paste("The matrix has t-value above the diagonal, and ", nsim, " times permutation p-value (adjusted by '", adj, "' method) below the diagonal", sep="")       
         } # end of if (is.null(permlist)) 
         
         if (!is.null(meandecr) && is.logical(meandecr)) groupRn <- rnK[order(mt$pm, decreasing = meandecr)] else groupRn <- NULL
@@ -263,7 +287,7 @@ predictmeans <- function (model, modelterm, data=NULL, pairwise=FALSE, atvar=NUL
           t_valueN <- length(na.omit(t_value)) 
           if (t_valueN < 2) x$adj.pvalue <- x$pvalue
           else{
-            if (adj=="tukey") x$adj.pvalue <- ptukey(sqrt(2)*abs(x$tvalue), t_valueN, Df, lower.tail=FALSE)
+            if (adj=="tukey") x$adj.pvalue <- ptukey(sqrt(2)*abs(x$tvalue), t_valueN, Df, lower.tail=FALSE) # Df need to be updated
             else x$adj.pvalue <- p.adjust(x$pvalue, adj)
           }
         }))
@@ -282,7 +306,7 @@ predictmeans <- function (model, modelterm, data=NULL, pairwise=FALSE, atvar=NUL
         
         # mean table arrange by atvar
         mt.atvar <- mt[do.call(order, mt[, atvar, drop=FALSE]),]		
-        bkmt <- mt.atvar[, c(atvar, resvar, "pm", "ses")]
+        bkmt <- mt.atvar[, c(atvar, resvar, "pm", "ses", "Df")]
         listlength <- length(atvar.levels)
         pmlist <- pmlistTab <- pmlistLetter <- vector("list", listlength)
         indexlength <- nrow(atvar.df)/listlength
@@ -323,11 +347,10 @@ predictmeans <- function (model, modelterm, data=NULL, pairwise=FALSE, atvar=NUL
       } # if (is.null(atvar))
     }# end of if(pairwise)    
     
-    meanTable <- mt
-    meanTable$Df <- Df
+    meanTable <- mt    
     if (is.null(permlist) || all(permlist%in%c("NULL", ""))) {    
-      meanTable$LL <- meanTable$pm - qt(1 - slevel/2, df = Df) * meanTable$ses
-      meanTable$UL <- meanTable$pm + qt(1 - slevel/2, df = Df) * meanTable$ses
+      meanTable$LL <- meanTable$pm - qt(1 - slevel/2, df = meanTable$Df) * meanTable$ses
+      meanTable$UL <- meanTable$pm + qt(1 - slevel/2, df = meanTable$Df) * meanTable$ses
     }else{
       meanTable$LL <- meanTable$pm - 2 * meanTable$ses
       meanTable$UL <- meanTable$pm + 2 * meanTable$ses
@@ -493,14 +516,14 @@ predictmeans <- function (model, modelterm, data=NULL, pairwise=FALSE, atvar=NUL
     bkmt$Mean <- trans(bkmt$pm)-transOff
     if (identical(trans, make.link("log")$linkinv) || identical(trans, exp)) bkmt$Mean <- exp(bkmt$pm)-transOff
     if (is.null(permlist) || all(permlist%in%c("NULL", ""))) {    
-      bkmt$LL <- trans(bkmt$pm - qt(1 - slevel/2, df = Df) * bkmt$ses)-transOff
-      bkmt$UL <- trans(bkmt$pm + qt(1 - slevel/2, df = Df) * bkmt$ses)-transOff
+      bkmt$LL <- trans(bkmt$pm - qt(1 - slevel/2, df = bkmt$Df) * bkmt$ses)-transOff
+      bkmt$UL <- trans(bkmt$pm + qt(1 - slevel/2, df = bkmt$Df) * bkmt$ses)-transOff
     }else{
       bkmt$LL <- trans(bkmt$pm - 2 * bkmt$ses)-transOff
       bkmt$UL <- trans(bkmt$pm + 2 * bkmt$ses)-transOff
     }
     
-    bkmt$pm <- bkmt$ses <- NULL
+    bkmt$pm <- bkmt$ses <- bkmt$Df <- NULL
     nc <- ncol(bkmt)    
     bkmt[, (nc - 2):nc] <- round(bkmt[, (nc - 2):nc], ndecimal)
     if (count) {

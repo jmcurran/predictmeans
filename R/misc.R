@@ -332,7 +332,10 @@ df_term <- function(model, modelterm, covariate=NULL, ctrmatrix=NULL, ctrnames=N
     ddf <- try(apply(Lc, 1, function(x) pbkrtest::Lb_ddf(x, V0=vcov(model),
                                                          Vadj=vcov_beta_adj)), silent=TRUE) # vcov_beta_adj need to be dgeMatrix!
     
-    if (any(inherits(vcov_beta_adj, "try-error"), inherits(ddf, "try-error"), ddf >= nrow(model.frame(model)))) {
+    if (any(inherits(vcov_beta_adj, "try-error"), 
+	        inherits(ddf, "try-error"), 
+			ddf >= nrow(model.frame(model)),
+			ddf <= 0)) {
       warning("Unable to compute Kenward-Roger Df: using Satterthwaite instead")
       type <- "Satterthwaite"	
     }
