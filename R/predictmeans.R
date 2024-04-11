@@ -151,6 +151,7 @@ predictmeans <- function (model, modelterm, data=NULL, pairwise=FALSE, atvar=NUL
 		  names(Df) <- NULL
 		  mt$Df <- round(Df, 2)
 		  pairDf <- Df
+		  Df_diff <- Df
         }else if (inherits(model, "lmerMod")) {
         #  Df <- median(df_term(model, modelterm), na.rm=TRUE)
 		  Df <- mp$df[modelterm]
@@ -164,10 +165,16 @@ predictmeans <- function (model, modelterm, data=NULL, pairwise=FALSE, atvar=NUL
   		 Df <- mp$df
 		 mt$Df <- round(Df, 2)
 		 pairDf <- Df
+		 Df_diff <- Df
 		}
         
         if (Df==0) stop("You need provide Df for this model!")
-      }
+      }else {
+	    mt$Df <- Df
+		Df_diff <- Df
+		pairDf <- Df
+		}
+	  
 	  bkmt <- mt  # update bkmt
 	  
       LSD <- round(qt(1 - level/2, df = Df) * SED.out, ndecimal+1)
