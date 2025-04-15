@@ -215,10 +215,15 @@ term2colX <- function(terms, X) {
   }
   term_names <- attr(terms, "term.labels")
   has_intercept <- attr(terms, "intercept") > 0
-  col_terms <- if(has_intercept) c("(Intercept)", term_names)[asgn + 1] else
+  col_terms <- if(has_intercept) {
+    c("(Intercept)", term_names)[asgn + 1]
+  } else {
     term_names[asgn[asgn > 0]]
-  if(!length(col_terms) == ncol(X)) # should never happen.
+  }
+  if(!length(col_terms) == ncol(X)) {
+    # should never happen.
     stop("An error happended when mapping terms to columns of X")
+  }
   # get names of terms (including aliased terms)
   nm <- union(unique(col_terms), term_names)
   res <- lapply(setNames(as.list(nm), nm), function(x) numeric(0L))
@@ -228,8 +233,9 @@ term2colX <- function(terms, X) {
 }
 
 doolittle <- function(x, eps = 1e-6) {
-  if(!is.matrix(x) || ncol(x) != nrow(x) || !is.numeric(x))
+  if(!is.matrix(x) || ncol(x) != nrow(x) || !is.numeric(x)){
     stop("argument 'x' should be a numeric square matrix")
+  }
   stopifnot(ncol(x) > 1L)
   n <- nrow(x)
   L <- U <- matrix(0, nrow=n, ncol=n)
@@ -253,7 +259,11 @@ doolittle <- function(x, eps = 1e-6) {
             L[j,i] <- L[j,i] - L[j,k] * U[k,i]
           }
         }
-        L[j, i] <- if(abs(U[i, i]) < eps) 0 else L[j,i] / U[i,i]
+        L[j, i] <- if(abs(U[i, i]) < eps){
+          0
+          } else {
+            L[j,i] / U[i,i]
+          }
       }
     }
   }
@@ -326,15 +336,22 @@ df_term <- function(model, modelterm, covariate=NULL, ctrmatrix=NULL, ctrnames=N
 
   stopifnot(inherits(model, "lmerMod"))
 
-  if(!getME(model, "is_REML"))
+  if (!getME(model, "is_REML")) {
     stop("This function works properly only for REML model fits")
+  }
 
   if (!is.null(ctrmatrix)) {
-    if (is.vector(ctrmatrix)) Lc <- matrix(ctrmatrix, nrow=1) else Lc <- ctrmatrix
+    if (is.vector(ctrmatrix)) {
+      Lc <- matrix(ctrmatrix, nrow=1)
+    } else {
+      Lc <- ctrmatrix
+    }
     stopifnot(is.numeric(Lc), ncol(Lc)==length(fixef(model)))
 
-    if (!is.null(ctrnames)) rownames(Lc) <- ctrnames
-  }else{
+    if (!is.null(ctrnames)) {
+      rownames(Lc) <- ctrnames
+    }
+  } else {
     Lc <- Kmatrix(model, modelterm, covariate)$K
   }
 
@@ -356,7 +373,9 @@ df_term <- function(model, modelterm, covariate=NULL, ctrmatrix=NULL, ctrnames=N
   }
 
   if (type == "Satterthwaite") {
-    if(!inherits(model, "lmerModLmerTest")) model <- as_lmerModLmerTest(model)
+    if(!inherits(model, "lmerModLmerTest")) {
+      model <- as_lmerModLmerTest(model)
+    }
     ddf <- apply(Lc, 1, function(x) suppressMessages(lmerTest::calcSatterth(model, x)$denom))
   }
   return(ddf)
@@ -381,14 +400,22 @@ as_lmerModLT <- function(model, devfun, tol=1e-8) {
   pos <- evals > tol
   zero <- evals > -tol & evals < tol
   if(sum(neg) > 0) { # negative eigenvalues
-    eval_chr <- if(sum(neg) > 1) "eigenvalues" else "eigenvalue"
+    eval_chr <- if(sum(neg) > 1) {
+      "eigenvalues"
+    } else {
+      "eigenvalue"
+    }
     evals_num <- paste(sprintf("%1.1e", evals[neg]), collapse = " ")
     warning(sprintf("Model failed to converge with %d negative %s: %s",
                     sum(neg), eval_chr, evals_num), call.=FALSE)
   }
   # Note: we warn about negative AND zero eigenvalues:
   if(sum(zero) > 0) { # some eigenvalues are zero
-    eval_chr <- if(sum(zero) > 1) "eigenvalues" else "eigenvalue"
+    eval_chr <- if(sum(zero) > 1) {
+      "eigenvalues"
+    } else {
+      "eigenvalue"
+    }
     evals_num <- paste(sprintf("%1.1e", evals[zero]), collapse = " ")
     warning(sprintf("Model may not have converged with %d %s close to zero: %s",
                     sum(zero), eval_chr, evals_num))
@@ -419,7 +446,9 @@ devfun_vp <- function(varpar, devfun, reml) {
   # Compute deviance for ML:
   dev <- df_envir$pp$ldL2() + (df_envir$resp$wrss() + df_envir$pp$sqrL(1))/sigma2 +
     n * log(2 * pi * sigma2)
-  if(!reml) return(dev)
+  if(!reml) {
+    return(dev)
+  }
   # Adjust if REML is used:
   RX <- df_envir$pp$RX() # X'V^{-1}X ~ crossprod(RX^{-1}) = cov(beta)^{-1} / sigma^2
   dev + 2*c(determinant(RX)$modulus) - ncol(RX) * log(2 * pi * sigma2)
@@ -519,8 +548,9 @@ print.pdmlist = function(x, ...){
 # from package merDeriv vcov.lmerMod.R
 
 vcov_lmerMod <- function (object, ...) {
-  if (!is(object, "lmerMod"))
+  if (!is(object, "lmerMod")) {
     stop("vcov.lmerMod() only works for lmer() models.")
+  }
   dotdotdot <- list(...)
   if ("full" %in% names(dotdotdot)) {
     full <- dotdotdot$full
@@ -534,10 +564,12 @@ vcov_lmerMod <- function (object, ...) {
   else {
     information <- "expected"
   }
-  if (!(full %in% c("TRUE", "FALSE")))
+  if (!(full %in% c("TRUE", "FALSE"))) {
     stop("invalid 'full' argument supplied")
-  if (!(information %in% c("expected", "observed")))
+  }
+  if (!(information %in% c("expected", "observed"))) {
     stop("invalid 'information' argument supplied")
+  }
   if ("ranpar" %in% names(dotdotdot)) {
     ranpar <- dotdotdot$ranpar
   }
@@ -648,8 +680,9 @@ vcov_lmerMod <- function (object, ...) {
     colnames(full_varcov) <- c(names(parts$fixef), paste("cov",
                                                          names(parts$theta), sep = "_"), "residual")
     callingFun <- try(deparse(sys.call(-2)), silent = TRUE)
-    if (length(callingFun) > 1)
+    if (length(callingFun) > 1) {
       callingFun <- paste(callingFun, collapse = "")
+    }
     if (!inherits(callingFun, "try-error") & grepl("summary.merMod",
                                                    callingFun)) {
       return(fixvar)
@@ -661,7 +694,9 @@ vcov_lmerMod <- function (object, ...) {
 }
 
 vcov_glmerMod <- function(object, ...) {
-  if (!(family(object)$family %in% c("binomial", "poisson"))) stop("family has to be binomial or poisson")
+  if (!(family(object)$family %in% c("binomial", "poisson"))) {
+    stop("family has to be binomial or poisson")
+  }
 
   dotdotdot <- list(...)
   if("full" %in% names(dotdotdot)){
@@ -679,11 +714,15 @@ vcov_glmerMod <- function(object, ...) {
   if (full == FALSE) {
     full_vcov <- vcov.merMod(object)
   } else {
-    if (length(getME(object, "l_i")) > 1L) stop("Multiple cluster variables detected. This type of model is currently not supported for full vcov.")
+    if (length(getME(object, "l_i")) > 1L) {
+      stop("Multiple cluster variables detected. This type of model is currently not supported for full vcov.")
+    }
 
     ## Hessian was based on deviance function, which is the
     ## -2*LogLik. That's why divided by -2
-    if (object@devcomp$dims[['nAGQ']] == 0L) stop("For full vcov, nAGQ of at least 1 is required.")
+    if (object@devcomp$dims[['nAGQ']] == 0L) {
+      stop("For full vcov, nAGQ of at least 1 is required.")
+    }
     full_vcov_noorder <- -solve(object@optinfo$derivs$Hessian/(-2))
 
     ## Block order in Hessian was theta, beta. Reorganize to
@@ -790,8 +829,9 @@ vcov_glmerMod <- function(object, ...) {
 
 lav_matrix_trace <- function (..., check = TRUE)
 {
-  if (nargs() == 0L)
+  if (nargs() == 0L) {
     return(as.numeric(NA))
+  }
   dots <- list(...)
   if (is.list(dots[[1]])) {
     mlist <- dots[[1]]
@@ -838,11 +878,14 @@ lav_matrix_diag_idx <- function (n = 1L)
 # Last changed: 04 OCT 2021 by M.P.Wand.
 
 ZOSull <- function(x,intKnots, range.x, drv=0) {
-  if (drv>2) stop("splines not smooth enough for more than 2 derivatives")
+  if (drv>2) {
+    stop("splines not smooth enough for more than 2 derivatives")
+  }
 
   # Set defaults for `range.x' and `intKnots'
-  if (missing(range.x))
+  if (missing(range.x)) {
     range.x <- c(1.05*min(x)-0.05*max(x),1.05*max(x)-0.05*min(x))
+  }
 
   if (missing(intKnots))
   {
@@ -873,9 +916,10 @@ ZOSull <- function(x,intKnots, range.x, drv=0) {
   UX <- eigOmega$vectors[,indsX]
   Lmat <- cbind(UX,LZ)
   stabCheck <- t(crossprod(Lmat,t(crossprod(Lmat,Omega))))
-  if (sum(stabCheck^2) > 1.0001*(numIntKnots+2))
+  if (sum(stabCheck^2) > 1.0001*(numIntKnots+2)) {
     print("WARNING: NUMERICAL INSTABILITY ARISING\\
               FROM SPECTRAL DECOMPOSITION")
+  }
 
   # Obtain B and post-multiply by LZ matrix to get Z.
   B <- splines::spline.des(allKnots,x,derivs=rep(drv,length(x)),
@@ -907,12 +951,15 @@ Ztps <- function(x, k, knots=NULL, range.x=NULL) {
     r <- as.vector(r)
     nzi <- (1:length(r))[r!=0]
     ans <- rep(0,length(r))
-    if ((d+1)%%2!=0)
+    if ((d+1)%%2!=0) {
       ans[nzi] <- (abs(r[nzi]))^(2*m-d)*log(abs(r[nzi])) # d is even
-    else
+    } else {
       ans[nzi] <- (abs(r[nzi]))^(2*m-d)
+    }
 
-    if (num.col>1) ans <- matrix(ans,num.row,num.col)     # d is odd
+    if (num.col>1) {
+      ans <- matrix(ans,num.row,num.col)     # d is odd
+    }
     return(ans)
   }
 
@@ -920,10 +967,11 @@ Ztps <- function(x, k, knots=NULL, range.x=NULL) {
   matrix.sqrt <- function(A)
   {
     sva <- svd(A)
-    if (min(sva$d)>=0)
+    if (min(sva$d)>=0) {
       Asqrt <- t(sva$v %*% (t(sva$u) * sqrt(sva$d)))
-    else
+    } else {
       stop("Matrix square root is not defined")
+    }
     return(Asqrt)
   }
 
@@ -959,7 +1007,9 @@ Ztps <- function(x, k, knots=NULL, range.x=NULL) {
   sqrt.Omega <- matrix.sqrt(Omega)
   Z <- t(solve(sqrt.Omega,t(prelim.Z)))
   attr(Z,"knots") <- knots
-  if (!is.null(range.x)) attr(Z,"range.x") <- range.x
+  if (!is.null(range.x)) {
+    attr(Z,"range.x") <- range.x
+  }
   return(Z)
 }
 ########################################################################
@@ -1018,7 +1068,9 @@ ci_mcp <- function(LL, UL, trt_n=NULL) {
 	all(LL < UL)
   })
   trt_len <- length(LL)
-  if(is.null(trt_n) || length(unique(trt_n))!=trt_len) trt_n <- as.character(1:trt_len)
+  if(is.null(trt_n) || length(unique(trt_n))!=trt_len) {
+    trt_n <- as.character(1:trt_len)
+  }
 
   ci_mcp_letters_0 <- rep("A", trt_len)
   names(ci_mcp_letters_0) <- trt_n
@@ -1038,8 +1090,9 @@ ci_mcp <- function(LL, UL, trt_n=NULL) {
     }
   }
 
-  if (all(unique(na.omit(as.vector(results)))==0.08)) ci_mcp_letters <- ci_mcp_letters_0
-  else{
+  if (all(unique(na.omit(as.vector(results)))==0.08)) {
+    ci_mcp_letters <- ci_mcp_letters_0
+  } else {
     rownames(results) <- colnames(results) <- trt_n
     results[lower.tri(results)] <- t(results)[lower.tri(results)]
     ci_mcp_letters <- multcompLetters(results, Letters=LETTERS)
