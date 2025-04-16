@@ -313,15 +313,18 @@ predictmeans <- function (model, modelterm, data=NULL, pairwise=FALSE, atvar=NUL
         rownames(dses.m) <- c("Aveg.LSD", "Min.LSD", "Max.LSD")
         attr(LSD, "For the Same Level of Factor") <- round(qt(1 - level/2, df = Df) * dses.m, ndecimal+1)
       } # end of if LSD
+
       attr(LSD, "Significant level") <- slevel
       attr(LSD, "Degree of freedom") <- round(Df, 2)
     }else{
       LSD <- round(2 * SED.out[1:3], ndecimal+1)
       names(LSD) <- c("Max.LSD", "Min.LSD", "Aveg.LSD")
+
       if (length(vars) > 1) {
         rownames(dses.m) <- c("Aveg.LSD", "Min.LSD", "Max.LSD")
         attr(LSD, "For the Same Level of Factor") <- round(2 * dses.m, ndecimal+1)
       }
+
       attr(LSD, "Note") <- "This is a approximate LSD (i.e. 2*SED) at 0.05 level."
     }
 
@@ -331,22 +334,26 @@ predictmeans <- function (model, modelterm, data=NULL, pairwise=FALSE, atvar=NUL
       tvm <- t.p.valuem <- LSDm <- Diffm <- matrix(0, ncol = nK, nrow = nK)
       rownames(tvm) <- colnames(tvm) <- rownames(t.p.valuem) <- colnames(t.p.valuem) <- rownames(LSDm) <- colnames(LSDm) <- rnK
       t.v <- cm/dses
+
       if (all(is.null(permlist) || all(permlist%in%c("NULL", "")), adj=="tukey")) {
-	    if (inherits(model, "lmerMod")) {
-		  p.tukey <- sapply(1:length(t.v), function(m) ptukey(sqrt(2)*abs(t.v[m]), nK, Df_diff[m], lower.tail=FALSE))
-		}else{
-	      p.tukey <- ptukey(sqrt(2)*abs(t.v), nK, Df, lower.tail=FALSE)
-		}
+	      if (inherits(model, "lmerMod")) {
+		      p.tukey <- sapply(1:length(t.v), function(m) ptukey(sqrt(2)*abs(t.v[m]), nK, Df_diff[m], lower.tail=FALSE))
+		    }else{
+	        p.tukey <- ptukey(sqrt(2)*abs(t.v), nK, Df, lower.tail=FALSE)
+		    }
       }
+
       tvm[upper.tri(tvm)] <- t.v
+
       if (is.null(permlist) || all(permlist%in%c("NULL", ""))) {
-	  	if (inherits(model, "lmerMod")) {
-		  t.p.values <- sapply(1:length(t.v), function(m) 2 * pt(-abs(t.v[m]), Df_diff[m]))
-		}else{
-	      t.p.values <- 2 * pt(-abs(t.v), Df)
-		}
+	  	  if (inherits(model, "lmerMod")) {
+		      t.p.values <- sapply(1:length(t.v), function(m) 2 * pt(-abs(t.v[m]), Df_diff[m]))
+		    }else{
+	        t.p.values <- 2 * pt(-abs(t.v), Df)
+		    }
       }else{
         nsim <- length(permlist[[1]])
+
         tValue <- function(x, rK){
           cm <- rK%*%x$coef
           vcovm <- x$vcov
