@@ -255,50 +255,60 @@ predictmeans <- function (model, modelterm, data=NULL, pairwise=FALSE, atvar=NUL
       dses.m <- matrix(0, nrow=3, ncol=length(vars))
       colnames(dses.m) <- vars
       rownames(dses.m) <- c("Aveg.SED", "Min.SED", "Max.SED")
+
       for (i in 1:length(vars)) {
         varsindx <- as.character(dses.df[,i])==as.character(dses.df[, length(vars)+i])
-        if(any(varsindx))  # in case of A/B
-          dses.m[,i] <- summary.default(dses.df[varsindx,"dses"])[c(4,1,6)]  else {dses.m[,i] <- NA; atvar <- NULL}
+        if(any(varsindx)){  # in case of A/B
+          dses.m[,i] <- summary.default(dses.df[varsindx,"dses"])[c(4,1,6)]
+        }else{
+          dses.m[,i] <- NA
+          atvar <- NULL
+        }
       }
       attr(SED.out, "For the Same Level of Factor") <- dses.m
     }
 
     if (is.null(permlist) || all(permlist%in%c("NULL", ""))) {
+
       if (length(Df) == 0) {
+
         if (inherits(model, "lme")) {
           Df <- terms(model$fixDF)[modelterm]
-		  names(Df) <- NULL
-		  mt$Df <- round(Df, 2)
-		  pairDf <- Df
-		  Df_diff <- Df
+    		  names(Df) <- NULL
+    		  mt$Df <- round(Df, 2)
+    		  pairDf <- Df
+    		  Df_diff <- Df
         }else if (inherits(model, "lmerMod")) {
         #  Df <- median(df_term(model, modelterm), na.rm=TRUE)
-		  Df <- mp$df[modelterm]
-		  names(Df) <- NULL
-		  mt$Df <- round(df_term(model, modelterm), 2)
-		 # if (any(mt$Df <= 0)) mt$Df <- Df
-		  Df_diff <- df_term(model, ctrmatrix=rK)
-		  pairDf <- round(mean(Df_diff), 2)
-		 # Df_diff[Df_diff <= 0] <- 1
+    		  Df <- mp$df[modelterm]
+    		  names(Df) <- NULL
+    		  mt$Df <- round(df_term(model, modelterm), 2)
+    		 # if (any(mt$Df <= 0)) mt$Df <- Df
+    		  Df_diff <- df_term(model, ctrmatrix=rK)
+    		  pairDf <- round(mean(Df_diff), 2)
+    		 # Df_diff[Df_diff <= 0] <- 1
         }else{
-  		 Df <- mp$df
-		 mt$Df <- round(Df, 2)
-		 pairDf <- Df
-		 Df_diff <- Df
-		}
+          Df <- mp$df
+          mt$Df <- round(Df, 2)
+          pairDf <- Df
+          Df_diff <- Df
+        }
 
-        if (Df==0) stop("You need provide Df for this model!")
+        if (Df==0){
+          stop("You need provide Df for this model!")
+        }
       }else {
-	    mt$Df <- Df
-		Df_diff <- Df
-		pairDf <- Df
-		}
+  	    mt$Df <- Df
+  		  Df_diff <- Df
+  		  pairDf <- Df
+		  }
 
-	  bkmt <- mt  # update bkmt
+	    bkmt <- mt  # update bkmt
 
       LSD <- round(qt(1 - level/2, df = Df) * SED.out, ndecimal+1)
       names(LSD) <- c("Max.LSD", "Min.LSD", "Aveg.LSD")
       attr(LSD, "For the Same Level of Factor") <- NULL
+
       if (length(vars) > 1) {
         rownames(dses.m) <- c("Aveg.LSD", "Min.LSD", "Max.LSD")
         attr(LSD, "For the Same Level of Factor") <- round(qt(1 - level/2, df = Df) * dses.m, ndecimal+1)
