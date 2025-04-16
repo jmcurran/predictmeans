@@ -5,12 +5,17 @@ predictmeans <- function (model, modelterm, data=NULL, pairwise=FALSE, atvar=NUL
 						  which.plots = c("mean", "pval", "back"),
 						  mplot=NULL, barplot=NULL, pplot=NULL, bkplot=NULL, plot=TRUE, jitterv=0.2,
 						  basesz=12, prtnum=TRUE, prtplt=TRUE, newwd=FALSE, permlist=NULL, ncore=3, ndecimal=4) {
-  options(scipen=6)
-  if(any(missing(model), missing(modelterm)))
-    stop("The arguments 'model', and 'modelterm' must be provided!")
 
-  if (!(modelterm %in% attr(terms(model), "term.labels")))
+  ## Bias output towards fixed notation. See ?options for more info
+  options(scipen = 6)
+
+  if(any(missing(model), missing(modelterm))){
+    stop("The arguments 'model', and 'modelterm' must be provided!")
+  }
+
+  if (!(modelterm %in% attr(terms(model), "term.labels"))){
     stop(paste("The", modelterm, "must be exactly a term in the model (especially check the order of interaction)."))
+  }
 
   all.null = function(...){
     all(unlist(lapply(list(...), is.null)))
@@ -51,40 +56,87 @@ predictmeans <- function (model, modelterm, data=NULL, pairwise=FALSE, atvar=NUL
     warning(warnMessage)
   }
 
-
-
   meanPlot <- ciPlot <- predictmeansBarPlot <- NULL
+
   # if (inherits(model, "aovlist")) stop("Plese use model 'lme' instead of 'aov'!")
-  if (inherits(model, "aovlist")) model <- aovlist_lmer(model)
+  if (inherits(model, "aovlist")){
+    model <- aovlist_lmer(model)
+  }
+
   if (inherits(model, "glm")) {
     trans <- model$family$linkinv  # identical(trans, make.link("log")$linkinv)
-    if (model$family$family %in% c("poisson", "quasipoisson")) count=TRUE
+
+    if (model$family$family %in% c("poisson", "quasipoisson")){
+      count=TRUE
+    }
   }
+
   if (inherits(model, "glmerMod")) {
     trans <- slot(model, "resp")$family$linkinv
   }
+
   if (inherits(model, "glmmTMB")) {
     trans <- model$modelInfo$family$linkinv
-    if (model$modelInfo$family$family %in% c("poisson", "quasipoisson")) count=TRUE
+
+    if (model$modelInfo$family$family %in% c("poisson", "quasipoisson")){
+      count=TRUE
+    }
   }
+
   vars <- unlist(strsplit(modelterm, "\\:"))
   mdf <- model.frame(model)
-  if(any(!is.element(vars, names(mdf)[sapply(mdf,is.factor)])))
+
+  if(any(!is.element(vars, names(mdf)[sapply(mdf,is.factor)]))){
     stop(paste(vars, "must be factor(s)!"))
+  }
+
   # option checking
-  if (length(vars)==1) atvar <- NULL
-  if (!is.null(permlist) && !unique(permlist%in%c("NULL", ""))) {pairwise <- TRUE; if (adj=="tukey") stop("The p-value can't be adjusted by Tukey methd!")}
-  if (!is.null(atvar) && !unique(atvar%in%c("NULL", ""))) pairwise <- TRUE
-  if (adj != "none") pairwise <- TRUE
-  if (letterCI) {atvar <- NULL; pairwise <- TRUE; adj <- "none"; if (is.null(level)) slevel <- level <- 0.166 else slevel <- level}
-  if (is.null(level)) slevel <- level <- 0.05
+  if (length(vars)==1){
+    atvar <- NULL
+  }
+
+  if (!is.null(permlist) && !unique(permlist%in%c("NULL", ""))) {
+    pairwise <- TRUE
+
+    if (adj=="tukey"){
+      stop("The p-value can't be adjusted by Tukey methd!")
+    }
+  }
+
+  if (!is.null(atvar) && !unique(atvar%in%c("NULL", ""))){
+    pairwise <- TRUE
+  }
+
+  if (adj != "none"){
+    pairwise <- TRUE
+  }
+
+  if (letterCI) {
+    atvar <- NULL
+    pairwise <- TRUE
+    adj <- "none"
+
+    if (is.null(level)){
+      slevel <- level <- 0.166
+    }else{
+      slevel <- level
+    }
+  }
+
+  if (is.null(level)){
+    slevel <- level <- 0.05
+  }
+
   if (!is.null(plotord) && !unique(plotord%in%c("NULL", ""))) {
     plot <- mplot <- TRUE
+
     if(length(plotord) != length(vars)){
       stop(paste("plotord must be a vector of length", length(vars)))
     }
+
     if(is.character(plotord)){
       i = match(plotord, vars)
+
       if(any(is.na(i))){
         stop(paste("The entries", paste0(plotord[is.na(i)], sep = ", "), "do not match any term in ", modelterm))
       }else{
@@ -92,8 +144,14 @@ predictmeans <- function (model, modelterm, data=NULL, pairwise=FALSE, atvar=NUL
       }
     }
   }
-  if (!is.logical(meandecr)) meandecr <- NULL
-  if (!prtplt) newwd <- FALSE
+
+  if (!is.logical(meandecr)){
+    meandecr <- NULL
+  }
+
+  if (!prtplt){
+    newwd <- FALSE
+  }
 
   ctr.matrix <- Kmatrix(model, modelterm, covariate, data=data, prtnum=prtnum)
   KK <- ctr.matrix$K
@@ -105,12 +163,14 @@ predictmeans <- function (model, modelterm, data=NULL, pairwise=FALSE, atvar=NUL
   ndf <- data.frame(n.table)       ## To obtain info from model
 
   K <- KK[, mp$estimable, drop = FALSE]          # To match coef names
+
   if (any(ndf$Freq==0)) {
     rnTrt <- do.call("paste", c(ndf[, vars, drop=FALSE], sep=":"))
     rnTrt <- rnTrt[ndf$Freq!=0]      # To delete any missing level in factor
     K <- K[rownames(K)%in%rnTrt,]
     label <- label[rownames(label)%in%rnTrt,]
   }
+
   pm <- K %*% mp$coef
   vcovm <- mp$vcov
   # ses <- sqrt(diag(K %*% tcrossprod(vcovm, K)))
@@ -123,13 +183,19 @@ predictmeans <- function (model, modelterm, data=NULL, pairwise=FALSE, atvar=NUL
   se.table <- round(xtabs(ses ~ ., mt[, c("ses", vars)], drop.unused.levels = TRUE), ndecimal+1)
   mean.table[!(n.table)] <- NA
   se.table[!(n.table)] <- NA
+
   if (length(vars) > 1) {
     varsnlevel <- numeric(0)
-    for (i in vars) varsnlevel[i] <- nlevels(mdf[, i])
+
+    for (i in vars){
+      varsnlevel[i] <- nlevels(mdf[, i])
+    }
+
     tbvars <- names(sort(varsnlevel, decreasing = TRUE))
     mean.table <- ftable(mean.table, row.vars =tbvars[1], col.var=tbvars[-1])
     se.table <- ftable(se.table, row.vars =tbvars[1], col.var=tbvars[-1])
   }
+
   if (length(na.omit(unique(se.table)))==1) {
     se.table <- min(se.table, na.rm=TRUE)
     names(se.table) <- "All means have the same SE"
@@ -146,6 +212,7 @@ predictmeans <- function (model, modelterm, data=NULL, pairwise=FALSE, atvar=NUL
     kindx <- 1:nK
     CM <-  matrix(0, nrow=nK * (nK - 1)/2, ncol=nK)
     t <- 1
+
     for (i in 2:nK) {                      # To construct pairwise comparison K matrix by col order
       for (j in 1:(i-1)) {
         CM[t, ] <- (kindx == j) - (kindx == i)
@@ -159,6 +226,7 @@ predictmeans <- function (model, modelterm, data=NULL, pairwise=FALSE, atvar=NUL
     rnKK <- rownames(KK)
     KKvarn1 <- KKvarn2 <- rep(0, nKK * (nKK - 1)/2)
     tt <- 1
+
     for (i in 2:nKK) {
       for (j in 1:(i-1)) {
         KKvarn1[tt] <- rnKK[i]
@@ -166,6 +234,7 @@ predictmeans <- function (model, modelterm, data=NULL, pairwise=FALSE, atvar=NUL
         tt <- tt+1
       }
     }
+
     KKvarndiff <- data.frame(matrix(unlist(strsplit(KKvarn1, "\\:")), byrow=T, nrow=length(KKvarn1)),
                              matrix(unlist(strsplit(KKvarn2, "\\:")), byrow=T, nrow=length(KKvarn2)))
 
@@ -173,7 +242,10 @@ predictmeans <- function (model, modelterm, data=NULL, pairwise=FALSE, atvar=NUL
     cm <- rK%*%mp$coef
     vcov.contr <- rK %*% tcrossprod(vcovm, rK)
     dses <- sqrt(diag(vcov.contr))
-    if (adj == "bonferroni") level <- level/length(dses)
+
+    if (adj == "bonferroni"){
+      level <- level/length(dses)
+    }
 
     SED.out <- c(Max.SED = max(dses), Min.SED = min(dses), Aveg.SED = mean(dses))
     dses.df <- data.frame(matrix(unlist(strsplit(varn1, "\\:")), byrow=T, nrow=length(varn1)),
