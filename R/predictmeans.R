@@ -439,82 +439,100 @@ predictmeans <- function (model, modelterm, data=NULL, pairwise=FALSE, atvar=NUL
 
         PMplot(t(t.p.valuep), level=slevel, legendx=0.69, mtitle=mtitle, newwd=newwd)
       }
-      }else{
-        dses.df$tvalue <- t.v
-        dses.df$pvalue <- t.p.values
-        for (i in which(vars%in%atvar)) { # To find rows relating atvar
-          KKvarndiff <- KKvarndiff[which(as.character(KKvarndiff[, i]) == as.character(KKvarndiff[, length(vars) + i])), ]
-        }
+    }else{
+      dses.df$tvalue <- t.v
+      dses.df$pvalue <- t.p.values
 
-        atvar.df <- f_loj_krc(KKvarndiff, dses.df, by.x=names(KKvarndiff), by.y=names(KKvarndiff))
-        names(atvar.df)[1:length(vars)] <- vars
-		for (i in vars) {       # To ensure factor vars  have the same level as original
+      for (i in which(vars%in%atvar)) { # To find rows relating atvar
+        KKvarndiff <- KKvarndiff[which(as.character(KKvarndiff[, i]) == as.character(KKvarndiff[, length(vars) + i])), ]
+      }
+
+      atvar.df <- f_loj_krc(KKvarndiff, dses.df, by.x=names(KKvarndiff), by.y=names(KKvarndiff))
+      names(atvar.df)[1:length(vars)] <- vars
+
+		  for (i in vars) {       # To ensure factor vars  have the same level as original
           atvar.df[,i] <- factor(atvar.df[,i], levels=levels(mdf[, i][[1]]))
-        }
-        atvar.df$adj.pvalue <- unlist(lapply(split(atvar.df, atvar.df[, atvar]), function(x) {
+      }
+
+      atvar.df$adj.pvalue <- unlist(lapply(split(atvar.df, atvar.df[, atvar]), function(x) {
           t_value <- x$tvalue
           t_valueN <- length(na.omit(t_value))
-          if (t_valueN < 2) x$adj.pvalue <- x$pvalue
-          else{
-            if (adj=="tukey") x$adj.pvalue <- ptukey(sqrt(2)*abs(x$tvalue), t_valueN, Df, lower.tail=FALSE) # Df need to be updated
-            else x$adj.pvalue <- p.adjust(x$pvalue, adj)
+
+          if (t_valueN < 2){
+            x$adj.pvalue <- x$pvalue
+          } else {
+            if (adj=="tukey"){
+              x$adj.pvalue <- ptukey(sqrt(2)*abs(x$tvalue), t_valueN, Df, lower.tail=FALSE) # Df need to be updated
+            }else{
+              x$adj.pvalue <- p.adjust(x$pvalue, adj)
+            }
           }
         }))
 
-        rnK.df <- as.data.frame(matrix(unlist(strsplit(rnKK, "\\:")), byrow=T, nrow=nKK)) # To find the suitable names for pm
-        colnames(rnK.df) <- vars
-        for (i in vars) {       # To ensure factor vars  have the same level as original
+      rnK.df <- as.data.frame(matrix(unlist(strsplit(rnKK, "\\:")), byrow=T, nrow=nKK)) # To find the suitable names for pm
+      colnames(rnK.df) <- vars
+
+      for (i in vars) {       # To ensure factor vars  have the same level as original
           rnK.df[,i] <- factor(rnK.df[,i], levels=levels(mdf[, i][[1]]))
-        }
-        rnK.df  <- rnK.df [do.call(order, rnK.df[, atvar, drop=FALSE]),]
-        resvar <- vars[!vars%in%atvar]   # The rest of vars rather than at var
-        rnK.df <- rnK.df[, c(atvar, resvar)]   # To ensure the right matrix name later
-        atvar.levels <- unique(do.call("paste", c(rnK.df[, atvar, drop=FALSE], sep=" : ")))
-        resvar.levels <- unique(do.call("paste", c(rnK.df[, resvar, drop=FALSE], sep=" : ")))
-        rcnplotm <- do.call("paste", c(rnK.df[, , drop=FALSE], sep=" : ")) # row col names of image plot
+      }
 
-        # mean table arrange by atvar
-        mt.atvar <- mt[do.call(order, mt[, atvar, drop=FALSE]),]
-        bkmt <- mt.atvar[, c(atvar, resvar, "pm", "ses", "Df")]
-        listlength <- length(atvar.levels)
-        pmlist <- pmlistTab <- pmlistLetter <- vector("list", listlength)
-        indexlength <- nrow(atvar.df)/listlength
-        nrow.pm <- length(resvar.levels)
+      rnK.df  <- rnK.df [do.call(order, rnK.df[, atvar, drop=FALSE]),]
+      resvar <- vars[!vars%in%atvar]   # The rest of vars rather than at var
+      rnK.df <- rnK.df[, c(atvar, resvar)]   # To ensure the right matrix name later
+      atvar.levels <- unique(do.call("paste", c(rnK.df[, atvar, drop=FALSE], sep=" : ")))
+      resvar.levels <- unique(do.call("paste", c(rnK.df[, resvar, drop=FALSE], sep=" : ")))
+      rcnplotm <- do.call("paste", c(rnK.df[, , drop=FALSE], sep=" : ")) # row col names of image plot
 
-        for (i in 1:listlength) {           # extract pvalues for each factor level
-          atvar.pm <- matrix(0, nrow=nrow.pm, ncol=nrow.pm)
-          atvar.pm[upper.tri(atvar.pm)] <- atvar.df$adj.pvalue[(indexlength*i-(indexlength-1)):(indexlength*i)]
-          rownames(atvar.pm) <- colnames(atvar.pm) <- resvar.levels
-          pmlist[[i]] <- t(atvar.pm)
-          outtab <- round(as.table(t(atvar.pm)), 4)
-          outtab[outtab < 0.0001] <- "0.0001"
-          outtab[col(outtab)==row(outtab)] <- 1.0000
-          outtab[upper.tri(outtab)] <-""
-          Grpatvar.pm <- t(atvar.pm)+ atvar.pm
-		  if (all(!is.na(outtab))) {
-		   Grpatvar.letter <- multcompLetters(Grpatvar.pm, Letters=LETTERS, threshold=slevel)[resvar.levels]
-		   outtab <- as.table(cbind(outtab, Group=Grpatvar.letter))
-		  }else{
-		  Grpatvar.letterM <- rep(NA, nrow.pm)
-		  names(Grpatvar.letterM) <- resvar.levels
-		  atvar.rowname <- resvar.levels[!is.na(Grpatvar.pm[, 1])]
-		  Grpatvar.letterM[atvar.rowname] <- multcompLetters(Grpatvar.pm[atvar.rowname, atvar.rowname], Letters=LETTERS, threshold=slevel)[atvar.rowname]
-		  outtab <- as.table(cbind(outtab, Group=Grpatvar.letterM))
-		  Grpatvar.letter <- Grpatvar.letterM[atvar.rowname]
-		  }
-		  pmlistLetter[[i]] <- Grpatvar.letter
-          pmlistTab[[i]] <- outtab
-        }
+      # mean table arrange by atvar
+      mt.atvar <- mt[do.call(order, mt[, atvar, drop=FALSE]),]
+      bkmt <- mt.atvar[, c(atvar, resvar, "pm", "ses", "Df")]
+      listlength <- length(atvar.levels)
+      pmlist <- pmlistTab <- pmlistLetter <- vector("list", listlength)
+      indexlength <- nrow(atvar.df)/listlength
+      nrow.pm <- length(resvar.levels)
 
-        if (nrow.pm > 2) p_valueMatrix <- pmlist
-        if (all(nrow.pm > 2, pplot, plot, prtplt)) {
-          mtitle <- plottitle
-          if (is.null(plottitle) || plottitle%in%c("NULL", ""))  mtitle <- paste("Adjusted p-value (by '", adj,
-                                                                                 "' method)\n for Pairwise Comparison at Each Level of '",paste(atvar, collapse =" and "), "'", sep="")
-          PMplot(pmlist, level=slevel, xylabel=rcnplotm, legendx=0.69, mtitle=mtitle, newwd=newwd)
+      for (i in 1:listlength) {           # extract pvalues for each factor level
+        atvar.pm <- matrix(0, nrow=nrow.pm, ncol=nrow.pm)
+        atvar.pm[upper.tri(atvar.pm)] <- atvar.df$adj.pvalue[(indexlength*i-(indexlength-1)):(indexlength*i)]
+        rownames(atvar.pm) <- colnames(atvar.pm) <- resvar.levels
+        pmlist[[i]] <- t(atvar.pm)
+        outtab <- round(as.table(t(atvar.pm)), 4)
+        outtab[outtab < 0.0001] <- "0.0001"
+        outtab[col(outtab)==row(outtab)] <- 1.0000
+        outtab[upper.tri(outtab)] <-""
+        Grpatvar.pm <- t(atvar.pm)+ atvar.pm
+
+        if (all(!is.na(outtab))) {
+    	   Grpatvar.letter <- multcompLetters(Grpatvar.pm, Letters=LETTERS, threshold=slevel)[resvar.levels]
+    	   outtab <- as.table(cbind(outtab, Group=Grpatvar.letter))
+    	  }else{
+      	  Grpatvar.letterM <- rep(NA, nrow.pm)
+      	  names(Grpatvar.letterM) <- resvar.levels
+      	  atvar.rowname <- resvar.levels[!is.na(Grpatvar.pm[, 1])]
+      	  Grpatvar.letterM[atvar.rowname] <- multcompLetters(Grpatvar.pm[atvar.rowname, atvar.rowname], Letters=LETTERS, threshold=slevel)[atvar.rowname]
+      	  outtab <- as.table(cbind(outtab, Group=Grpatvar.letterM))
+      	  Grpatvar.letter <- Grpatvar.letterM[atvar.rowname]
+    	  }
+
+	      pmlistLetter[[i]] <- Grpatvar.letter
+        pmlistTab[[i]] <- outtab
+      }
+
+      if (nrow.pm > 2){
+        p_valueMatrix <- pmlist
+      }
+
+      if (all(nrow.pm > 2, pplot, plot, prtplt)) {
+        mtitle <- plottitle
+
+        if (is.null(plottitle) || plottitle%in%c("NULL", "")){
+          mtitle <- paste("Adjusted p-value (by '", adj,
+                          "' method)\n for Pairwise Comparison at Each Level of '",paste(atvar, collapse =" and "), "'", sep="")
         }
-      } # if (is.null(atvar))
-    }# end of if(pairwise)
+        PMplot(pmlist, level=slevel, xylabel=rcnplotm, legendx=0.69, mtitle=mtitle, newwd=newwd)
+      }
+    } # if (is.null(atvar))
+  }# end of if(pairwise)
 
     meanTable <- mt
     if (is.null(permlist) || all(permlist%in%c("NULL", ""))) {
