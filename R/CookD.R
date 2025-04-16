@@ -3,11 +3,15 @@ CookD <- function (model, group=NULL, plot=TRUE, idn=3, newwd=FALSE) {
   stopifnot("CookD doesn't support this model!"={
     any(inherits(model, "gls"), inherits(model, "lme"), inherits(model, "lmerMod"))
   })
-  if (inherits(model, "gls") || inherits(model, "lme")) model <- update(model, method="ML") 
-  if (inherits(model, "lmerMod")) model <- update(model, REML=FALSE)
+  if (inherits(model, "gls") || inherits(model, "lme")) {
+    model <- update(model, method="ML")
+  }
+  if (inherits(model, "lmerMod")) {
+    model <- update(model, REML=FALSE)
+  }
   if (inherits(model, "gls") || inherits(model, "lme")) {
     mdf <- nlme::getData(model)
-  }else{
+  } else {
     mdf <- model.frame(model)
   }
   mp <- mymodelparm(model)
@@ -18,7 +22,7 @@ CookD <- function (model, group=NULL, plot=TRUE, idn=3, newwd=FALSE) {
   if (is.null(group) || group%in%c("NULL", "")) {
     rn <- rownames(mdf)
     LOOmp <- lapply(rn, function(x)  mymodelparm(update(model, data=mdf[rn!=x, ])))
-  }else{
+  } else {
     rn <- unique(mdf[, group])
     LOOmp <- lapply(rn, function(x)  {
   	rind <- mdf[, group]!=x
@@ -26,12 +30,14 @@ CookD <- function (model, group=NULL, plot=TRUE, idn=3, newwd=FALSE) {
     })
   }
 
-  LOObeta <- sapply(LOOmp, function(x) x$coef)          # Matrix with beta(-i)  
-  rK <- t(LOObeta-beta0)  
+  LOObeta <- sapply(LOOmp, function(x) x$coef)          # Matrix with beta(-i)
+  rK <- t(LOObeta-beta0)
   CookD <- diag(rK %*% tcrossprod(vb.inv, rK)/length(beta0))
   names(CookD) <- rn
   if (plot) {
-    if (newwd) dev.new()
+    if (newwd) {
+      dev.new()
+    }
     outD <- CookD >= sort(CookD, decreasing =TRUE)[idn]                        # Outlying Di's
     labid <- names(CookD)
     plot(CookD,  xlab="Obs. number", col="blue", ylim=c(0, max(CookD)+0.005),
