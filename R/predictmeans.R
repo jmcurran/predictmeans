@@ -380,15 +380,25 @@ predictmeans <- function (model, modelterm, data=NULL, pairwise=FALSE, atvar=NUL
       } # end of if (is.null(permlist))
 
       if (is.null(atvar) || all(atvar%in%c("NULL", ""))) {
-        if (adj=="tukey") t.p.valuem[upper.tri(t.p.valuem)] <- p.tukey else
+
+        if (adj=="tukey"){
+          t.p.valuem[upper.tri(t.p.valuem)] <- p.tukey
+        }else{
           t.p.valuem[upper.tri(t.p.valuem)] <- p.adjust(t.p.values, adj)
+        }
+
         t.p.valuep <- t.p.valuem    # for plot
         t.p.valuem <- t(t.p.valuem) + tvm
         names(t.p.valuem) <- NULL
-		diag(t.p.valuem) <- 1
-        if (is.null(permlist) || all(permlist%in%c("NULL", ""))) {
-          if (!inherits(model, "lmerMod")) attr(t.p.valuem, "Degree of freedom") <- pairDf
-          attr(t.p.valuem, "Note") <- paste("The matrix has t-value above the diagonal, p-value (adjusted by '",
+		    diag(t.p.valuem) <- 1
+
+		    if (is.null(permlist) || all(permlist%in%c("NULL", ""))) {
+
+		      if (!inherits(model, "lmerMod")) {
+		        attr(t.p.valuem, "Degree of freedom") <- pairDf
+		      }
+
+		      attr(t.p.valuem, "Note") <- paste("The matrix has t-value above the diagonal, p-value (adjusted by '",
                                             adj, "' method) below the diagonal", sep="")
           LSDm.up <- qt(1-level/2, df = Df)*dses
           LSDm[upper.tri(LSDm)] <- LSDm.up
@@ -399,20 +409,36 @@ predictmeans <- function (model, modelterm, data=NULL, pairwise=FALSE, atvar=NUL
           attr(LSDm,"Degree of freedom") <- Df
           attr(LSDm,"Note") <- paste("LSDs matrix has mean differences (row-col) above the diagonal, LSDs (adjusted by '",
                                      adj, "' method) below the diagonal", sep="")
-        }else{
-          attr(t.p.valuem, "Note") <- paste("The matrix has t-value above the diagonal, and ", nsim, " times permutation p-value (adjusted by '", adj, "' method) below the diagonal", sep="")
-        } # end of if (is.null(permlist))
+      }else{
+        attr(t.p.valuem, "Note") <- paste("The matrix has t-value above the diagonal, and ", nsim, " times permutation p-value (adjusted by '", adj, "' method) below the diagonal", sep="")
+      } # end of if (is.null(permlist))
 
-        if (!is.null(meandecr) && is.logical(meandecr)) groupRn <- rnK[order(mt$pm, decreasing = meandecr)] else groupRn <- NULL
-        t.p.valuemGrp <- t.p.valuem
-        t.p.valuemGrp[upper.tri(t.p.valuemGrp)] <- t(t.p.valuemGrp)[upper.tri(t.p.valuemGrp)]
-        if (!is.null(groupRn))  t.p.valuemGrp <- t.p.valuemGrp[groupRn, groupRn]
-        if (nrow(t.p.valuep) > 2) p_valueMatrix <- round(t(t.p.valuep), 4)
-        if (all(nrow(t.p.valuep) > 2, pplot, plot, prtplt)) {
-          mtitle <- plottitle
-          if (is.null(plottitle) || plottitle%in%c("NULL", "")) mtitle <- paste("Level Plot of p-value (adjusted by '", adj, "' method)\n for Pairwise Comparison", sep="")
-          PMplot(t(t.p.valuep), level=slevel, legendx=0.69, mtitle=mtitle, newwd=newwd)
+      if (!is.null(meandecr) && is.logical(meandecr)){
+        groupRn <- rnK[order(mt$pm, decreasing = meandecr)]
+      }else{
+        groupRn <- NULL
+      }
+
+		  t.p.valuemGrp <- t.p.valuem
+      t.p.valuemGrp[upper.tri(t.p.valuemGrp)] <- t(t.p.valuemGrp)[upper.tri(t.p.valuemGrp)]
+
+      if (!is.null(groupRn)){
+        t.p.valuemGrp <- t.p.valuemGrp[groupRn, groupRn]
+      }
+
+      if (nrow(t.p.valuep) > 2){
+        p_valueMatrix <- round(t(t.p.valuep), 4)
+      }
+
+      if (all(nrow(t.p.valuep) > 2, pplot, plot, prtplt)) {
+        mtitle <- plottitle
+
+        if (is.null(plottitle) || plottitle%in%c("NULL", "")){
+          mtitle <- paste("Level Plot of p-value (adjusted by '", adj, "' method)\n for Pairwise Comparison", sep="")
         }
+
+        PMplot(t(t.p.valuep), level=slevel, legendx=0.69, mtitle=mtitle, newwd=newwd)
+      }
       }else{
         dses.df$tvalue <- t.v
         dses.df$pvalue <- t.p.values
