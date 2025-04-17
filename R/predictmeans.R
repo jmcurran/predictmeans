@@ -786,34 +786,50 @@ predictmeans <- function (model, modelterm, data=NULL, pairwise=FALSE, atvar=NUL
         }
 
         mylab <- plotylab
-        if (is.null(plotylab) || plotylab%in%c("NULL", "")) mylab <- paste(response, "\n", sep="")
+
+        if (is.null(plotylab) || plotylab%in%c("NULL", "")) {
+          mylab <- paste(response, "\n", sep="")
+        }
+
         p3 <- ggplot(plotmt, aes(eval(parse(text = fact1)), pm, group=factor(eval(parse(text = fact2))), col=factor(eval(parse(text = fact2)))))+
           labs(title=paste(mtitle, "\n", sep=""), x=mxlab, y=mylab)+
           lims(x= levels(plotmt[, fact1]), y = c(yMin-0.5*offSet, max(yMax+0.5*offSet, yMin+LSD_value+0.5*offSet))) +
           geom_errorbar(aes(ymax=up, ymin=yMin, x=bar_label), width=0.15, linewidth=0.8, colour="blue")+
-		  geom_point(size=2)+
+		      geom_point(size=2)+
          # geom_line(aes(linetype=eval(parse(text = fact2)), col=eval(parse(text = fact2))), linewidth=0.8)+
           facet_grid(eval(parse(text = paste("~",fact3, sep=""))))+
           guides(group = guide_legend(fact2))+
          # guides(linetype = guide_legend(fact2))+
           guides(col = guide_legend(fact2))+
           theme_bw(basesz)
-        if (lineplot) p3 <- p3 + geom_line(aes(linetype=eval(parse(text = fact2)), col=eval(parse(text = fact2))), linewidth=0.8) + guides(linetype = guide_legend(title = fact2))
-        meanPlot <- p3
-        if (prtplt) print(p3)
-      }
 
+        if (lineplot){
+          p3 <- p3 + geom_line(aes(linetype=eval(parse(text = fact2)),
+                                   col=eval(parse(text = fact2))), linewidth=0.8) +
+            guides(linetype = guide_legend(title = fact2))
+        }
+
+        meanPlot <- p3
+
+        if (prtplt){
+          print(p3)
+        }
+      }
     }
   }
 
   if (!is.null(trans)) {
     Mean <- Trt <- ciPlot <- NULL
     bkmt$Mean <- trans(bkmt$pm)-transOff
-    if (identical(trans, make.link("log")$linkinv) || identical(trans, exp)) bkmt$Mean <- exp(bkmt$pm)-transOff
+
+    if (identical(trans, make.link("log")$linkinv) || identical(trans, exp)){
+      bkmt$Mean <- exp(bkmt$pm)-transOff
+    }
+
     if (is.null(permlist) || all(permlist%in%c("NULL", ""))) {
       bkmt$LL <- trans(bkmt$pm - qt(1 - slevel/2, df = bkmt$Df) * bkmt$ses)-transOff
       bkmt$UL <- trans(bkmt$pm + qt(1 - slevel/2, df = bkmt$Df) * bkmt$ses)-transOff
-    }else{
+    } else {
       bkmt$LL <- trans(bkmt$pm - 2 * bkmt$ses)-transOff
       bkmt$UL <- trans(bkmt$pm + 2 * bkmt$ses)-transOff
     }
@@ -821,6 +837,7 @@ predictmeans <- function (model, modelterm, data=NULL, pairwise=FALSE, atvar=NUL
     bkmt$pm <- bkmt$ses <- bkmt$Df <- NULL
     nc <- ncol(bkmt)
     bkmt[, (nc - 2):nc] <- round(bkmt[, (nc - 2):nc], ndecimal)
+
     if (count) {
       bkmt[, (nc - 2):nc] <- round(bkmt[, (nc - 2):nc], 0)
       bkmt[, (nc - 2):nc][bkmt[, (nc - 2):nc] < 0] <- 0
@@ -828,34 +845,52 @@ predictmeans <- function (model, modelterm, data=NULL, pairwise=FALSE, atvar=NUL
 
     if (plot && bkplot) {
 
-      if (!is.null(atvar) && !unique(atvar%in%c("NULL", ""))) mdf <- mdf[do.call(order, mdf[, c(atvar, resvar), drop=FALSE]),]
+      if (!is.null(atvar) && !unique(atvar%in%c("NULL", ""))) {
+        mdf <- mdf[do.call(order, mdf[, c(atvar, resvar), drop=FALSE]),]
+      }
 
       if (response %in% names(mdf)) {    ## Transformed y before modelling
-        if (inherits(mdf[, response], "factor")){
+
+        if (inherits(mdf[, response], "factor")) {
           bky <- as.numeric(mdf[, response])-1
-        }else{
+        } else {
+
           if (inherits(model, "glm") || inherits(model, "glmerMod") || inherits(model, "glmmTMB")) {
             bky <- mdf[, response]
-            if (!is.null(dim(mdf[, response]))) bky <- mdf[, response][,1]/rowSums(mdf[, response])
-          }else{
+
+            if (!is.null(dim(mdf[, response]))){
+              bky <- mdf[, response][,1]/rowSums(mdf[, response])
+            }
+
+          } else {
             bky <- trans(mdf[, response])
           }# end of if glm or glmer
         }# end of if factor
-      }else{       ## Transformed y within modelling
+      } else {       ## Transformed y within modelling
         nresponse <- regmatches(response, regexec("\\(([^<]+)\\)", response))[[1]][2]
+
         if (!(nresponse %in% names(mdf))) {
-          if (is.null(responsen) || all(responsen%in%c("NULL", "")))  stop(paste("Please provide suitable name for response variable using option responsen='", names(mdf)[1], "'!", sep=""))
+
+          if (is.null(responsen) || all(responsen%in%c("NULL", ""))){
+            stop(paste("Please provide suitable name for response variable using option responsen='",
+                       names(mdf)[1], "'!", sep=""))
+          }
+
           nresponse <- responsen
         }
+
         bky <- mdf[, nresponse]
       }
-      if (is.list(bky)) bky <- bky[[1]]
+
+      if (is.list(bky)){
+        bky <- bky[[1]]
+      }
 
       if (is.null(atvar) || all(atvar%in%c("NULL", ""))) {
         Trtn <- do.call("paste", c(mdf[, vars, drop=FALSE], sep=":"))
         newdata2 <- data.frame(bky=bky, Trtn=Trtn)
         bkmt$Trt <- do.call("paste", c(bkmt[, vars, drop=FALSE], sep=":"))
-      }else{
+      } else {
         Trtn <- do.call("paste", c(mdf[, c(atvar, resvar), drop=FALSE], sep=":"))
         newdata2 <- data.frame(bky=bky, Trtn=Trtn)
         bkmt$Trt <- do.call("paste", c(bkmt[, c(atvar, resvar), drop=FALSE], sep=":"))
@@ -865,12 +900,20 @@ predictmeans <- function (model, modelterm, data=NULL, pairwise=FALSE, atvar=NUL
       xMin <- min(min(bkmt[, nc - 1], na.rm=TRUE), bky, na.rm=TRUE)
       xoffSet <- 0.15 * (xMax - xMin)
       mtitle <- plottitle
-      if (is.null(plottitle) || plottitle%in%c("NULL", "")) mtitle <- paste("Back Transformed Means with ", (1 - slevel) * 100, "% CIs\n for '", modelterm, "'", "\n", sep = "")
-      if (newwd) dev.new()
+
+      if (is.null(plottitle) || plottitle%in%c("NULL", "")){
+        mtitle <- paste("Back Transformed Means with ", (1 - slevel) * 100, "% CIs\n for '",
+                        modelterm, "'", "\n", sep = "")
+      }
+
+      if (newwd) {
+        dev.new()
+      }
+
       xlimv <- c(xMin - xoffSet, xMax + xoffSet)
-	  bkmt[, c("Mean", "LL", "UL")] <- lapply(bkmt[, c("Mean", "LL", "UL")], as.numeric)
-	  newdata2$bky <- as.numeric(newdata2$bky)
-	  p <- ggplot(bkmt, aes(Mean, Trt))+
+	    bkmt[, c("Mean", "LL", "UL")] <- lapply(bkmt[, c("Mean", "LL", "UL")], as.numeric)
+	    newdata2$bky <- as.numeric(newdata2$bky)
+	    p <- ggplot(bkmt, aes(Mean, Trt))+
         labs(title=mtitle, x="", y="")+
         xlim(xlimv) +
         geom_point(colour="red") + geom_errorbarh(aes(xmax = UL, xmin=LL ), height=0.2, linewidth=0.8, colour="red") +
@@ -878,10 +921,15 @@ predictmeans <- function (model, modelterm, data=NULL, pairwise=FALSE, atvar=NUL
         geom_point(aes(x=bky, y=Trtn), shape=1, position = position_jitter(width = jitterv, height = jitterv), colour="blue", alpha=0.6, data=newdata2)+
         theme_bw(basesz)
       ciPlot <- p
-      if (prtplt) print(p)
+
+      if (prtplt) {
+        print(p)
+      }
     }
+
     rownames(bkmt) <- NULL
     bkmt$Trt <- NULL
+
     if (!(is.null(atvar) || all(atvar%in%c("NULL", "")))) {
       all_var_names <- colnames(meanTable)
       meanTable <- meanTable[c(atvar, resvar, setdiff(all_var_names, vars))]
