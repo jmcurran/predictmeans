@@ -937,30 +937,42 @@ predictmeans <- function (model, modelterm, data=NULL, pairwise=FALSE, atvar=NUL
     }
 
    # if (all(!identical(trans, function(x) x, ignore.environment=TRUE), !identical(trans, I, ignore.environment=TRUE))) {
-	if (any(meanTable$Mean!=bkmt$Mean)) {
+	  if (any(meanTable$Mean!=bkmt$Mean)) {
       meanTable <- cbind(meanTable, round(bkmt[, (ncol(bkmt)-2):ncol(bkmt)], ndecimal))
       colnames(meanTable)[(ncol(meanTable)-2):ncol(meanTable)] <-  c("Bk_Mean", paste("Bk_LL(", (1 - slevel) * 100, "%)", sep = ""),
                                                                      paste("Bk_UL(", (1 - slevel) * 100, "%)", sep = ""))
     }
 
-	if (pairwise) {
-    if ((is.null(atvar) || all(atvar%in%c("NULL", "")))) {
-      if (!is.null(meandecr) && is.logical(meandecr)) meanTable <- meanTable[order(meanTable$Mean, decreasing = meandecr), ]
-      meanTable$LetterGrp <- multcompLetters(t.p.valuemGrp, Letters=LETTERS, threshold=slevel)
-      if (letterCI)  meanTable$LetterGrp <- ci_mcp(meanTable[, grepl("^LL", names(meanTable))], meanTable[, grepl("^UL", names(meanTable))])
+	  if (pairwise) {
 
-      meanTable <- list(Table=meanTable, Note=paste("Letter-based representation of pairwise comparisons at significant level '", slevel, "'", sep=""))
-      # attr(meanTable, "Note") <- paste("Note: letter-based representation of pairwise comparisons at significant level '", slevel, "'", sep="")
-    }else{
-	  meanTable$LetterGrp <- unlist(pmlistLetter)
-      meanTable <- list(Table=meanTable, Note=paste("Letter-based representation of pairwise comparisons at significant level '", slevel, "' at each level of ", atvar, sep=""))
-	}
-	}
+      if ((is.null(atvar) || all(atvar%in%c("NULL", "")))) {
+
+        if (!is.null(meandecr) && is.logical(meandecr)) {
+          meanTable <- meanTable[order(meanTable$Mean, decreasing = meandecr), ]
+        }
+
+        meanTable$LetterGrp <- multcompLetters(t.p.valuemGrp, Letters=LETTERS, threshold=slevel)
+
+        if (letterCI) {
+          meanTable$LetterGrp <- ci_mcp(meanTable[, grepl("^LL", names(meanTable))],
+                                        meanTable[, grepl("^UL", names(meanTable))])
+        }
+
+        meanTable <- list(Table=meanTable, Note=paste("Letter-based representation of pairwise comparisons at significant level '", slevel, "'", sep=""))
+        # attr(meanTable, "Note") <- paste("Note: letter-based representation of pairwise comparisons at significant level '", slevel, "'", sep="")
+      } else {
+	      meanTable$LetterGrp <- unlist(pmlistLetter)
+        meanTable <- list(Table=meanTable, Note=paste("Letter-based representation of pairwise comparisons at significant level '", slevel, "' at each level of ", atvar, sep=""))
+	    }
+	  }
+
     predictmeansPlot <- list(meanPlot=meanPlot, ciPlot=ciPlot)
   }
 
   if (pairwise) {
+
     if (is.null(atvar) || all(atvar%in%c("NULL", ""))) {
+
       if (all(is.null(permlist) || all(permlist%in%c("NULL", "")), adj %in% c("none", "bonferroni"))) {
         outputlist <- list("Predicted Means" = mean.table, "Standard Error of Means" = se.table,
                            "Standard Error of Differences" = SED.out, LSD = LSD, "Pairwise LSDs"=round(LSDm,ndecimal+1),
@@ -968,7 +980,9 @@ predictmeans <- function (model, modelterm, data=NULL, pairwise=FALSE, atvar=NUL
                            predictmeansBarPlot=predictmeansBarPlot, mean_table=meanTable, p_valueMatrix=p_valueMatrix)
         class(outputlist) = "pdmlist"
         return(outputlist)
+
       }else{
+
         outputlist <- list("Predicted Means" = mean.table, "Standard Error of Means" = se.table,
                            "Standard Error of Differences" = SED.out, LSD = LSD, "Pairwise p-value" = round(t.p.valuem, 4),
                            predictmeansPlot=predictmeansPlot, predictmeansBarPlot=predictmeansBarPlot, mean_table=meanTable,
@@ -976,14 +990,21 @@ predictmeans <- function (model, modelterm, data=NULL, pairwise=FALSE, atvar=NUL
         class(outputlist) = "pdmlist"
         return(outputlist)
       }
-    }else{
+    } else {
+
       outputlist <- vector("list", listlength+8)
       outputlist[[1]] <- mean.table
       outputlist[[2]] <- se.table
       outputlist[[3]] <- SED.out
       outputlist[[4]] <- LSD
       outputlist[[5]] <- paste("For variable '", paste(resvar, collapse =" and "), "' at each level of '", paste(atvar, collapse =" and "), "'", sep="")
-      for (i in 6: (listlength+5))  outputlist[[i]] <- pmlistTab[[i-5]]
+
+      ## DONGWEN: I think this could be replaced with
+      ## outputlist[[6:(listlength + 5)]] <- pmListTab[[1:listLength]]
+      for (i in 6: (listlength+5)) {
+        outputlist[[i]] <- pmlistTab[[i-5]]
+      }
+
       outputlist[[listlength+6]] <- meanTable
       outputlist[[listlength+7]] <- predictmeansPlot
       outputlist[[listlength+8]] <- predictmeansBarPlot
@@ -994,15 +1015,16 @@ predictmeans <- function (model, modelterm, data=NULL, pairwise=FALSE, atvar=NUL
         names(outputlist)<- c("Predicted Means", "Standard Error of Means", "Standard Error of Differences",
                               "LSD", paste("Pairwise comparison p-value (adjusted by '", adj, "' method)", sep=""),
                               atvar.levels, "mean_table", "predictmeansPlot", "predictmeansBarPlot", "p_valueMatrix")[1:length(outputlist)]
-      }else{
+      } else {
         names(outputlist) <- c(c("Predicted Means", "Standard Error of Means", "Standard Error of Differences",
                                  "Approximated LSD"), paste("Pairwise '", nsim, "' times permuted p-value (adjusted by '", adj, "' method)", sep=""),
                                atvar.levels, "mean_table", "predictmeansPlot", "predictmeansBarPlot", "p_valueMatrix")[1:length(outputlist)]
       }
+
       class(outputlist) <- "pdmlist"
       return(outputlist)
     }
-  }else {
+  } else {
     outputlist=list("Predicted Means" = mean.table, "Standard Error of Means" = se.table,
                     "Standard Error of Differences" = SED.out, LSD = LSD, predictmeansPlot=predictmeansPlot,
                     predictmeansBarPlot=predictmeansBarPlot, mean_table=meanTable)
