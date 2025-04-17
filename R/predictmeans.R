@@ -278,7 +278,7 @@ predictmeans <- function (model, modelterm, data=NULL, pairwise=FALSE, atvar=NUL
     		  mt$Df <- round(Df, 2)
     		  pairDf <- Df
     		  Df_diff <- Df
-        }else if (inherits(model, "lmerMod")) {
+        } else if (inherits(model, "lmerMod")) {
         #  Df <- median(df_term(model, modelterm), na.rm=TRUE)
     		  Df <- mp$df[modelterm]
     		  names(Df) <- NULL
@@ -287,7 +287,7 @@ predictmeans <- function (model, modelterm, data=NULL, pairwise=FALSE, atvar=NUL
     		  Df_diff <- df_term(model, ctrmatrix=rK)
     		  pairDf <- round(mean(Df_diff), 2)
     		 # Df_diff[Df_diff <= 0] <- 1
-        }else{
+        } else {
           Df <- mp$df
           mt$Df <- round(Df, 2)
           pairDf <- Df
@@ -529,6 +529,7 @@ predictmeans <- function (model, modelterm, data=NULL, pairwise=FALSE, atvar=NUL
           mtitle <- paste("Adjusted p-value (by '", adj,
                           "' method)\n for Pairwise Comparison at Each Level of '",paste(atvar, collapse =" and "), "'", sep="")
         }
+
         PMplot(pmlist, level=slevel, xylabel=rcnplotm, legendx=0.69, mtitle=mtitle, newwd=newwd)
       }
     } # if (is.null(atvar))
@@ -656,12 +657,12 @@ predictmeans <- function (model, modelterm, data=NULL, pairwise=FALSE, atvar=NUL
           print(bp1)
         }
       }
-    }else if (length(vars) == 2) {
+    } else if (length(vars) == 2) {
       ##NB: I have changed this to an else statement because there shouldn't be any other way to get here. That is, length(vars) will not
       ##change from 1 to 2 between the block where length(vars)==1 is true and here, therefore the cases should be else if statements.
         if (is.null(plotord) || all(plotord%in%c("NULL", ""))) {
           plotord <- 1:2
-          if (!(is.null(atvar) || all(atvar%in%c("NULL", "")))){
+          if (!(is.null(atvar) || all(atvar%in%c("NULL", "")))) {
             atvar_num <- which(vars %in% atvar)
             plotord <- c(atvar_num, setdiff(1:length(vars), atvar_num))
           }
@@ -669,34 +670,70 @@ predictmeans <- function (model, modelterm, data=NULL, pairwise=FALSE, atvar=NUL
 
         fact1 <- (vars[plotord])[1]
         fact2 <- (vars[plotord])[2]
+
         mxlab <- plotxlab
-        if (is.null(plotxlab) || plotxlab%in%c("NULL", "")) mxlab <- paste("\n", fact1, sep="")
+
+        if (is.null(plotxlab) || plotxlab%in%c("NULL", "")) {
+          mxlab <- paste("\n", fact1, sep="")
+        }
+
         mylab <- plotylab
-        if (is.null(plotylab) || plotylab%in%c("NULL", "")) mylab <- paste(response, "\n", sep="")
+
+        if (is.null(plotylab) || plotylab%in%c("NULL", "")) {
+          mylab <- paste(response, "\n", sep="")
+        }
 
         if (mplot) {
-          if (newwd) dev.new()
+
+          if (newwd){
+            dev.new()
+          }
+
           mtitle <- plottitle
-          if (is.null(plottitle) || plottitle%in%c("NULL", ""))  mtitle <- paste("Predicted means for \"", fact1, "\" by \"", fact2, "\" with ", paste(atvar, collapse=" "), " ", bar_label, " (", slevel * 100, "%) Bar", sep = "")
+
+          if (is.null(plottitle) || plottitle%in%c("NULL", "")){
+            mtitle <- paste("Predicted means for \"", fact1, "\" by \"", fact2, "\" with ",
+                            paste(atvar, collapse=" "), " ", bar_label, " (", slevel * 100, "%) Bar", sep = "")
+          }
+
           plotmt[, fact1] <- factor(plotmt[, fact1], levels = c(bar_label, levels(plotmt[, fact1])))
           p2 <- ggplot(plotmt, aes(eval(parse(text = fact1)), pm, group=eval(parse(text = fact2)), col=eval(parse(text = fact2))))+
             labs(title=paste(mtitle, "\n", sep=""), x=mxlab, y=mylab)+
             lims(x= levels(plotmt[, fact1]), y = c(yMin - offSet, max(yMax + offSet, yMin + LSD_value + offSet))) +
-			geom_point(size=2)+
+			      geom_point(size=2)+
            # geom_line(aes(linetype=eval(parse(text = fact2)), col=eval(parse(text = fact2))), linewidth=0.96)+
             geom_errorbar(aes(ymax=up, ymin=yMin, x=bar_label), width=0.15, linewidth=0.8, colour="blue")+
           #  guides(linetype = guide_legend(title = fact2))+
             guides(col = guide_legend(title = fact2))+
             theme_bw(basesz)
-          if (lineplot) p2 <- p2 + geom_line(aes(linetype=eval(parse(text = fact2)), col=eval(parse(text = fact2))), linewidth=0.96)+guides(linetype = guide_legend(title = fact2))
+
+          if (lineplot) {
+            p2 <- p2 + geom_line(aes(linetype=eval(parse(text = fact2)),
+                                     col=eval(parse(text = fact2))), linewidth=0.96)+
+                  guides(linetype = guide_legend(title = fact2))
+          }
+
           meanPlot <- p2
-          if (prtplt) print(p2)
+
+          if (prtplt){
+            print(p2)
+          }
         } # end if mplot
+
         if (barplot) {
-          if (newwd) dev.new()
+
+          if (newwd) {
+            dev.new()
+          }
+
           mtitle <- plottitle
-          if (is.null(plottitle) || plottitle%in%c("NULL", ""))  mtitle <- paste("Predicted means for \"", modelterm, "\" with SE Bars", sep = "")
+
+          if (is.null(plottitle) || plottitle%in%c("NULL", "")) {
+            mtitle <- paste("Predicted means for \"", modelterm, "\" with SE Bars", sep = "")
+          }
+
           dodge <- position_dodge(width=0.9)
+
           bp2 <- ggplot(plotmt, aes(eval(parse(text = fact1)), pm, group=eval(parse(text = fact2)), fill=  eval(parse(text = fact2))))+
             geom_point(position=dodge) +
             geom_bar(stat = "identity", position=dodge)+
@@ -707,28 +744,47 @@ predictmeans <- function (model, modelterm, data=NULL, pairwise=FALSE, atvar=NUL
             theme(panel.border = element_blank(), axis.line = element_line(), panel.grid = element_blank())+
             theme(legend.position = "top")+guides(fill = guide_legend(title = fact2))
           predictmeansBarPlot <- bp2
-          if (prtplt) print(bp2)
-        }
-      }
 
-      if (all(length(vars) == 3, mplot)) {
-        if (newwd) dev.new()
+          if (prtplt) {
+            print(bp2)
+          }
+        }
+      } else if (all(length(vars) == 3, mplot)) {
+        ## NB: I have changed this to else if, because neither length(vars)
+        ## or mplot should have changed, and I believe this is just the third
+        ## choice
+        if (newwd) {
+          dev.new()
+        }
+
         mtitle <- plottitle
+
         if (is.null(plotord) || all(plotord%in%c("NULL", ""))) {
           plotord <- 1:3
+
           if (!(is.null(atvar) || all(atvar%in%c("NULL", ""))) && length(atvar)==1){
             atvar_num <- which(vars %in% atvar)
             plotord <- c(atvar_num, setdiff(1:length(vars), atvar_num))
           }
         }
+
         fact1 <- (vars[plotord])[1]
         fact2 <- (vars[plotord])[2]
         fact3 <- (vars[plotord])[3]
         plotmt[, fact1] <- factor(plotmt[, fact1], levels = c(bar_label, levels(plotmt[, fact1])))
-        if (is.null(plottitle) || plottitle%in%c("NULL", "")) mtitle <- paste("Predicted means for '", fact1, "' by '", fact2, "' for each '",
-                                                                              fact3, "'\n with ", paste(atvar, collapse=" "), " ", bar_label, " (", slevel * 100, "%) Bar\n", sep = "")
+
+        if (is.null(plottitle) || plottitle%in%c("NULL", "")){
+          mtitle <- paste("Predicted means for '", fact1, "' by '", fact2, "' for each '",
+                           fact3, "'\n with ", paste(atvar, collapse=" "), " ",
+                          bar_label, " (", slevel * 100, "%) Bar\n", sep = "")
+        }
+
         mxlab <- plotxlab
-        if (is.null(plotxlab) || plotxlab%in%c("NULL", "")) mxlab <- paste("\n", fact1, sep="")
+
+        if (is.null(plotxlab) || plotxlab%in%c("NULL", "")){
+          mxlab <- paste("\n", fact1, sep="")
+        }
+
         mylab <- plotylab
         if (is.null(plotylab) || plotylab%in%c("NULL", "")) mylab <- paste(response, "\n", sep="")
         p3 <- ggplot(plotmt, aes(eval(parse(text = fact1)), pm, group=factor(eval(parse(text = fact2))), col=factor(eval(parse(text = fact2)))))+
