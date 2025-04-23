@@ -7,9 +7,9 @@
 \method{model.frame}{gls}(formula, ...)
 }
 \arguments{
-\item{...}{Further arguments passed to \code{model.frame.formula}.}
+\item{formula}{An object of class \code{gls}.}
 
-\item{x}{An object of class \code{gls}.}
+\item{...}{Further arguments passed to \code{model.frame.formula}.}
 }
 \description{
 This is a specific \code{model.frame} method for objects of the class \code{gls}.

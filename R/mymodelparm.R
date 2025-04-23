@@ -1,6 +1,8 @@
 mymodelparm <- function(model, coef., vcov., df, ...)
   UseMethod("mymodelparm")
 
+#' @export
+#' @keywords internal
 mymodelparm.default <- function(model, coef. = coef, vcov. = vcov, df = NULL, ...){
   ### extract coefficients and their covariance matrix
 	if (inherits(model, "glmmTMB")) {
@@ -96,20 +98,32 @@ mymodelparm.default <- function(model, coef. = coef, vcov. = vcov, df = NULL, ..
   return(RET)
 }
 
+#' @export
+#' @keywords internal
 mymodelparm.aovlist <- function(model, coef. = coef, vcov. = vcov, df = NULL, ...)
     stop("This function does not support objects of class ", sQuote("aovlist"))
 
+#' @export
+#' @keywords internal
 mymodelparm.lme <- function(model, coef. = nlme::fixef, vcov. = vcov, df = NULL, ...)
     mymodelparm.default(model, coef. = coef., vcov. = vcov., df = df, ...)
 
+#' @export
+#' @keywords internal
 mymodelparm.lmerMod <- function(model, coef. = lme4::fixef, vcov. = vcov, df = NULL, ...)
    mymodelparm.default(model, coef. = coef., vcov. = vcov., df = df, ...)
 
+#' @export
+#' @keywords internal
 mymodelparm.glmerMod <- function(model, coef. = lme4::fixef, vcov. = vcov, df = NULL, ...)
    mymodelparm.default(model, coef. = coef., vcov. = vcov., df = df, ...)
 
+#' @export
+#' @keywords internal
 mymodelparm.gls <- function(model, coef. = coef, vcov. = vcov, df = NULL, ...)
     mymodelparm.default(model, coef. = coef., vcov. = vcov., df = df, ...)
 
+#' @export
+#' @keywords internal
 mymodelparm.glmmTMB <- function(model, coef. = glmmTMB::fixef, vcov. = vcov, df = NULL, ...)
    mymodelparm.default(model, coef. = coef., vcov. = vcov., df = df, ...)
