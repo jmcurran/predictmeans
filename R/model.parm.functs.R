@@ -1,4 +1,12 @@
-
+#' model.frame method for objects of class 'gls'
+#'
+#' This is a specific \code{model.frame} method for objects of the class \code{gls}.
+#' It simply calls \code{nlme::getData}. See \link[nlme]{getData}.
+#'
+#' @param x An object of class \code{gls}.
+#' @param ... Further arguments passed to \code{model.frame.formula}.
+#' @method model.frame gls
+#' @export
 model.frame.gls <- function(formula, ...) {
   model.frame(formula(formula), nlme::getData(formula),...)
 }

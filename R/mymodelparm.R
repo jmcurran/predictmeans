@@ -1,8 +1,7 @@
 mymodelparm <- function(model, coef., vcov., df, ...)
-UseMethod("mymodelparm")
+  UseMethod("mymodelparm")
 
-mymodelparm.default <- function(model, coef. = coef, vcov. = vcov, df = NULL, ...)
-{
+mymodelparm.default <- function(model, coef. = coef, vcov. = vcov, df = NULL, ...){
   ### extract coefficients and their covariance matrix
 	if (inherits(model, "glmmTMB")) {
 	  beta <- try(coef.(model)[["cond"]])
@@ -19,10 +18,12 @@ mymodelparm.default <- function(model, coef. = coef, vcov. = vcov, df = NULL, ..
   } else {
     sigma <- try(vcov.(model))
   }
+
   if (inherits(sigma, "try-error")) {
     stop("no ", sQuote("vcov"), " method for ",
          sQuote("model"), " found!")
   }
+
   sigma <- as.matrix(sigma)
 
   if (any(length(beta) != dim(sigma))) {
@@ -38,21 +39,27 @@ mymodelparm.default <- function(model, coef. = coef, vcov. = vcov, df = NULL, ..
       class(model) <- "lm"
       df <- summary(model)$df[2]
     }
+
 		if (inherits(model, "gls")) {
 			dd <- model$dims
 			df <- dd[["N"]] - dd[["p"]]
 		}
-		if (inherits(model, "lmerMod")) {
+
+    if (inherits(model, "lmerMod")) {
 		    L_list <- get_contrasts_type1(model)
             df <- sapply(L_list, function(L) mean(df_term(model, ctrmatrix=L)))
-		}
+    }
+
 		if (inherits(model, "glmerMod") || inherits(model, "glmmTMB")) {
 			df <- summary(model)$AICtab["df.resid"]
 		}
+
     if (inherits(model, "parm")) {
       df <- model$df
     }
+
   } else {
+
     if (df < 0) {
       stop(sQuote("df"), " is not positive")
     }
@@ -86,7 +93,7 @@ mymodelparm.default <- function(model, coef. = coef, vcov. = vcov, df = NULL, ..
 
   RET <- list(coef = beta, vcov = sigma, df = df, estimable = estimable)
   class(RET) <- "mymodelparm"
-  RET
+  return(RET)
 }
 
 mymodelparm.aovlist <- function(model, coef. = coef, vcov. = vcov, df = NULL, ...)

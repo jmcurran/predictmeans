@@ -18,3 +18,4 @@ NeedsCompilation: yes
 Encoding: UTF-8
 ByteCompile: true
 Date/Publication: 2024-04-03
+RoxygenNote: 7.3.2
