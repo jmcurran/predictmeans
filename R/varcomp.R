@@ -10,7 +10,7 @@
 #' @param ci a logical value to indicates wheather or not to simulate a
 #' confidence interval for \code{lmer} model, the default value is TRUE.
 #' @param level level of confidence of CI, the default value is 0.95.
-#' @import lmeInfo
+#' @importFrom lmeInfo extract_varcomp varcomp_vcov
 #' @importFrom stats family qnorm
 #' @importFrom nlme intervals
 #' @return Variance components table.

@@ -48,7 +48,7 @@ model.matrix.aovlist <- function(object, ...) {
 #' @method model.matrix gls
 #' @export
 model.matrix.gls <- function(object, ...) {
-    model.matrix(terms(object), data = nlme::getData(object), ...)
+    model.matrix(object = terms(object), data = nlme::getData(object), ...)
 }
 
 #' model.matrix method for objects of class 'lme'
@@ -61,7 +61,18 @@ model.matrix.gls <- function(object, ...) {
 #' @method model.matrix lme
 #' @export
 model.matrix.lme <- function(object, ...) {
-    model.matrix(terms(object), data = model.frame(object), ...)
+  ## DONGWEN: ... appears to already contain data, so I have changed the
+  ## definition. The reason for the if statement is that varcomp seems to
+  ## use one definition, and Kmatrix, another. TODO: We probably need a deeper dive
+  ## here.
+  dot_args <- list(...)
+
+  # Only add data if not already passed in ...
+  if (!"data" %in% names(dot_args)) {
+    model.matrix(object = terms(object), data = model.frame(object), ...)
+  } else {
+    model.matrix(object = terms(object), ...)
+  }
 }
 
 #' terms method for objects of class 'gls'

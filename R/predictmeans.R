@@ -116,6 +116,8 @@
 #' For \code{predictmeans} function, it is assumed that methods \code{coef},
 #' \code{vcov}, \code{model.matrix}, \code{model.frame} and \code{terms} are
 #' available for \code{model}.
+#' ## TODO: change this at some point
+#' @import ggplot2
 #' @author Dongwen Luo, Siva Ganesh and John Koolaard
 #' @references Torsten Hothorn, Frank Bretz and Peter Westfall (2008),
 #' \emph{Simultaneous Inference in General Parametric Models. Biometrical},
@@ -125,7 +127,7 @@
 #' \emph{Prediction in linear mixed models}, Australian and New Zealand Journal
 #' of Statistics, 46(3), 325-347.
 #'
-#' Vanessa, C. (05 October 2022), \emph{Confidence tricks: the 83.4\%
+#' Cave, Vanessa M. (05 October 2022), \emph{Confidence tricks: the 83.4\%
 #' confidence interval for comparing means},
 #' https://vsni.co.uk/blogs/confidence_trick.
 #' @examples
@@ -805,7 +807,7 @@ predictmeans <- function(model, modelterm, data = NULL, pairwise = FALSE, atvar 
                     mtitle <- paste("Predicted means for \"", modelterm, "\" with SE Bars", sep = "")
                   }
 
-                  dodge <- position_dodge(width = 0.9)
+                  dodge <- ggplot2::position_dodge(width = 0.9)
                   bp1 <- ggplot(plotmt, aes(eval(parse(text = vars)), pm)) + labs(title = paste(mtitle, "\n",
                     sep = ""), x = mxlab, y = mylab) + ylim(c(min(0, (min(pm) - max(ses)) * 1.2), max(0, (max(pm) +
                     max(ses)) * 1.2))) + geom_bar(position = dodge, stat = "identity", fill = "papayawhip", colour = "darkgreen") +
@@ -890,7 +892,7 @@ predictmeans <- function(model, modelterm, data = NULL, pairwise = FALSE, atvar 
                     mtitle <- paste("Predicted means for \"", modelterm, "\" with SE Bars", sep = "")
                   }
 
-                  dodge <- position_dodge(width = 0.9)
+                  dodge <- ggplot2::position_dodge(width = 0.9)
 
                   bp2 <- ggplot(plotmt, aes(eval(parse(text = fact1)), pm, group = eval(parse(text = fact2)),
                     fill = eval(parse(text = fact2)))) + geom_point(position = dodge) + geom_bar(stat = "identity",

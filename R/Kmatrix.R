@@ -1,9 +1,9 @@
 #' Matrix of Coefficients in a Linear Model
-#' 
+#'
 #' This function obtains a matrix of coefficients for parametric models such as
 #' \code{aov}, \code{lm}, \code{glm}, \code{gls}, \code{lme}, and \code{lmer}.
-#' 
-#' 
+#'
+#'
 #' @param model Model object returned by \code{aov}, \code{lm}, \code{glm},
 #' \code{gls}, \code{lme}, and \code{lmer}.
 #' @param modelterm Name (in "quotes") for indicating which model term's
@@ -23,12 +23,14 @@
 #' @return \item{K}{Coefficients matrix} \item{fctnames}{A model frame contains
 #' factor(s) info in the model.} \item{response}{The name of response variable
 #' in the model.}
+#' @importFrom methods slot
+#' @importFrom stats as.formula delete.response formula get_all_vars model.matrix terms
 #' @author This function heavily depends on the codes from package "lsmeans".
 #' @references Welham, S., Cullis, B., Gogel, B., Gilmour, A., & Thompson, R.
 #' (2004), \emph{Prediction in linear mixed models}, Australian and New Zealand
 #' Journal of Statistics, 46(3), 325-347.
 #' @examples
-#' 
+#'
 #'   library(predictmeans)
 #'   data(Oats, package="nlme")
 #' # fm <- lmer(yield ~ nitro*Variety+(1|Block/Variety), data=Oats)
@@ -37,7 +39,7 @@
 #'   Kmatrix(fm, "Variety", 0.5, prtnum=TRUE)$K
 #'  # Kmatrix(fm, "Variety", "nitro")$K
 #'   Kmatrix(fm, "Variety", "nitro", covariateV=seq(0, 0.6, 0.1))$K
-#' 
+#'
 #' @export Kmatrix
 Kmatrix <- function(model, modelterm, covariate=NULL, covariateV=NULL, data=NULL, prtnum=FALSE) {
   if (inherits(model, "mer") || inherits(model, "merMod")) {

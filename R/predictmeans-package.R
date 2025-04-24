@@ -72,16 +72,16 @@ NULL
 #' \tabular{ll}{ Package: \tab predictmeans\cr Type: \tab Package\cr Version:
 #' \tab 1.1.1\cr Date: \tab 2024-04-03\cr License: \tab GPL (>= 2)\cr }
 #'
-#' @name predictmeans-package
-#' @docType _PACKAGE
+#' @name predictmeans
+#' @docType package
 #' @author Dongwen Luo, Siva Ganesh and John Koolaard
 #'
 #' Maintainer: Dongwen Luo <dongwen.luo@@agresearch.co.nz>
 #' @references Welham, S., Cullis, B., Gogel, B., Gilmour, A., & Thompson, R.
 #' (2004), \emph{Prediction in linear mixed models}, Australian and New Zealand
 #' Journal of Statistics, 46(3), 325-347.
-#' @keywords package
-NULL
+"_PACKAGE"
+
 
 
 

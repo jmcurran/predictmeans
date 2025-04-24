@@ -26,11 +26,11 @@ was crafted following the guidance provided by Professor Hans-Peter Piepho.
 
   library(predictmeans)
   Oats$nitro <- factor(Oats$nitro)
-  (fm <- lmer(yield ~ nitro*Variety+(1|Block/Variety), data=Oats))
+  fm <- lmer(yield ~ nitro*Variety+(1|Block/Variety), data=Oats)
   R2_glmm(fm)
   (gm <- glmer(cbind(incidence, size - incidence) ~ period + (1 | herd),
               data = cbpp, family = binomial))
-  R2_glmm(gm)		  
+  R2_glmm(gm)
 
 }
 \references{
