@@ -149,7 +149,7 @@ matrix for all smooth terms.} \item{Cov_ind}{Covariance matrix index for
 each smooth term.} \item{Cov_indN}{Covariance matrix index for each smooth
 term when \code{group=TRUE} in \code{smoothZ} argument.} \item{df}{Degree of
 freedom of all random terms.} \item{tmbf}{The glmmTMB model result using
-doFit=FALSE.}
+\code{doFit = FALSE}.}
 }
 \description{
 Fit a semi parametric model based on glmmTMB.
@@ -165,7 +165,7 @@ O'Sullivan-type of Z.
 
 ## Not run
 # library(predictmeans)
-# library(HRW) 
+# library(HRW)
 # data(WarsawApts)
 # help(WarsawApts)
 # str(WarsawApts)
@@ -175,15 +175,15 @@ O'Sullivan-type of Z.
 #                ),
 #                data = WarsawApts)
 # sp_out1 <- semipred(fit1, "construction.date", "construction.date")
-# 
+#
 # WarsawApts$district <- factor(WarsawApts$district)
 # fit2 <- semireg_tmb(areaPerMzloty ~ construction.date*district, resp_scale = TRUE,
 #                 smoothZ=list(group=smZ(construction.date, k=15,
-#                                        by = district, group=TRUE)), 
+#                                        by = district, group=TRUE)),
 #                 data=WarsawApts)
 # sp_out2_1 <- semipred(fit2, "district", "construction.date")
 # sp_out2_2 <- semipred(fit2, "district", "construction.date", contr=c(2,1))
-# 
+#
 # data(indonRespir)
 # help(indonRespir)
 # str(indonRespir)
@@ -199,7 +199,7 @@ O'Sullivan-type of Z.
 # sp_out3$plt+
 #   geom_rug(data = subset(indonRespir, respirInfec==0), sides = "b", col="deeppink") +
 #   geom_rug(data = subset(indonRespir, respirInfec==1), sides = "t", col="deeppink")+
-#   ylim(0, 0.2)                     
+#   ylim(0, 0.2)
 
 }
 \references{

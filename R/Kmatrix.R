@@ -23,8 +23,13 @@
 #' @return \item{K}{Coefficients matrix} \item{fctnames}{A model frame contains
 #' factor(s) info in the model.} \item{response}{The name of response variable
 #' in the model.}
+#'
+#' @importFrom lme4 isLMM isGLMM
 #' @importFrom methods slot
-#' @importFrom stats as.formula delete.response formula get_all_vars model.matrix terms
+#' @importFrom plyr alply
+#' @importFrom stats as.formula delete.response formula get_all_vars model.matrix
+#' @importFrom stats terms na.pass
+#'
 #' @author This function heavily depends on the codes from package "lsmeans".
 #' @references Welham, S., Cullis, B., Gogel, B., Gilmour, A., & Thompson, R.
 #' (2004), \emph{Prediction in linear mixed models}, Australian and New Zealand

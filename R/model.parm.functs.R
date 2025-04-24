@@ -5,6 +5,8 @@
 #'
 #' @param formula An object of class \code{gls}.
 #' @param ... Further arguments passed to \code{model.frame.formula}.
+#' @importFrom stats coef model.frame model.matrix terms
+#' @importFrom stats vcov
 #' @method model.frame gls
 #' @export
 model.frame.gls <- function(formula, ...) {

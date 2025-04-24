@@ -117,7 +117,17 @@
 #' \code{vcov}, \code{model.matrix}, \code{model.frame} and \code{terms} are
 #' available for \code{model}.
 #' ## TODO: change this at some point
-#' @import ggplot2
+#' @importFrom ggplot2 aes element_blank element_line facet_grid facet_wrap
+#' @importFrom ggplot2 ggplot geom_bar geom_errorbar geom_errorbarh geom_line geom_point
+#' @importFrom ggplot2 guides guide_legend
+#' @importFrom ggplot2 labs lims position_dodge position_jitter scale_fill_brewer scale_y_discrete
+#' @importFrom ggplot2 theme theme_bw xlim ylim
+#' @importFrom graphics abline axis barplot box identify image
+#' @importFrom graphics legend lines par title
+#' @importFrom parallel clusterExport makeCluster mclapply parLapplyLB stopCluster
+#' @importFrom stats ftable
+#' @importFrom stats p.adjust pt ptukey
+#' @importFrom stats qt xtabs
 #' @author Dongwen Luo, Siva Ganesh and John Koolaard
 #' @references Torsten Hothorn, Frank Bretz and Peter Westfall (2008),
 #' \emph{Simultaneous Inference in General Parametric Models. Biometrical},
@@ -385,8 +395,12 @@ predictmeans <- function(model, modelterm, data = NULL, pairwise = FALSE, atvar 
             }
         }
 
-        KKvarndiff <- data.frame(matrix(unlist(strsplit(KKvarn1, "\\:")), byrow = T, nrow = length(KKvarn1)),
-            matrix(unlist(strsplit(KKvarn2, "\\:")), byrow = T, nrow = length(KKvarn2)))
+        KKvarndiff <- data.frame(matrix(unlist(strsplit(KKvarn1, "\\:")),
+                                        byrow = TRUE, nrow = length(KKvarn1)
+                                       ),
+                                 matrix(unlist(strsplit(KKvarn2, "\\:")),
+                                        byrow = TRUE, nrow = length(KKvarn2))
+                                 )
 
         rK <- CM %*% K  # calculate stats
         cm <- rK %*% mp$coef
@@ -398,8 +412,8 @@ predictmeans <- function(model, modelterm, data = NULL, pairwise = FALSE, atvar 
         }
 
         SED.out <- c(Max.SED = max(dses), Min.SED = min(dses), Aveg.SED = mean(dses))
-        dses.df <- data.frame(matrix(unlist(strsplit(varn1, "\\:")), byrow = T, nrow = length(varn1)), matrix(unlist(strsplit(varn2,
-            "\\:")), byrow = T, nrow = length(varn2)), dses)
+        dses.df <- data.frame(matrix(unlist(strsplit(varn1, "\\:")), byrow = TRUE, nrow = length(varn1)), matrix(unlist(strsplit(varn2,
+            "\\:")), byrow = TRUE, nrow = length(varn2)), dses)
 
         if (length(vars) > 1) {
             # all(length(vars) > 1, SED.out[1]!=SED.out[2])
@@ -512,7 +526,7 @@ predictmeans <- function(model, modelterm, data = NULL, pairwise = FALSE, atvar 
               vcovm <- x$vcov
               vcov.contr <- rK %*% tcrossprod(vcovm, rK)
               ses <- sqrt(diag(vcov.contr))
-              t.v <- cm/ses
+              t.v <- cm / ses
               return(t.v)
             }
 
@@ -628,7 +642,7 @@ predictmeans <- function(model, modelterm, data = NULL, pairwise = FALSE, atvar 
               }
             }))
 
-            rnK.df <- as.data.frame(matrix(unlist(strsplit(rnKK, "\\:")), byrow = T, nrow = nKK))  # To find the suitable names for pm
+            rnK.df <- as.data.frame(matrix(unlist(strsplit(rnKK, "\\:")), byrow = TRUE, nrow = nKK))  # To find the suitable names for pm
             colnames(rnK.df) <- vars
 
             for (i in vars) {
@@ -846,39 +860,38 @@ predictmeans <- function(model, modelterm, data = NULL, pairwise = FALSE, atvar 
                   mylab <- paste(response, "\n", sep = "")
                 }
 
-                if (mplot)
-                  {
+                if (mplot) {
 
-                    if (newwd) {
-                      dev.new()
-                    }
+                  if (newwd) {
+                    dev.new()
+                  }
 
-                    mtitle <- plottitle
+                  mtitle <- plottitle
 
-                    if (is.null(plottitle) || plottitle %in% c("NULL", "")) {
-                      mtitle <- paste("Predicted means for \"", fact1, "\" by \"", fact2, "\" with ", paste(atvar,
-                        collapse = " "), " ", bar_label, " (", slevel * 100, "%) Bar", sep = "")
-                    }
+                  if (is.null(plottitle) || plottitle %in% c("NULL", "")) {
+                    mtitle <- paste("Predicted means for \"", fact1, "\" by \"", fact2, "\" with ", paste(atvar,
+                      collapse = " "), " ", bar_label, " (", slevel * 100, "%) Bar", sep = "")
+                  }
 
-                    plotmt[, fact1] <- factor(plotmt[, fact1], levels = c(bar_label, levels(plotmt[, fact1])))
-                    p2 <- ggplot(plotmt, aes(x = eval(parse(text = fact1)), y = pm, group = eval(parse(text = fact2)),
-                      col = eval(parse(text = fact2)))) + labs(title = paste(mtitle, "\n", sep = ""), x = mxlab,
-                      y = mylab) + lims(x = levels(plotmt[, fact1]), y = c(yMin - offSet, max(yMax + offSet,
-                      yMin + LSD_value + offSet))) + geom_point(size = 2) + geom_errorbar(aes(ymax = up, ymin = yMin,
-                      x = bar_label), width = 0.15, linewidth = 0.8, colour = "blue") + guides(col = guide_legend(title = fact2)) +
-                      theme_bw(basesz)
+                  plotmt[, fact1] <- factor(plotmt[, fact1], levels = c(bar_label, levels(plotmt[, fact1])))
+                  p2 <- ggplot(plotmt, aes(x = eval(parse(text = fact1)), y = pm, group = eval(parse(text = fact2)),
+                    col = eval(parse(text = fact2)))) + labs(title = paste(mtitle, "\n", sep = ""), x = mxlab,
+                    y = mylab) + lims(x = levels(plotmt[, fact1]), y = c(yMin - offSet, max(yMax + offSet,
+                    yMin + LSD_value + offSet))) + geom_point(size = 2) + geom_errorbar(aes(ymax = up, ymin = yMin,
+                    x = bar_label), width = 0.15, linewidth = 0.8, colour = "blue") + guides(col = guide_legend(title = fact2)) +
+                    theme_bw(basesz)
 
-                    if (lineplot) {
-                      p2 <- p2 + geom_line(aes(linetype = eval(parse(text = fact2)), col = eval(parse(text = fact2))),
-                        linewidth = 0.96) + guides(linetype = guide_legend(title = fact2))
-                    }
+                  if (lineplot) {
+                    p2 <- p2 + geom_line(aes(linetype = eval(parse(text = fact2)), col = eval(parse(text = fact2))),
+                      linewidth = 0.96) + guides(linetype = guide_legend(title = fact2))
+                  }
 
-                    meanPlot <- p2
+                  meanPlot <- p2
 
-                    if (prtplt) {
-                      print(p2)
-                    }
-                  }  # end if mplot
+                  if (prtplt) {
+                    print(p2)
+                  }
+                }  # end if mplot
 
                 if (barplot) {
 
@@ -978,8 +991,8 @@ predictmeans <- function(model, modelterm, data = NULL, pairwise = FALSE, atvar 
         }
 
         if (is.null(permlist) || all(permlist %in% c("NULL", ""))) {
-            bkmt$LL <- trans(bkmt$pm - qt(1 - slevel/2, df = bkmt$Df) * bkmt$ses) - transOff
-            bkmt$UL <- trans(bkmt$pm + qt(1 - slevel/2, df = bkmt$Df) * bkmt$ses) - transOff
+            bkmt$LL <- trans(bkmt$pm - qt(1 - slevel * 0.5, df = bkmt$Df) * bkmt$ses) - transOff
+            bkmt$UL <- trans(bkmt$pm + qt(1 - slevel * 0.5, df = bkmt$Df) * bkmt$ses) - transOff
         } else {
             bkmt$LL <- trans(bkmt$pm - 2 * bkmt$ses) - transOff
             bkmt$UL <- trans(bkmt$pm + 2 * bkmt$ses) - transOff

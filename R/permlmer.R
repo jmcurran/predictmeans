@@ -1,9 +1,9 @@
 #' Permutation Test of random or fixed effects for \code{lmer} model.
-#' 
+#'
 #' This function provides permutation tests for the terms in a linear mixed
 #' model of \code{lmer}.
-#' 
-#' 
+#'
+#'
 #' @param lmer0 \code{lmer} model under H0, note that \code{lmer0} model must
 #' nest within \code{lmer1} model.
 #' @param lmer1 \code{lmer} model under H1, note that \code{lmer0} model must
@@ -15,11 +15,14 @@
 #' @param seed Specify a random number generator seed, for reproducible
 #' results.
 #' @return Permutation p-value.
+#'
+#' @importFrom stats density logLik
+#'
 #' @author Dongwen Luo, Siva Ganesh and John Koolaard
 #' @references Oliver E. Lee and Thomas M. Braun (2012), \emph{Permutation
 #' Tests for Random Effects in Linear Mixed Models. Biometrics}, Journal 68(2).
 #' @examples
-#' 
+#'
 #' # library(predictmeans)
 #' ## Test random effects
 #' # fm1 <- lmer(Reaction ~ Days + (Days | Subject), sleepstudy)
@@ -28,13 +31,13 @@
 #' # anova(fm1, fm2, fm3)
 #' # permlmer(fm3, fm2)
 #' # permlmer(fm2, fm1)
-#' 
+#'
 #' ## Test fixed effects
 #' # Oats$nitro <- factor(Oats$nitro)
 #' # fm0 <- lmer(yield ~ nitro+Variety+(1|Block/Variety), data=Oats)
 #' # fm <- lmer(yield ~ nitro*Variety+(1|Block/Variety), data=Oats)
 #' # permlmer(fm0, fm)
-#' 
+#'
 #' @export permlmer
 permlmer <- function(lmer0, lmer1, nperm = 999, ncore=3, plot=FALSE, seed){
 

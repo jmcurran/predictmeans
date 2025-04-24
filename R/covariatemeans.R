@@ -1,9 +1,9 @@
 #' Predicted Means of a Linear Model with Covariate Variable(s)
-#' 
+#'
 #' This function obtains predicted means with graph for a new set of covariate
 #' values.
-#' 
-#' 
+#'
+#'
 #' @param model Model object returned by \code{aov}, \code{lm}, \code{glm},
 #' \code{gls}, \code{lme}, and \code{lmer}.
 #' @param modelterm Name (in "quotes") for indicating which factor term's
@@ -48,9 +48,11 @@
 #' @param newwd A logical variable to indicate whether to print graph in a new
 #' window. The default value is FALSE.
 #' @return \item{Predicted Means}{A table of predicted means.}
+#' @importFrom ggplot2 facet_wrap geom_ribbon
+#' @importFrom stats aggregate make.link qt
 #' @author Dongwen Luo, Siva Ganesh and John Koolaard
 #' @examples
-#' 
+#'
 #'   library(predictmeans)
 #'   data(Oats, package="nlme")
 #'   fm <- lme(yield ~ nitro*Variety, random=~1|Block/Variety, data=Oats)
@@ -58,7 +60,7 @@
 #' # fm <- lmer(yield ~ nitro*Variety+(1|Block/Variety), data=Oats)
 #'   covariatemeans(fm, "Variety", covariate="nitro")
 #'   covariatemeans(fm, "Variety", covariate="nitro", covariateV=seq(0, 0.6, 0.1))$pltdf
-#' 
+#'
 #' @export covariatemeans
 covariatemeans <- function (model, modelterm=NULL, covariate, as.is=FALSE, covariateV=NULL, data=NULL, level=0.05, Df=NULL, trans=NULL, transOff=0, responsen=NULL, trellis=TRUE, plotord=NULL, mtitle=NULL, ci=TRUE, point=TRUE, jitterv=0, newwd=FALSE) {
 

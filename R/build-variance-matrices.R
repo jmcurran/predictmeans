@@ -1,3 +1,5 @@
+#' @importFrom nlme getGroupsFormula getData corMatrix varWeights
+#' @importFrom stats complete.cases model.frame na.action
 
 get_cor_grouping <- function(mod, levels = NULL) {
   if (!is.null(mod$groups)) {

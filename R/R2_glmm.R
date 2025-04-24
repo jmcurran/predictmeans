@@ -12,6 +12,7 @@
 #' @return Adjusted R2 in percentage for Total (fixed + random), Fiexd, Random
 #' and individual random term.
 #' @importFrom Matrix t diag
+#' @importFrom stats vcov
 #' @references Piepho HP. An adjusted coefficient of determination (R2 ) for
 #' generalized linear mixed models in one go. Biom J. 2023 Oct;65(7):e2200290.
 #' doi: 10.1002/bimj.202200290. Epub 2023 May 1. PMID: 37127864.

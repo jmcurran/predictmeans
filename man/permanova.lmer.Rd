@@ -34,7 +34,7 @@ This function provides permutation ANOVA for \code{lmer} model.
 \examples{
 
 # library(predictmeans)
-# Oats$nitro <- factor(Oats$nitro) 
+# Oats$nitro <- factor(Oats$nitro)
 # fm <- lmer(yield ~ nitro*Variety+(1|Block/Variety), data=Oats)
 
 ## Permutation Test for model terms

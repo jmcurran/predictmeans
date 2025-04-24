@@ -1,10 +1,10 @@
 #' Linear Contrast Tests for a Linear Model
-#' 
+#'
 #' Performs t-tests (or permuted t-tests) of specified contrasts for linear
 #' models obtained from functions \code{aov}, \code{lm}, \code{glm},
 #' \code{gls}, \code{lme}, or \code{lmer}.
-#' 
-#' 
+#'
+#'
 #' @param model Model object returned by \code{aov}, \code{lm}, \code{glm},
 #' \code{gls}, \code{lme}, and \code{lmer}.
 #' @param modelterm Name (in "quotes") for indicating which factor term's
@@ -25,6 +25,9 @@
 #' produced by the function \code{permmodels}. When \code{permlist != NULL},
 #' the option \code{Df} will be non-functional. This is a key option for the
 #' permutation test.
+#'
+#' @importFrom utils edit
+#'
 #' @return There are two components in the output which are \item{Table}{A
 #' table showing t-test results for the specified linear contrasts.} \item{K}{A
 #' contrast matrix.}
@@ -33,37 +36,37 @@
 #' \emph{Simultaneous Inference in General Parametric Models. Biometrical},
 #' Journal 50(3), 346--363.
 #' @examples
-#' 
+#'
 #' library(predictmeans)
 #' # ftable(xtabs(yield ~ Block+Variety+nitro, data=Oats))
 #' Oats$nitro <- factor(Oats$nitro)
 #' fm <- lme(yield ~ nitro*Variety, random=~1|Block/Variety, data=Oats)
 #' # library(lme4)
 #' # fm <- lmer(yield ~ nitro*Variety+(1|Block/Variety), data=Oats)
-#' 
-#' ## Not run: 
+#'
+#' ## Not run:
 #' ## The contrast has a contrast matrix as follows:
-#' #     0:Golden Rain 0:Marvellous 0:Victory 
-#' #[1,]            -1            0         1 
-#' #[2,]             0            0         1 
-#' #     0.2:Golden Rain 0.2:Marvellous 0.2:Victory 
-#' #[1,]               0              0           0 
-#' #[2,]               0              0           0 
+#' #     0:Golden Rain 0:Marvellous 0:Victory
+#' #[1,]            -1            0         1
+#' #[2,]             0            0         1
+#' #     0.2:Golden Rain 0.2:Marvellous 0.2:Victory
+#' #[1,]               0              0           0
+#' #[2,]               0              0           0
 #' #     0.4:Golden Rain  0.4:Marvellous 0.4:Victory
 #' #[1,]               0               0           0
 #' #[2,]               0              -1           0
 #' #      0.6:Golden Rain 0.6:Marvellous 0.6:Victory
 #' #[1,]                0              0           0
 #' #[2,]                0              0           0
-#' 
+#'
 #' # 1. Enter above contrast matrix into a pop up window, then close the window
 #' # contrastmeans(fm, "nitro:Variety")
-#'  
+#'
 #' # 2. Construct the contrast matrix directly
-#' cm <- rbind(c(-1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0), 
+#' cm <- rbind(c(-1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0),
 #'             c(0, 0, 1, 0, 0, 0, 0, -1, 0, 0, 0, 0))
 #' contrastmeans(fm, "nitro:Variety", ctrmatrix=cm)
-#' 
+#'
 #' @export contrastmeans
 contrastmeans <- function(model, modelterm, ctrmatrix, ctrnames=NULL, adj="none", Df, permlist) {
   options(scipen=6)

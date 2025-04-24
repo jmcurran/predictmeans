@@ -103,12 +103,12 @@ model with new set of covariate values.
 # data(Dialyzer, package="nlme")
 # help(Dialyzer)
 # str(Dialyzer)
-# 
+#
 # library(ggplot2)
 # ggplot(Dialyzer, aes(x=pressure, y=rate, col=QB)) +
 #  geom_line() +
 #  facet_wrap(vars(Subject))
-# 
+#
 # fm <- semireg(rate ~ pressure*QB+(pressure|Subject),
 #              smoothZ=list(
 #                qb_grp=smZ(pressure, k=4, by=QB, group=TRUE)
@@ -135,7 +135,7 @@ model with new set of covariate values.
 #       xlab = "Days of sleep deprivation",
 #       ylab = "Average reaction time (ms)",
 #       as.table = TRUE)
-# 
+#
 # sleep.semi <- semireg(Reaction ~ Days*Subject,
 #                    smoothZ=list(
 #                      sub_grp=smZ(Days, by=Subject, group=TRUE)
@@ -146,7 +146,7 @@ model with new set of covariate values.
 # anova(sleep.semi$semer)
 # ranova(sleep.semi$semer)
 # R2_glmm(sleep.semi$semer)
-# 
+#
 # predout1 <- semipred(sleep.semi, "Subject", "Days")
 # str(predout1$pred_df)
 # predout2 <- semipred(sleep.semi, "Subject", "Days", contr = c(6,1))

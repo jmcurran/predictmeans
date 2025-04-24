@@ -1,3 +1,5 @@
+#' @importFrom lmerTest as_lmerModLmerTest
+#' @importFrom stats aov dist quantile setNames
 adiag <- function (..., pad = as.integer(0), do.dimnames = TRUE) # function from package 'magic'
 {
   args <- list(...)
@@ -595,6 +597,14 @@ get_covbeta <- function(varpar, devfun) {
 #######################################################
 # from package merDeriv vcov.lmerMod.R
 
+#' @importFrom utils combn
+#' @importFrom Matrix forceSymmetric
+#' @importFrom pbkrtest vcovAdj Lb_ddf
+#' @importFrom lmerTest calcSatterth
+#' @importFrom numDeriv hessian jacobian
+#' @importFrom Matrix Diagonal forceSymmetric
+#' @importFrom splines spline.des
+#' @importFrom HRW pointsInPoly
 vcov_lmerMod <- function (object, ...) {
   if (!is(object, "lmerMod")) {
     stop("vcov.lmerMod() only works for lmer() models.")

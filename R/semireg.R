@@ -64,6 +64,9 @@
 #' @param predict_info Logical scalar - Should provide the info for function
 #' semipred or not?
 #' @param ...  Further arguments for passing on to model setup routines.
+#'
+#' @importFrom stats poisson
+#'
 #' @return \item{semer}{A mer model used in the fitting.} \item{data}{A
 #' data.frame with generated variables in the fitting.} \item{fomul_vars}{Name
 #' of variables in the formula of semireg model.} \item{sm_vars}{Name of

@@ -11,8 +11,9 @@
 #' confidence interval for \code{lmer} model, the default value is TRUE.
 #' @param level level of confidence of CI, the default value is 0.95.
 #' @importFrom lmeInfo extract_varcomp varcomp_vcov
-#' @importFrom stats family qnorm
 #' @importFrom nlme intervals
+#' @importFrom numDeriv hessian
+#' @importFrom stats confint family qnorm
 #' @return Variance components table.
 #' @author Dongwen Luo, Siva Ganesh and John Koolaard
 #' @examples

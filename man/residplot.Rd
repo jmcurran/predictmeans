@@ -44,7 +44,7 @@ This function produces diagnostic plots for linear models including 'aov',
 }
 \examples{
 
-## Note that the order of levels of nested random effects is oposite 
+## Note that the order of levels of nested random effects is oposite
 ## between lme and lmer objects.
 
 library(predictmeans)

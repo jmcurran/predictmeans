@@ -1,10 +1,10 @@
 #' Permutation Test of Linear Model
-#' 
+#'
 #' This function provides permutation t-tests for coefficients of (fixed)
 #' effects and permutation F-tests for the terms in a linear model such as
 #' \code{aov}, \code{lm}, \code{glm}, \code{gls}, \code{lme}, and \code{lmer}.
-#' 
-#' 
+#'
+#'
 #' @param model Model object returned by \code{aov}, \code{lm}, \code{glm},
 #' \code{gls}, \code{lme}, and \code{lmer}.
 #' @param nperm The number of permutations. The default is 4999.
@@ -32,12 +32,17 @@
 #' parameter list \code{permlist}, a list containing \code{nsim=4999} times
 #' permutation refitted \code{model} parameters which are used in functions
 #' \code{predictmeans} and \code{contrastmeans}.
+#'
+#' @importFrom parallel clusterEvalQ
+#' @importFrom stats anova
+#'
+#'
 #' @author Dongwen Luo, Siva Ganesh and John Koolaard
 #' @examples
-#' 
+#'
 #' ## Not run for simplifying process of submiting pkg to CRAN
 #' #library(predictmeans)
-#' #Oats$nitro <- factor(Oats$nitro) 
+#' #Oats$nitro <- factor(Oats$nitro)
 #' #fm <- lme(yield ~ nitro*Variety, random=~1|Block/Variety, data=Oats)
 #' ## library(lme4)
 #' ## fm <- lmer(yield ~ nitro*Variety+(1|Block/Variety), data=Oats)
@@ -45,101 +50,101 @@
 #' ## Permutation Test for model terms
 #' #system.time(
 #' #  permlme <- permmodels(model=fm, nperm=999)
-#' #)  
+#' #)
 #' #
 #' ## Permutation Test for multiple comparisons
-#' #predictmeans(model=fm, modelterm="nitro:Variety", atvar="Variety", adj="BH", 
+#' #predictmeans(model=fm, modelterm="nitro:Variety", atvar="Variety", adj="BH",
 #' #  permlist=permlme, plot=FALSE)
 #' #
 #' ## Permutation Test for specified contrasts
-#' #cm <- rbind(c(-1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0), 
+#' #cm <- rbind(c(-1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0),
 #' #            c(0, 0, 1, 0, 0, 0, 0, -1, 0, 0, 0, 0))
 #' #contrastmeans(model=fm, modelterm="nitro:Variety", ctrmatrix=cm, permlist=permlme)
-#' 
+#'
 #' @export permmodels
 permmodels <- function(model, nperm=4999, type=c("I", "II", "III", 1, 2, 3),
-                       test.statistic=c("Chisq", "F", "LR", "Wald"),  exact=FALSE, 
+                       test.statistic=c("Chisq", "F", "LR", "Wald"),  exact=FALSE,
 					   data=NULL, fo=NULL, prt=TRUE, ncore=3, seed) {
-  
+
   options(scipen=6)
   type <- as.character(type)
   type <- match.arg(type)
-  test.statistic <- match.arg(test.statistic)	
+  test.statistic <- match.arg(test.statistic)
   if (inherits(model, "glm") && !(test.statistic %in% c("LR", "Wald", "F"))) test.statistic <- "LR"
   if (any(inherits(model, "gls"), inherits(model, "lme"))) test.statistic <- "Chisq"
-  if (type %in% c("I", "1")) test.statistic <- "F"	  
+  if (type %in% c("I", "1")) test.statistic <- "F"
   if (class(model)[1]=="aovlist") stop("Plese use model 'lme' instead of 'aov'!")
   if (inherits(model, "glmerMod")) stop("This function is not applied to 'glmer' yet!")
-  
+
   if (any(inherits(model, "lm"), inherits(model, "aov"), inherits(model, "glm"))) {
     if (!is.null(data)) mod_df <- data else {
     if (inherits(model, "glm")) mod_df <- as.data.frame(model$data) else mod_df <- as.data.frame(model.frame(model))
 	}
     Terms <- terms(model)
-    yname <- as.character(attr(Terms, "variables"))[[2]]    
+    yname <- as.character(attr(Terms, "variables"))[[2]]
     if (grepl("[,]", yname)) {
       yname <- unlist(strsplit(yname, "[,] "))[2]
       yname <- gsub("\\)", "", unlist(strsplit(yname, " - "))) # ynames
     }
 	diff_yname <- setdiff(colnames(mod_df), yname)
-    if(!missing(seed)) set.seed(seed)  
+    if(!missing(seed)) set.seed(seed)
     permy <- replicate(nperm, {
       mod_df[sample(1:nrow(mod_df)), yname, drop=FALSE]
     }, simplify = !(length(yname) > 1))
-		
+
 	if (!is.null(fo)) {
 	      permmod <- lapply(permy, function(x) {
         if (length(yname) > 1) mod_df <- cbind(mod_df[, diff_yname], x) else mod_df[, yname] <- x
         rfitmodel <- try(update(model, data=mod_df), TRUE)
         if (class(rfitmodel)[1]==class(model)[1]) {
-          mp <- mymodelparm(rfitmodel)[1:2]		
+          mp <- mymodelparm(rfitmodel)[1:2]
           if (type %in% c("I", "1")) aT <- anova(rfitmodel) else aT <- car::Anova(rfitmodel, type=type, test.statistic=test.statistic)
 		  coefT <- coef(summary(rfitmodel))
           return(list(mp, aT, coefT))
         }
       })
-    
-    } else{	
+
+    } else{
 	if (.Platform$OS.type=="windows") {
-      cl <- makeCluster(ncore)	  
+      cl <- makeCluster(ncore)
       if (!(type %in% c("I", "1"))) clusterEvalQ(cl, library(car))
-      clusterExport(cl, c("mymodelparm", "mymodelparm.default", "model", "mod_df", "yname", "diff_yname", "type", "test.statistic"), envir = environment()) 
+      clusterExport(cl, c("mymodelparm", "mymodelparm.default", "model", "mod_df", "yname", "diff_yname", "type", "test.statistic"), envir = environment())
       permmod <- parLapplyLB(cl, permy, function(x) {
-		if (length(yname) > 1) mod_df <- cbind(mod_df[, diff_yname], x) else mod_df[, yname] <- x		
+		if (length(yname) > 1) mod_df <- cbind(mod_df[, diff_yname], x) else mod_df[, yname] <- x
         rfitmodel <- try(update(model, data=mod_df), TRUE)
         if (class(rfitmodel)[1]==class(model)[1]) {
-          mp <- mymodelparm(rfitmodel)[1:2]		
+          mp <- mymodelparm(rfitmodel)[1:2]
           if (type %in% c("I", "1")) aT <- anova(rfitmodel) else aT <- car::Anova(rfitmodel, type=type, test.statistic=test.statistic)
 		  coefT <- coef(summary(rfitmodel))
           return(list(mp, aT, coefT))
         }
       })
       stopCluster(cl)
-    }else{  
+    }else{
       permmod <- mclapply(permy, function(x) {
         if (length(yname) > 1) mod_df <- cbind(mod_df[, diff_yname], x) else mod_df[, yname] <- x
         rfitmodel <- try(update(model, data=mod_df), TRUE)
         if (class(rfitmodel)[1]==class(model)[1]) {
-          mp <- mymodelparm(rfitmodel)[1:2]		
+          mp <- mymodelparm(rfitmodel)[1:2]
           if (type %in% c("I", "1")) aT <- anova(rfitmodel) else aT <- car::Anova(rfitmodel, type=type, test.statistic=test.statistic)
 		  coefT <- coef(summary(rfitmodel))
           return(list(mp, aT, coefT))
         }
       }, mc.cores=ncore)
     }
-}    
+}
   }
-  
-  if (any(inherits(model, "gls"), inherits(model, "lme"))) { 
+
+  if (any(inherits(model, "gls"), inherits(model, "lme"))) {
     # fm$call$fixed
-    # fm$call$random  
+    # fm$call$random
     model <- update(model, na.action=na.omit)
     mod_df <- as.data.frame(nlme::getData(model))
     X <- model.matrix(model)
     if (inherits(model, "gls")) beta <- coef(model) else beta <- nlme::fixef(model)
     # check for columns dropped from model
     col_names <- names(beta)
-    if (ncol(X) != length(col_names)) X <- X[,col_names,drop=FALSE]    
+    if (ncol(X) != length(col_names)) X <- X[,col_names,drop=FALSE]
     Terms <- terms(model)
     yname <- as.character(attr(Terms, "variables"))[[2]]
     y <- nlme::getResponse(model)
@@ -153,51 +158,51 @@ permmodels <- function(model, nperm=4999, type=c("I", "II", "III", 1, 2, 3),
     V_matrix <- Matrix::bdiag(V_list)
     Ut <- t(chol(V_matrix))
     wt <- solve(Ut)
-    
+
     #Weighting the residuals.
-    wterrors <- wt%*%errors    
-    
-    if(!missing(seed)) set.seed(seed)  
+    wterrors <- wt%*%errors
+
+    if(!missing(seed)) set.seed(seed)
     permy <- replicate(nperm, {
       rowindex <- sample(1:length(errors))
       as.data.frame(perm_y <- xbeta[rowindex]+as.vector(Ut%*%wterrors[rowindex]))
     })
-    
+
 	if (!is.null(fo)) {
 	        permmod <- lapply(permy, function(x) {
         mod_df[, yname] <- x
         rfitmodel <- try(update(model, data=mod_df), TRUE)
         if (class(rfitmodel)[1]==class(model)[1]) {
-          mp <- mymodelparm(rfitmodel)[1:2]		
+          mp <- mymodelparm(rfitmodel)[1:2]
           if (type %in% c("I", "1")) aT <- anova(rfitmodel) else aT <- car::Anova(rfitmodel, type=type, test.statistic=test.statistic)
 		  coefT <- coef(summary(rfitmodel))
           return(list(mp, aT, coefT))
         }
       })
-	
+
 	}else{
     if (.Platform$OS.type=="windows") {
-      cl <- makeCluster(ncore)	  
-      if (!(type %in% c("I", "1"))) clusterEvalQ(cl, library(car)) 
+      cl <- makeCluster(ncore)
+      if (!(type %in% c("I", "1"))) clusterEvalQ(cl, library(car))
       clusterEvalQ(cl, library(nlme))
-      clusterExport(cl, c("mymodelparm", "mymodelparm.lme", "mymodelparm.gls","mymodelparm.default", "model", "mod_df", "yname", "type", "test.statistic"), envir = environment()) 
+      clusterExport(cl, c("mymodelparm", "mymodelparm.lme", "mymodelparm.gls","mymodelparm.default", "model", "mod_df", "yname", "type", "test.statistic"), envir = environment())
       permmod <- parLapplyLB(cl, permy, function(x) {
         mod_df[, yname] <- x
         rfitmodel <- try(update(model, data=mod_df), TRUE)
         if (class(rfitmodel)[1]==class(model)[1]) {
-          mp <- mymodelparm(rfitmodel)[1:2]		
+          mp <- mymodelparm(rfitmodel)[1:2]
           if (type %in% c("I", "1")) aT <- anova(rfitmodel) else aT <- car::Anova(rfitmodel, type=type, test.statistic=test.statistic)
 		  coefT <- coef(summary(rfitmodel))
           return(list(mp, aT, coefT))
         }
       })
       stopCluster(cl)
-    }else{  
+    }else{
       permmod <- mclapply(permy, function(x) {
         mod_df[, yname] <- x
         rfitmodel <- try(update(model, data=mod_df), TRUE)
         if (class(rfitmodel)[1]==class(model)[1]) {
-          mp <- mymodelparm(rfitmodel)[1:2]		
+          mp <- mymodelparm(rfitmodel)[1:2]
           if (type %in% c("I", "1")) aT <- anova(rfitmodel) else aT <- car::Anova(rfitmodel, type=type, test.statistic=test.statistic)
 		  coefT <- coef(summary(rfitmodel))
           return(list(mp, aT, coefT))
@@ -206,15 +211,15 @@ permmodels <- function(model, nperm=4999, type=c("I", "II", "III", 1, 2, 3),
     }
 	}
   }
-  
-  if (any(inherits(model, "lmerMod"), inherits(model, "glmerMod"))) { 
+
+  if (any(inherits(model, "lmerMod"), inherits(model, "glmerMod"))) {
     lmer_var_names <- all.vars(model@call$formula)
 	lmer_var_names <- lmer_var_names[lmer_var_names!="pi"]
 	mod_df <- as.data.frame(nlme::getData(model))
-	mod_df <- na.omit(mod_df[, lmer_var_names])	
-	model <- update(model, data=mod_df)	
+	mod_df <- na.omit(mod_df[, lmer_var_names])
+	model <- update(model, data=mod_df)
     theta <- getME(model, "theta")
-    fixef <- fixef(model) 
+    fixef <- fixef(model)
     Lambda <- getME(model, "Lambda")
     Lambdac <- Matrix::tcrossprod(Lambda)
     V <- getME(model, "Z")%*%Lambdac%*%getME(model, "Zt")+diag(dim(getME(model, "Z"))[1])
@@ -222,71 +227,71 @@ permmodels <- function(model, nperm=4999, type=c("I", "II", "III", 1, 2, 3),
     wt <- solve(Ut)
     xbeta <- as.vector(getME(model, "X")%*%fixef)
     if (inherits(model, "glmerMod")) {
-      errors <- slot(model, "resp")$family$linkfun(getME(model, "y")) - xbeta 
+      errors <- slot(model, "resp")$family$linkfun(getME(model, "y")) - xbeta
 	  }else errors <- getME(model, "y") - xbeta
-    
+
     #Weighting the residuals.
     wterrors <- wt%*%errors
-    
-    if(!missing(seed)) set.seed(seed)  
+
+    if(!missing(seed)) set.seed(seed)
     permy <- replicate(nperm, {
       rowindex <- sample(1:length(errors))
 	  if (inherits(model, "glmerMod")) {
-  	    perm_y <- slot(model, "resp")$family$linkinv(xbeta[rowindex]+as.vector(Ut%*%wterrors[rowindex])) 
-		if (slot(model, "resp")$family$family == "poisson") { 
+  	    perm_y <- slot(model, "resp")$family$linkinv(xbeta[rowindex]+as.vector(Ut%*%wterrors[rowindex]))
+		if (slot(model, "resp")$family$family == "poisson") {
 		  perm_y[perm_y<=0] <- 0
 		  perm_y <- round(perm_y, 0)
 		}
 		if (slot(model, "resp")$family$family == "binomial") {
 		  perm_y[perm_y<=0] <- 0
-		  perm_y[perm_y>=1] <- 1		
+		  perm_y[perm_y>=1] <- 1
 		}
 		if (slot(model, "resp")$family$family == "gamma") {
-		  perm_y[perm_y<=0] <- 0		
+		  perm_y[perm_y<=0] <- 0
 		}
 		as.data.frame(perm_y)
 		}else as.data.frame(perm_y <- xbeta[rowindex]+as.vector(Ut%*%wterrors[rowindex]))
     })
-    
+
 	if (!is.null(fo)) {
 	      permmod <- lapply(permy, function(x) {
         rfitmodel <- try(refit(model, x), TRUE)
         if (class(rfitmodel)[1] %in% c("lmerMod", "glmerMod")) {
-          mp <- mymodelparm(rfitmodel)[1:2]		
+          mp <- mymodelparm(rfitmodel)[1:2]
           if (type %in% c("I", "1")) aT <- anova(rfitmodel) else aT <- car::Anova(rfitmodel, type=type, test.statistic=test.statistic)
 		  coefT <- coef(summary(rfitmodel))
           return(list(mp, aT, coefT))
         }
       })
-	
+
 	}else{
     if (.Platform$OS.type=="windows") {
-      cl <- makeCluster(ncore)	  
+      cl <- makeCluster(ncore)
       clusterEvalQ(cl, library(lme4))
-      clusterExport(cl, c("mymodelparm", "mymodelparm.lmerMod", "mymodelparm.default", "model", "type", "test.statistic"), envir = environment())       
+      clusterExport(cl, c("mymodelparm", "mymodelparm.lmerMod", "mymodelparm.default", "model", "type", "test.statistic"), envir = environment())
       permmod <- parLapplyLB(cl, permy, function(x) {
         rfitmodel <- try(refit(model, x), TRUE)
         if (class(rfitmodel)[1] %in% c("lmerMod", "glmerMod")){
-          mp <- mymodelparm(rfitmodel)[1:2]		
+          mp <- mymodelparm(rfitmodel)[1:2]
           if (type %in% c("I", "1")) aT <- anova(rfitmodel) else aT <- car::Anova(rfitmodel, type=type, test.statistic=test.statistic)
 		  coefT <- coef(summary(rfitmodel))
           return(list(mp, aT, coefT))
         }
       })
       stopCluster(cl)
-    }else{  
+    }else{
       permmod <- mclapply(permy, function(x) {
         rfitmodel <- try(refit(model, x), TRUE)
         if (class(rfitmodel)[1] %in% c("lmerMod", "glmerMod")) {
-          mp <- mymodelparm(rfitmodel)[1:2]		
+          mp <- mymodelparm(rfitmodel)[1:2]
           if (type %in% c("I", "1")) aT <- anova(rfitmodel) else aT <- car::Anova(rfitmodel, type=type, test.statistic=test.statistic)
 		  coefT <- coef(summary(rfitmodel))
           return(list(mp, aT, coefT))
         }
       }, mc.cores=ncore)
     }
-}	
-  }    
+}
+  }
   permmod <- permmod[!(sapply(permmod,is.null))]
   nperm <- length(permmod)
   if (nperm==0) stop("permutation can't produce useful data!")
@@ -296,7 +301,7 @@ permmodels <- function(model, nperm=4999, type=c("I", "II", "III", 1, 2, 3),
         # mp <- mymodelparm(x)
         # tTable <- cbind(mp$coef, sqrt(base::diag(mp$vcov)), mp$coef/sqrt(base::diag(mp$vcov)))
         # colnames(tTable) <- c("Estimate", "Std. Error", "t value")
-        # return(round(tTable, 4))		
+        # return(round(tTable, 4))
       # }else{
         # summ <- summary(x)
         # if (class(x)[1] %in% c("lme", "gls")) {
@@ -307,18 +312,18 @@ permmodels <- function(model, nperm=4999, type=c("I", "II", "III", 1, 2, 3),
         # return(tTable)
       # }
     # }
-    
+
 	# model_tTable <- tTable(model)
-    # Tvalue <- colnames(model_tTable)[grep("value", colnames(model_tTable))][1] 
+    # Tvalue <- colnames(model_tTable)[grep("value", colnames(model_tTable))][1]
 
     # if (nrow(model_tTable)==1) {
       # Tper.p <- (sum(round(sapply(permmod, function(x) {mp <- x[[1]]; abs(mp$coef/sqrt(base::diag(mp$vcov)))}), 6) >= round(abs(model_tTable[, Tvalue]),6))+!exact)/(nperm+!exact)
     # }else{
       # Tper.p <- (rowSums(round(sapply(permmod, function(x) {mp <- x[[1]]; abs(mp$coef/sqrt(base::diag(mp$vcov)))}), 6) >= round(abs(model_tTable[, Tvalue]), 6))+!exact)/(nperm+!exact)
     # }
-	
+
 	model_tTable <- coef(summary(model))
-    Tvalue <- colnames(model_tTable)[grep("value", colnames(model_tTable))][1] 
+    Tvalue <- colnames(model_tTable)[grep("value", colnames(model_tTable))][1]
     if (nrow(model_tTable)==1) {
       Tper.p <- (sum(round(sapply(permmod, function(x) abs(x[[3]][, Tvalue])), 6) >= round(abs(model_tTable[, Tvalue]),6))+!exact)/(nperm+!exact)
     }else{
@@ -333,7 +338,7 @@ permmodels <- function(model, nperm=4999, type=c("I", "II", "III", 1, 2, 3),
       cat("\nNote: Perm_p_value of t test is obtained using", sQuote(nperm), "permutations.\n")
     }
   }else COEFFICENTS <- NULL
-  
+
   if (type %in% c("I", "1")) {
     key_anova <- anova(model)
     Fvalue <- colnames(key_anova)[grep("F.value",colnames(key_anova))]
@@ -342,23 +347,23 @@ permmodels <- function(model, nperm=4999, type=c("I", "II", "III", 1, 2, 3),
       Fper.p <- (sum(round(sapply(permmod, function(x) {aT <- x[[2]]; aT[, Fvalue]}), 6) >= round(key_anova[, Fvalue], 6))+!exact)/(nperm+!exact)
     }else{
       Fper.p <- (rowSums(round(sapply(permmod, function(x) {aT <- x[[2]]; aT[, Fvalue]}), 6) >= round(key_anova[, Fvalue], 6))+!exact)/(nperm+!exact)
-    } 
-    if ("(Intercept)" %in% rownames(key_anova)) Fper.p[1] <- NA	
+    }
+    if ("(Intercept)" %in% rownames(key_anova)) Fper.p[1] <- NA
     ANOVA <- round(cbind(key_anova, "Perm_p_value"=Fper.p),4)
   }else{
     key_anova <- car::Anova(model, type=type, test.statistic=test.statistic)
-    if (class(model)[1] %in% c("lm", "aov")) stats_value <- "F value"  else stats_value <-  test.statistic 
-    if (class(model)[1] %in% c("glm")) stats_value <- switch(test.statistic, LR = "LR Chisq", Wald = "Chisq", F = ifelse(type %in% c("2", "II"), "F value", "F values"))  
+    if (class(model)[1] %in% c("lm", "aov")) stats_value <- "F value"  else stats_value <-  test.statistic
+    if (class(model)[1] %in% c("glm")) stats_value <- switch(test.statistic, LR = "LR Chisq", Wald = "Chisq", F = ifelse(type %in% c("2", "II"), "F value", "F values"))
     if (nrow(key_anova)==1) {
       stats.p <- (sum(round(sapply(permmod, function(x) {aT <- x[[2]]; aT[, stats_value]}), 6) >= round(key_anova[, stats_value], 6))+!exact)/(nperm+!exact)
     }else{
       stats.p <- (rowSums(round(sapply(permmod, function(x) {aT <- x[[2]]; aT[, stats_value]}), 6) >= round(key_anova[, stats_value], 6))+!exact)/(nperm+!exact)
-    }  
+    }
 	if ("(Intercept)" %in% rownames(key_anova)) stats.p[1] <- NA
-    ANOVA <- round(cbind(key_anova, "Perm_p_value"=stats.p),4) 
+    ANOVA <- round(cbind(key_anova, "Perm_p_value"=stats.p),4)
     attr(ANOVA, "heading") <- attr(key_anova, "heading")
   }
-  
+
   ANOVA[is.na(ANOVA)] <-""
   if (prt) {
     cat("\nANOVA:\n")
@@ -371,4 +376,4 @@ permmodels <- function(model, nperm=4999, type=c("I", "II", "III", 1, 2, 3),
     permlist[[i]] <- permmod[[i]][[1]]
   }
   return(invisible(list("permlist"=permlist, "COEFFICENTS"=COEFFICENTS, "ANOVA"=ANOVA)))
-} 
+}

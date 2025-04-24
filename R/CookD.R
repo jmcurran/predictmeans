@@ -17,9 +17,12 @@
 #' labelled in the plot. The default value is 3.
 #' @param newwd A logical variable to indicate whether to print graph in a new
 #' window. The default value is FALSE.
+#'
 #' @importFrom stats update
 #' @importFrom grDevices dev.new
 #' @importFrom graphics points text
+#' @importFrom nlme getData
+#'
 #' @author Dongwen Luo, Siva Ganesh and John Koolaard
 #' @examples
 #'
