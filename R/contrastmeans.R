@@ -155,7 +155,6 @@ contrastmeans <- function(model,
   vcov.contr <- rK %*% tcrossprod(vcovm, rK)
   ses <- sqrt(diag(vcov.contr))
   t.v <- cm / ses
-  dv <- t(1 / ses)
 
   if (missing(permlist)) {
     t.p.value <- apply(cbind(t.v, Df), 1, function(x) {
