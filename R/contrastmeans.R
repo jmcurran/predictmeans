@@ -183,14 +183,16 @@ contrastmeans <- function(model,
 
     if (nctr == 1) {
       per.p <- (sum(sapply(permlist[[1]], function(x) {
-          abs(tValue(x, rK)) > abs(t.v)
-        })) + 1) / (nsim + 1)
+        abs(tValue(x, rK)) > abs(t.v)
+      })) + 1) / (nsim + 1)
     } else {
-      per.p <- (rowSums(sapply(permlist[[1]], function(x)
-        abs(tValue(x, rK)) > abs(t.v))) + 1) / (nsim + 1)
+      per.p <- (rowSums(sapply(permlist[[1]], function(x) {
+        abs(tValue(x, rK)) > abs(t.v)
+      })) + 1) / (nsim + 1)
     }
     out.put <- cbind(cm, ses, t.v, per.p)
-    colnames(out.put) <- c("Estimate", "Std. Error", "t value", "Permuted Pr(>|t|)")
+    colnames(out.put) <- c("Estimate", "Std. Error", "t value",
+                           "Permuted Pr(>|t|)")
     rownames(out.put) <- ctrnames
     attr(out.put, "Note") <- paste("The permuted p-value is obtained using",
                                    sQuote(nsim),
