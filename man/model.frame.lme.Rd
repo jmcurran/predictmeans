@@ -12,6 +12,6 @@
 \item{...}{Further arguments passed to \code{model.frame.formula}.}
 }
 \description{
-This is a specific \code{model.frame} method for objects of the class \code{lme}.
-See \link[nlme]{lme}.
+This is a specific \code{model.frame} method for objects of the class
+\code{lme}. See \link[nlme]{lme}.
 }

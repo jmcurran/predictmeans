@@ -83,7 +83,8 @@ effects and permutation F-tests for the terms in a linear model such as
 ## Permutation Test for specified contrasts
 #cm <- rbind(c(-1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0),
 #            c(0, 0, 1, 0, 0, 0, 0, -1, 0, 0, 0, 0))
-#contrastmeans(model=fm, modelterm="nitro:Variety", ctrmatrix=cm, permlist=permlme)
+#contrastmeans(model = fm, modelterm = "nitro:Variety", ctrmatrix = cm,
+#              permlist = permlme)
 
 }
 \author{

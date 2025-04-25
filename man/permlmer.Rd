@@ -43,8 +43,8 @@ model of \code{lmer}.
 
 ## Test fixed effects
 # Oats$nitro <- factor(Oats$nitro)
-# fm0 <- lmer(yield ~ nitro+Variety+(1|Block/Variety), data=Oats)
-# fm <- lmer(yield ~ nitro*Variety+(1|Block/Variety), data=Oats)
+# fm0 <- lmer(yield ~ nitro + Variety+ (1|Block/Variety), data = Oats)
+# fm <- lmer(yield ~ nitro * Variety + (1|Block/Variety), data = Oats)
 # permlmer(fm0, fm)
 
 }

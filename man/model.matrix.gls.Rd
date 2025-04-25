@@ -12,6 +12,6 @@
 \item{...}{Further arguments passed to \code{model.matrix.terms}.}
 }
 \description{
-This is a specific \code{model.matrix} method for objects of the class \code{gls}.
-See \link[nlme]{getData}.
+This is a specific \code{model.matrix} method for objects of the class
+\code{gls}. See \link[nlme]{getData}.
 }

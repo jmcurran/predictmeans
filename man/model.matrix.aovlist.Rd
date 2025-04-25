@@ -12,6 +12,7 @@
 \item{...}{Not used.}
 }
 \description{
-This is a specific \code{model.matrix} method for objects of the class \code{aovlist}.
-It does not do anything except give an error because \code{aovlist} is not supported.
+This is a specific \code{model.matrix} method for objects of the class
+\code{aovlist}. It does not do anything except give an error because
+\code{aovlist} is not supported.
 }

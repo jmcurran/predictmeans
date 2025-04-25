@@ -261,12 +261,15 @@ permmodels <- function(model,
         rfitmodel <- try(update(model, data = mod_df), TRUE)
         if (class(rfitmodel)[1] == class(model)[1]) {
           mp <- mymodelparm(rfitmodel)[1:2]
-          if (type %in% c("I", "1"))
+
+          if (type %in% c("I", "1")) {
             aT <- anova(rfitmodel)
-          else
-            aT <- car::Anova(rfitmodel,
-                             type = type,
-                             test.statistic = test.statistic)
+          } else {
+            aT <- Anova(rfitmodel,
+                        type = type,
+                        test.statistic = test.statistic)
+          }
+
           coefT <- coef(summary(rfitmodel))
           return(list(mp, aT, coefT))
         }

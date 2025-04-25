@@ -12,6 +12,6 @@
 \item{...}{Further arguments passed to \code{model.frame.formula}.}
 }
 \description{
-This is a specific \code{model.frame} method for objects of the class \code{gls}.
-It simply calls \code{nlme::getData}. See \link[nlme]{getData}.
+This is a specific \code{model.frame} method for objects of the class
+\code{gls}. It simply calls \code{nlme::getData}. See \link[nlme]{getData}.
 }
