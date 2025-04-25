@@ -50,12 +50,14 @@ adiag <- function(..., pad = as.integer(0), do.dimnames = TRUE) {
     dimnames(out) <- mapply(c, n.a, n.b, SIMPLIFY = FALSE)
     names(dimnames(out)) <- names(n.a)
   }
+
   return(out)
 }
 
-vec2mat2 <- function (x, sep = "-"){
+vec2mat2 <- function(x, sep = "-") {
   splits <- strsplit(x, sep)
   n.spl <- sapply(splits, length)
+
   if (any(n.spl != 2)) {
     stop("Names must contain exactly one '",
          sep,
@@ -65,6 +67,7 @@ vec2mat2 <- function (x, sep = "-"){
 
   x2 <- t(as.matrix(as.data.frame(splits)))
   dimnames(x2) <- list(x, NULL)
+
   x2
 }
 
@@ -85,31 +88,34 @@ multcompLetters <- function(x,
   }
 
   dimx <- dim(x)
-  {
-    if ((length(dimx) == 2) && (dimx[1] == dimx[2])) {
-      Lvls <- dimnames(x)[[1]]
-      if (length(Lvls) != dimx[1]) {
-        stop("Names requred for ", x.is)
-      } else {
-        x2. <- t(outer(Lvls, Lvls, paste, sep = ""))
-        x2.n <- outer(Lvls, Lvls, function(x1, x2)
-          nchar(x2))
-        x2.2 <- x2.[lower.tri(x2.)]
-        x2.2n <- x2.n[lower.tri(x2.n)]
-        x2a <- substring(x2.2, 1, x2.2n)
-        x2b <- substring(x2.2, x2.2n + 1)
-        x2 <- cbind(x2a, x2b)
-        x <- x[lower.tri(x)]
-      }
+
+  ## NB: there was an unexplained set of braces here (to line 115)
+  ## so I have removed them
+  if ((length(dimx) == 2) && (dimx[1] == dimx[2])) {
+    Lvls <- dimnames(x)[[1]]
+    if (length(Lvls) != dimx[1]) {
+      stop("Names requred for ", x.is)
     } else {
-      namx <- names(x)
-      if (length(namx) != length(x)) {
-        stop("Names required for ", x.is)
-      }
-      x2 <- vec2mat2(namx)
-      Lvls <- unique(as.vector(x2))
+      x2. <- t(outer(Lvls, Lvls, paste, sep = ""))
+      x2.n <- outer(Lvls, Lvls, function(x1, x2) {
+        nchar(x2)
+      })
+      x2.2 <- x2.[lower.tri(x2.)]
+      x2.2n <- x2.n[lower.tri(x2.n)]
+      x2a <- substring(x2.2, 1, x2.2n)
+      x2b <- substring(x2.2, x2.2n + 1)
+      x2 <- cbind(x2a, x2b)
+      x <- x[lower.tri(x)]
     }
+  } else {
+    namx <- names(x)
+    if (length(namx) != length(x)) {
+      stop("Names required for ", x.is)
+    }
+    x2 <- vec2mat2(namx)
+    Lvls <- unique(as.vector(x2))
   }
+
   n <- length(Lvls)
   LetMat <- array(TRUE, dim = c(n, 1), dimnames = list(Lvls, NULL))
   k2 <- sum(x)
@@ -123,19 +129,19 @@ multcompLetters <- function(x,
   absorb <- function(A.) {
     k. <- dim(A.)[2]
     if (k. > 1) {
-      for (i. in 1:(k. - 1))
+      for (i. in 1:(k. - 1)) {
         for (j. in (i. + 1):k.) {
           if (all(A.[A.[, j.], i.])) {
             A. <- A.[, -j., drop = FALSE]
             return(absorb(A.))
-          }
-          else {
+          } else {
             if (all(A.[A.[, i.], j.])) {
               A. <- A.[, -i., drop = FALSE]
               return(absorb(A.))
             }
           }
         }
+      }
     }
     A.
   }
@@ -151,16 +157,20 @@ multcompLetters <- function(x,
     }
   }
   sortCols <- function(B) {
-    firstRow <- apply(B, 2, function(x)
-      which(x)[1])
+    firstRow <- apply(B, 2, function(x) {
+      which(x)[1]
+    })
     B <- B[, order(firstRow)]
-    firstRow <- apply(B, 2, function(x)
-      which(x)[1])
+    firstRow <- apply(B, 2, function(x) {
+      which(x)[1]
+    })
     reps <- (diff(firstRow) == 0)
+
     if (any(reps)) {
       nrep <- table(which(reps))
       irep <- as.numeric(names(nrep))
       k <- dim(B)[1]
+
       for (i in irep) {
         i. <- i:(i + nrep[as.character(i)])
         j. <- (firstRow[i] + 1):k
@@ -169,43 +179,58 @@ multcompLetters <- function(x,
     }
     B
   }
+
   LetMat. <- sortCols(LetMat)
+
   if (reversed) {
-    LetMat. <- LetMat.[, rev(1:ncol(LetMat.))]
+    LetMat. <- LetMat.[, rev(seq_len(ncol(LetMat.)))]
   }
+
   k.ltrs <- dim(LetMat.)[2]
   makeLtrs <- function(kl, ltrs = Letters) {
     kL <- length(ltrs)
+
     if (kl < kL) {
       return(ltrs[1:kl])
     }
+
     ltrecurse <- c(paste(ltrs[kL], ltrs[-kL], sep = ""), ltrs[kL])
     c(ltrs[-kL], makeLtrs(kl - kL + 1, ltrecurse))
   }
+
   Ltrs <- makeLtrs(k.ltrs, Letters)
   dimnames(LetMat.)[[2]] <- Ltrs
   LetVec <- rep(NA, n)
   names(LetVec) <- Lvls
-  for (i in 1:n)
+
+  for (i in 1:n) {
     LetVec[i] <- paste(Ltrs[LetMat.[i, ]], collapse = "")
+  }
+
   nch.L <- nchar(Ltrs)
   blk.L <- rep(NA, k.ltrs)
-  for (i in 1:k.ltrs)
+
+  for (i in 1:k.ltrs) {
     blk.L[i] <- paste(rep(" ", nch.L[i]), collapse = "")
+  }
+
   monoVec <- rep(NA, n)
   names(monoVec) <- Lvls
+
   for (j in 1:n) {
     ch2 <- blk.L
+
     if (any(LetMat.[j, ])) {
       ch2[LetMat.[j, ]] <- Ltrs[LetMat.[j, ]]
     }
+
     monoVec[j] <- paste(ch2, collapse = "")
   }
+
   return(monoVec)
 }
 
 ######################## Functions from lmerTest begin #################
-
 get_contrasts_type1 <- function(model) {
   terms <- terms(model)
   X <- model.matrix(model)
@@ -226,8 +251,9 @@ get_contrasts_type1 <- function(model) {
   dimnames(L) <- list(colnames(X), colnames(X))
   # Determine which rows of L belong to which term:
   ind.list <- term2colX(terms, X)[attr(terms, "term.labels")]
-  lapply(ind.list, function(rows)
-    L[rows, , drop = FALSE])
+  lapply(ind.list, function(rows) {
+    L[rows, , drop = FALSE]
+  })
 }
 
 term2colX <- function(terms, X) {
@@ -249,16 +275,17 @@ term2colX <- function(terms, X) {
     term_names[asgn[asgn > 0]]
   }
   if (!length(col_terms) == ncol(X)) {
-    # should never happen.
+    ## should never happen.
     stop("An error happended when mapping terms to columns of X")
   }
-  # get names of terms (including aliased terms)
+  ## get names of terms (including aliased terms)
   nm <- union(unique(col_terms), term_names)
-  res <- lapply(setNames(as.list(nm), nm), function(x)
-    numeric(0L))
+  res <- lapply(setNames(as.list(nm), nm), function(x) {
+    numeric(0L)
+  })
   map <- split(seq_along(col_terms), col_terms)
   res[names(map)] <- map
-  res[nm] # order appropriately
+  res[nm] ## order appropriately
 }
 
 doolittle <- function(x, eps = 1e-6) {
@@ -301,68 +328,6 @@ doolittle <- function(x, eps = 1e-6) {
   list(L = L, U = U)
 }
 
-# df_term <- function (model, term) {
-# if(!getME(model, "is_REML"))
-# stop("Kenward-Roger's method is only available for REML model fits")
-# if(!requireNamespace("pbkrtest", quietly = TRUE))
-# stop("pbkrtest package required for Kenward-Roger's method")
-# Lc <- get_contrasts_type1(model)[[term]]
-# Lc <- Kmatrix(model, term)$K
-# vcov_beta_adj <- try(pbkrtest::vcovAdj(model), silent=TRUE) # Adjusted vcov(beta)
-# ddf <- try(pbkrtest::Lb_ddf(L=Lc, V0=vcov(model),
-# Vadj=vcov_beta_adj), silent=TRUE) # vcov_beta_adj need to be dgeMatrix!
-# if(any(inherits(vcov_beta_adj, "try-error"), inherits(ddf, "try-error"))) {
-# warning("Unable to compute Kenward-Roger Df: using Satterthwaite instead")
-# if(!inherits(model, "lmerModLmerTest")) model <- as_lmerModLmerTest(model)
-# beta <- model@beta
-# # Compute Var(L beta) and eigen-decompose:
-# VLbeta <- Lc %*% model@vcov_beta %*% t(Lc) # Var(contrast) = Var(Lbeta)
-# eig_VLbeta <- eigen(VLbeta)
-# P <- eig_VLbeta$vectors
-# d <- eig_VLbeta$values
-# tol <- max(sqrt(.Machine$double.eps) * d[1], 0)
-# pos <- d > tol
-# q <- sum(pos) # rank(VLbeta)
-
-# PtL <- crossprod(P, Lc)[1:q, ]
-# if(q == 1) { # 1D case:
-# ddf <- contest1D(model, PtL, rhs=0, confint=FALSE)$df
-# return(ddf)
-# } # multi-D case proceeds:
-
-# # Compute q-list of gradients of (PtL)' cov(beta) (PtL) wrt. varpar vector:
-# grad_PLcov <- lapply(1:q, function(m) {
-# vapply(model@Jac_list, function(J) qform(PtL[m, ], J), numeric(1L))
-# })
-# # Compute degrees of freedom for the q t-statistics:
-# nu_m <- vapply(1:q, function(m) {
-# 2*(d[m])^2 / qform(grad_PLcov[[m]], model@vcov_varpar) }, numeric(1L)) # 2D_m^2 / g'Ag
-# # Compute ddf for the F-value:
-# ddf <- get_Fstat_ddf(nu_m, tol=1e-8)
-# }
-# return(ddf)
-# }
-
-# ##########
-# get_Fstat_ddf <- function(nu, tol=1e-8) {
-# fun <- function(nu) {
-# if(any(nu <= 2)) 2 else {
-# E <- sum(nu / (nu - 2))
-# 2 * E / (E - (length(nu))) # q = length(nu) : number of t-statistics
-# }
-# }
-# stopifnot(length(nu) >= 1,
-# # all(nu > 0), # returns 2 if any(nu < 2)
-# all(sapply(nu, is.numeric)))
-# if(length(nu) == 1L) return(nu)
-# if(all(abs(diff(nu)) < tol)) return(mean(nu))
-# if(!is.list(nu)) fun(nu) else vapply(nu, fun, numeric(1L))
-# }
-
-########################
-
-
-
 #' Calculate degree of freedom of a modelterm (contrast) for a lmer model
 #'
 #' Calculate the degree of freedom of a modelterm (contrast) for a \code{lmer}
@@ -387,9 +352,9 @@ doolittle <- function(x, eps = 1e-6) {
 #' @examples
 #'
 #' library(predictmeans)
-#' # ftable(xtabs(yield ~ Block+Variety+nitro, data=Oats))
+#' # ftable(xtabs(yield ~ Block + Variety+nitro, data = Oats))
 #' Oats$nitro <- factor(Oats$nitro)
-#' fm <- lmer(yield ~ nitro*Variety+(1|Block/Variety), data=Oats)
+#' fm <- lmer(yield ~ nitro * Variety + (1|Block/Variety), data = Oats)
 #' df_term(fm, "nitro:Variety")
 #' ## Not run:
 #' ## The contrast has a contrast matrix as follows:
@@ -412,7 +377,7 @@ doolittle <- function(x, eps = 1e-6) {
 #' # 2. Construct the contrast matrix directly
 #' cm <- rbind(c(-1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0),
 #'             c(0, 0, 1, 0, 0, 0, 0, -1, 0, 0, 0, 0))
-#' df_term(fm, ctrmatrix=cm, type="Satterthwaite")
+#' df_term(fm, ctrmatrix = cm, type = "Satterthwaite")
 #'
 #' @export df_term
 df_term <- function(model,
@@ -447,11 +412,11 @@ df_term <- function(model,
 
   if (type == "Kenward-Roger") {
     vcov_beta_adj <- try(pbkrtest::vcovAdj(model), silent = TRUE)
-    # Adjusted vcov(beta)
-    ddf <- try(apply(Lc, 1, function(x)
-      pbkrtest::Lb_ddf(x, V0 = vcov(model), Vadj = vcov_beta_adj)), silent =
-        TRUE)
-    # vcov_beta_adj need to be dgeMatrix!
+    ## Adjusted vcov(beta)
+    ddf <- try(apply(Lc, 1, function(x) {
+      pbkrtest::Lb_ddf(x, V0 = vcov(model), Vadj = vcov_beta_adj)
+    }), silent = TRUE)
+    ## vcov_beta_adj need to be dgeMatrix!
 
     if (any(
       inherits(vcov_beta_adj, "try-error"),
@@ -468,13 +433,16 @@ df_term <- function(model,
     if (!inherits(model, "lmerModLmerTest")) {
       model <- as_lmerModLmerTest(model)
     }
-    ddf <- apply(Lc, 1, function(x)
-      suppressMessages(lmerTest::calcSatterth(model, x)$denom))
+    ddf <- apply(Lc, 1, function(x) {
+      suppressMessages(lmerTest::calcSatterth(model, x)$denom)
+    })
   }
+
   return(ddf)
 }
 
 ##########
+#' @importFrom numDeriv jacobian
 as_lmerModLT <- function(model, devfun, tol = 1e-8) {
   is_reml <- getME(model, "is_REML")
   # Coerce 'lme4-model' to 'lmerModLmerTest':
@@ -532,19 +500,20 @@ as_lmerModLT <- function(model, devfun, tol = 1e-8) {
       )
     )
   }
-  # Compute vcov(varpar):
+  ## Compute vcov(varpar):
   pos <- eig_h$values > tol
+  ## lintr::lint() says this variable is not used byt I can see it in the next
+  ## line of code, so leaving it defined - wonder if it is a name clash
   q <- sum(pos)
-  # Using the Moore-Penrose generalized inverse for h:
+  ## Using the Moore-Penrose generalized inverse for h:
   h_inv <- with(eig_h, {
     vectors[, pos, drop = FALSE] %*% diag(1 / values[pos], nrow = q) %*%
       t(vectors[, pos, drop = FALSE])
   })
-  res@vcov_varpar <- 2 * h_inv # vcov(varpar)
-  # Compute Jacobian of cov(beta) for each varpar and save in list:
-  Jac <- numDeriv::jacobian(func = get_covbeta, x = varpar_opt, devfun =
-                              devfun)
-  res@Jac_list <- lapply(1:ncol(Jac), function(i)
+  res@vcov_varpar <- 2 * h_inv
+  ## Compute Jacobian of cov(beta) for each varpar and save in list:
+  Jac <- jacobian(func = get_covbeta, x = varpar_opt, devfun = devfun)
+  res@Jac_list <- lapply(seq_len(ncol(Jac)), function(i)
     array(Jac[, i], dim = rep(length(res@beta), 2))) # k-list of jacobian matrices
   res
 }

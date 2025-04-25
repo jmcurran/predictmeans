@@ -41,9 +41,9 @@ model using "Kenward-Roger" or "Satterthwaite" method.
 \examples{
 
 library(predictmeans)
-# ftable(xtabs(yield ~ Block+Variety+nitro, data=Oats))
+# ftable(xtabs(yield ~ Block + Variety+nitro, data = Oats))
 Oats$nitro <- factor(Oats$nitro)
-fm <- lmer(yield ~ nitro*Variety+(1|Block/Variety), data=Oats)
+fm <- lmer(yield ~ nitro * Variety + (1|Block/Variety), data = Oats)
 df_term(fm, "nitro:Variety")
 ## Not run:
 ## The contrast has a contrast matrix as follows:
@@ -66,7 +66,7 @@ df_term(fm, "nitro:Variety")
 # 2. Construct the contrast matrix directly
 cm <- rbind(c(-1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0),
             c(0, 0, 1, 0, 0, 0, 0, -1, 0, 0, 0, 0))
-df_term(fm, ctrmatrix=cm, type="Satterthwaite")
+df_term(fm, ctrmatrix = cm, type = "Satterthwaite")
 
 }
 \author{
