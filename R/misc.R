@@ -513,8 +513,11 @@ as_lmerModLT <- function(model, devfun, tol = 1e-8) {
   res@vcov_varpar <- 2 * h_inv
   ## Compute Jacobian of cov(beta) for each varpar and save in list:
   Jac <- jacobian(func = get_covbeta, x = varpar_opt, devfun = devfun)
-  res@Jac_list <- lapply(seq_len(ncol(Jac)), function(i)
-    array(Jac[, i], dim = rep(length(res@beta), 2))) # k-list of jacobian matrices
+  ## k-list of jacobian matrices
+  res@Jac_list <- lapply(seq_len(ncol(Jac)), function(i) {
+    array(Jac[, i], dim = rep(length(res@beta), 2))
+  })
+
   res
 }
 
@@ -533,8 +536,9 @@ devfun_vp <- function(varpar, devfun, reml) {
   if (!reml) {
     return(dev)
   }
-  # Adjust if REML is used:
-  RX <- df_envir$pp$RX() # X'V^{-1}X ~ crossprod(RX^{-1}) = cov(beta)^{-1} / sigma^2
+  ## Adjust if REML is used:
+  ## X'V^{-1}X ~ crossprod(RX^{-1}) = cov(beta)^{-1} / sigma^2
+  RX <- df_envir$pp$RX()
   dev + 2 * c(determinant(RX)$modulus) - ncol(RX) * log(2 * pi * sigma2)
 }
 
@@ -545,86 +549,18 @@ get_covbeta <- function(varpar, devfun) {
   theta <- varpar[-nvarpar] # ranef var-par
   devfun(theta) # evaluate REML or ML deviance 'criterion'
   df_envir <- environment(devfun) # extract model environment
-  sigma^2 * tcrossprod(df_envir$pp$RXi()) # vcov(beta)
+
+  ## This is the variance-covariance matrix of beta
+  sigma^2 * tcrossprod(df_envir$pp$RXi())
 }
 
 ######################## Functions from lmerTest end #################
 
 
-#######################
-# https://rpubs.com/bbolker/waldvar
 
-# waldVar2 <- function(object) {
-# ## test for/warn if ML fit?
-# dd <- lme4::devfun2(object,useSc=TRUE,signames=FALSE)
-# nvp <- length(attr(dd,"thopt"))+1 ## variance parameters (+1 for sigma)
-# pars <- attr(dd,"optimum")[seq(nvp)] ## var params come first
-# hh <- numDeriv::hessian(dd,pars)
-# ## factor of 2: deviance -> negative log-likelihood
-# vv <- 2*solve(hh)
-# nn <- tn(object)
-# dimnames(vv) <- list(nn,nn)
-# return(vv)
-# }
-
-# tn <- function(object) {
-# c(names(getME(object,"theta")),"sigma")
-# }
-
-# confintlmer <- function (object, parm, level = 0.95, ...)
-# {
-# cf <- coef(object)
-# pnames <- names(cf)
-# if (missing(parm))
-# parm <- pnames
-# else if (is.numeric(parm))
-# parm <- pnames[parm]
-# a <- (1 - level)/2
-# a <- c(a, 1 - a)
-# pct <- format.perc(a, 3)
-# fac <- qnorm(a)
-# ci <- array(NA, dim = c(length(parm), 2L), dimnames = list(parm, pct))
-# ses <- sqrt(diag(object$vcov))[parm]
-# ci[] <- cf[parm] + ses %o% fac
-# ci
-# }
-
-# format.perc <- function (probs, digits) {
-# paste(format(100 * probs, trim = TRUE, scientific = FALSE,
-# digits = digits), "%")
-# }
-
-######################
-# vcov.VarCorr.merMod <- function(object,fit,...) {
-# if (isREML(fit)) {
-# warning("refitting model with ML")
-# fit <- refitML(fit)
-# }
-# if (!require("numDeriv")) stop("numDeriv package required")
-# useSc <- attr(object,"useSc")
-# dd <- lme4:::devfun2(fit,useSc=useSc,signames=FALSE)
-# vdd <- as.data.frame(object,order="lower.tri")
-# pars <- vdd[,"sdcor"]
-# npar0 <- length(pars)
-# if (isGLMM(fit)) {
-# pars <- c(pars,fixef(fit))
-# }
-# hh1 <- hessian(dd,pars)
-# vv2 <- 2*solve(hh1)
-# if (isGLMM(fit)) {
-# vv2 <- vv2[1:npar0,1:npar0,drop=FALSE]
-# }
-# nms <- apply(vdd[,1:3],1,
-# function(x) paste(na.omit(x),collapse="."))
-# dimnames(vv2) <- list(nms,nms)
-# return(vv2)
-# }
-
-# http://rstudio-pubs-static.s3.amazonaws.com/28864_dd1f084207d54f5ea67c9d1a9c845d01.html
-
+## http://rstudio-pubs-static.s3.amazonaws.com/28864_dd1f084207d54f5ea67c9d1a9c845d01.html
 #######################################################
 # from package merDeriv vcov.lmerMod.R
-
 #' @importFrom utils combn
 #' @importFrom Matrix forceSymmetric
 #' @importFrom pbkrtest vcovAdj Lb_ddf
@@ -637,31 +573,35 @@ vcov_lmerMod <- function (object, ...) {
   if (!is(object, "lmerMod")) {
     stop("vcov.lmerMod() only works for lmer() models.")
   }
+
   dotdotdot <- list(...)
+
   if ("full" %in% names(dotdotdot)) {
     full <- dotdotdot$full
-  }
-  else {
+  } else {
     full <- FALSE
   }
+
   if ("information" %in% names(dotdotdot)) {
     information <- dotdotdot$information
-  }
-  else {
+  } else {
     information <- "expected"
   }
+
   if (!(full %in% c("TRUE", "FALSE"))) {
     stop("invalid 'full' argument supplied")
   }
+
   if (!(information %in% c("expected", "observed"))) {
     stop("invalid 'information' argument supplied")
   }
+
   if ("ranpar" %in% names(dotdotdot)) {
     ranpar <- dotdotdot$ranpar
-  }
-  else {
+  } else {
     ranpar <- "var"
   }
+
   parts <- getME(object, "ALL")
   yXbe <- parts$y - tcrossprod(parts$X, t(parts$beta))
   uluti <- length(parts$theta)
@@ -675,43 +615,51 @@ vcov_lmerMod <- function (object, ...) {
   Pmid <- solve(crossprod(parts$X, t(invVX)))
   P <- invV - tcrossprod(crossprod(invVX, Pmid), t(invVX))
   fixvar <- solve(tcrossprod(crossprod(parts$X, invV), t(parts$X)))
+
   if (full == FALSE) {
     fixvar
-  }
-  else {
+  } else {
     fixhes <- tcrossprod(crossprod(parts$X, invV), t(parts$X))
     uluti <- length(parts$theta)
     devV <- vector("list", (uluti + 1))
     devLambda <- vector("list", uluti)
     score_varcov <- matrix(NA, nrow = length(parts$y), ncol = uluti)
+
     for (i in 1:uluti) {
       devLambda[[i]] <- Matrix::forceSymmetric(LambdaInd == i, uplo = "L")
       devV[[i]] <- tcrossprod(tcrossprod(parts$Z, t(devLambda[[i]])), parts$Z)
     }
     devV[[(uluti + 1)]] <- Matrix::Diagonal(nrow(parts$X), 1)
-    ranhes <- matrix(NA, nrow = (uluti + 1), ncol = (uluti +
-                                                       1))
+    ranhes <- matrix(NA, nrow = (uluti + 1), ncol = (uluti + 1))
     entries <- rbind(matrix(rep(1:(uluti + 1), each = 2), (uluti + 1), 2, byrow = TRUE), t(combn((uluti + 1), 2)))
     entries <- entries[order(entries[, 1], entries[, 2]), ]
+
     if (parts$devcomp$dims[["REML"]] == 0) {
       if (information == "expected") {
-        ranhes[lower.tri(ranhes, diag = TRUE)] <- apply(entries, 1, function(x)
+        ranhes[lower.tri(ranhes, diag = TRUE)] <- apply(entries, 1,
+                                                        function(x) {
           as.numeric((1 / 2) * lav_matrix_trace(tcrossprod(
             tcrossprod(crossprod(invV, devV[[x[1]]]), invV), t(devV[[x[2]]])
-          ))))
+          )))
+        })
       }
+
       if (information == "observed") {
-        ranhes[lower.tri(ranhes, diag = TRUE)] <- unlist(apply(entries, 1, function(x)
-          as.vector(-as.numeric((1 / 2) *
-                                  lav_matrix_trace(tcrossprod(
-                                    tcrossprod(crossprod(invV, devV[[x[1]]]), invV), t(devV[[x[2]]])
-                                  ))
-          ) +
-            tcrossprod((
-              tcrossprod((crossprod(
-                yXbe, tcrossprod(tcrossprod(crossprod(invV, devV[[x[1]]]), invV), t(devV[[x[2]]]))
-              )), invV)
-            ), t(yXbe)))))
+        calcObsInformation = function(x) {
+          A <- crossprod(invV, devV[[x[1]]])
+          B <- tcrossprod(A, invV)
+          C <- tcrossprod(B, t(devV[[x[2]]]))
+
+          D <- crossprod(yXbe, C)
+          E <- tcrossprod(D, invV)
+          F <- tcrossprod(E, t(yXbe))
+
+          as.vector(-0.5 * lav_matrix_trace(C) + F)
+        }
+
+        ranhes[lower.tri(ranhes, diag = TRUE)] <-
+          unlist(apply(entries, 1, calcObservedInformation))
+
       }
     }
     if (parts$devcomp$dims[["REML"]] > 0) {
@@ -1126,7 +1074,7 @@ f_loj_krc <- function(x, y, by.x, by.y) {
 
   # replace column names of y with same names of x
   # to avoid duplicate fields
-  for (i in 1:length(by.y)) {
+  for (i in seq_along(by.y)) {
     colnames(y)[which(y.cn == by.y[i])] <- by.x[i]
   }
   by.y <- by.x # since two fields are the same now
