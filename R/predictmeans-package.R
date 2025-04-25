@@ -1,5 +1,6 @@
 
 
+
 #' \code{ATP} containing data
 #'
 #' \code{ATP} containing data from an experiment to study the effects of
@@ -81,7 +82,3 @@ NULL
 #' (2004), \emph{Prediction in linear mixed models}, Australian and New Zealand
 #' Journal of Statistics, 46(3), 325-347.
 "_PACKAGE"
-
-
-
-
