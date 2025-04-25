@@ -98,11 +98,12 @@ values.
 
   library(predictmeans)
   data(Oats, package="nlme")
-  fm <- lme(yield ~ nitro*Variety, random=~1|Block/Variety, data=Oats)
+  fm <- lme(yield ~ nitro*Variety, random = ~1|Block/Variety, data = Oats)
 # library(lme4)
 # fm <- lmer(yield ~ nitro*Variety+(1|Block/Variety), data=Oats)
-  covariatemeans(fm, "Variety", covariate="nitro")
-  covariatemeans(fm, "Variety", covariate="nitro", covariateV=seq(0, 0.6, 0.1))$pltdf
+  covariatemeans(fm, "Variety", covariate = "nitro")
+  covariatemeans(fm, "Variety", covariate = "nitro",
+                 covariateV = seq(0, 0.6, 0.1))$pltdf
 
 }
 \author{
