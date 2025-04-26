@@ -91,7 +91,8 @@ f <- gl(4, 25, length=length(x))
 zosuMat_by <- smZ(x, intKnots = knots, by=f) # one sparse matrix
 str(zosuMat_by)
 
-zosuMat_by <- smZ(x, intKnots = knots, by=f, group=TRUE) # a list of sparse matrix
+# a list of sparse matrix
+zosuMat_by <- smZ(x, intKnots = knots, by=f, group=TRUE)
 str(zosuMat_by)
 
 }
