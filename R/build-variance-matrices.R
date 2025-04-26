@@ -115,8 +115,8 @@ build_var_cor_mats <- function(mod,
       }
     } else {
       sort_order <- get_sort_order(mod)
-      sd_vec <- sigma / as.numeric(
-        varWeights(mod$modelStruct$varStruct))[sort_order]
+      sd_vec <- sigma /
+        as.numeric(varWeights(mod$modelStruct$varStruct))[sort_order]
       sd_list <- split(sd_vec, attr(R_list, "groups"))
       V_list <- Map(function(R, s) {
         tcrossprod(s) * R
