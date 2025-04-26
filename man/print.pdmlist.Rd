@@ -12,6 +12,6 @@
 \item{...}{Additional arguments passed to \code{print}.}
 }
 \description{
-This is a specific \code{print} method for objects of the class \code{pdmlist}.
-See \code{\link{predictmeans}}.
+This is a specific \code{print} method for objects of the class
+\code{pdmlist}. See \code{\link{predictmeans}}.
 }
