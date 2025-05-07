@@ -2,13 +2,19 @@
 get_cor_grouping <- function(mod, levels = NULL) {
   if (!is.null(mod$groups)) {
     struct <- mod$modelStruct$corStruct
-    if (is.null(struct)) struct <- mod
+    if (is.null(struct)) {
+      struct <- mod
+    }
     mod_formula <- nlme::getGroupsFormula(struct)
     dat <- nlme::getData(mod)
-    if (inherits(na.action(mod), "exclude")) dat <- dat[-as.integer(na.action(mod)),,drop=FALSE]
+    if (inherits(na.action(mod), "exclude")) {
+      dat <- dat[-as.integer(na.action(mod)),,drop=FALSE]
+    }
     grps <- stats::model.frame(mod_formula, data = dat)
     grps <- apply(grps, 1, paste, collapse = "/")
-    if (is.null(levels)) levels <- unique(grps)
+    if (is.null(levels)) {
+      levels <- unique(grps)
+    }
     grps <- factor(grps, levels = levels)
   } else if (!is.null(mod$modelStruct$corStruct)) {
     grps <- factor(rep("A",mod$dims$N))
@@ -28,7 +34,9 @@ build_corr_mats <- function(mod) {
   } else {
     R_list <- nlme::corMatrix(mod$modelStruct$corStruct)
     grps <- get_cor_grouping(mod, levels = names(R_list))
-    if (!is.list(R_list)) R_list <- list(A = R_list)
+    if (!is.list(R_list)) {
+      R_list <- list(A = R_list)
+    }
     attr(R_list, "groups") <- grps
     return(R_list)
   }
@@ -49,7 +57,11 @@ get_sort_order <- function(mod) {
 
 build_var_cor_mats <- function(mod, R_list = build_corr_mats(mod), sigma_scale = FALSE) {
 
-  sigma <- if (sigma_scale) mod$sigma else 1
+  sigma <- if (sigma_scale) {
+    mod$sigma
+  } else {
+    1
+  }
 
   if (is.null(R_list)) {
 
@@ -91,7 +103,11 @@ build_var_cor_mats <- function(mod, R_list = build_corr_mats(mod), sigma_scale =
     # build block-diagonals according to its grouping structure
 
     if (is.null(mod$modelStruct$varStruct)) {
-      V_list <- if (sigma_scale) lapply(R_list, function(x) x * mod$sigma^2) else R_list
+      V_list <- if (sigma_scale) {
+        lapply(R_list, function(x) x * mod$sigma^2)
+      } else {
+        R_list
+      }
     } else {
       sort_order <- get_sort_order(mod)
       sd_vec <- sigma / as.numeric(nlme::varWeights(mod$modelStruct$varStruct))[sort_order]
@@ -121,7 +137,9 @@ build_RE_mats <- function(mod, sigma_scale = FALSE) {
   if (length(all_groups) == 1) {
 
     D_mat <- as.matrix(mod$modelStruct$reStruct[[1]])
-    if (sigma_scale) D_mat <- mod$sigma^2 * D_mat
+    if (sigma_scale) {
+      D_mat <- mod$sigma^2 * D_mat
+    }
     data <- nlme::getData(mod)
     Z_mat <- model.matrix(mod$modelStruct$reStruc, data[complete.cases(data), ])
     row.names(Z_mat) <- NULL
@@ -185,7 +203,9 @@ build_Sigma_mats.gls <- function(mod, invert = FALSE, sigma_scale = FALSE) {
 
 build_Sigma_mats.lme <- function(mod, invert = FALSE, sigma_scale = FALSE) {
 
-  if (inherits(mod, "nlme")) stop("not implemented for \"nlme\" objects")
+  if (inherits(mod, "nlme")) {
+    stop("not implemented for \"nlme\" objects")
+  }
 
   # lowest-level covariance structure
   V_list <- build_var_cor_mats(mod, sigma_scale = sigma_scale)
