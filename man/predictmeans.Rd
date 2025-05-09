@@ -14,8 +14,8 @@ predictmeans(model, modelterm, data=NULL, pairwise=FALSE, atvar=NULL, adj="none"
   lsd_bar=TRUE, level=0.05, covariate=NULL, meandecr=NULL, letterCI=FALSE, trans = I,
   transOff = 0, responsen=NULL, count=FALSE, plotord=NULL, lineplot=TRUE, plottitle=NULL, 
   plotxlab=NULL, plotylab=NULL, mplot=TRUE, barplot=FALSE, pplot=TRUE, bkplot=TRUE, 
-  plot=TRUE, jitterv=0.2, basesz=12, prtnum=TRUE, prtplt=TRUE, newwd=FALSE, permlist=NULL, 
-  ncore=3, ndecimal=4)
+  plot=TRUE, jitterv=0.2, basesz=12L, prtnum=TRUE, prtplt=TRUE, newwd=FALSE, 
+  permlist=NULL, ncore=3L, ndecimal=4L)
 }
 \arguments{
   \item{model}{

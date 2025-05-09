@@ -7,10 +7,12 @@ semireg_tmb <- function(formula, data, family = gaussian(), smoothZ = list(), zi
   environment(formula) <- parent.frame()
   mc$formula <- formula
   fomul_vars <- all.vars(terms(mc$formula))
- # fomul_vars <- all.vars(terms(as.formula(mc$formula)))
+  # fomul_vars <- all.vars(terms(as.formula(mc$formula)))
   sm_vars <- all.vars(as.list(mc)$smoothZ)
   sm_vars <- intersect(sm_vars, names(data))
-  if (any(unlist(lapply(data[, setdiff(sm_vars, fomul_vars)], is.factor)))) stop("Any factor in 'smoothZ' list must be in the formula!")
+  if (any(unlist(lapply(data[, setdiff(sm_vars, fomul_vars)], is.factor)))) {
+    stop("Any factor in 'smoothZ' list must be in the formula!")
+  }
   response_n <- fomul_vars[1] 
   fomul_vars <- fomul_vars[-1]
   
@@ -20,7 +22,11 @@ semireg_tmb <- function(formula, data, family = gaussian(), smoothZ = list(), zi
   Z_namem <- names(smoothZm)
   smoothZN <- list()
   for (i in Z_namem){
-    if (is.list(smoothZm[[i]])) smoothZN <- c(smoothZN, unlist(smoothZm[i], recursive=FALSE)) else smoothZN <- c(smoothZN, smoothZm[i])
+    if (is.list(smoothZm[[i]])) {
+      smoothZN <- c(smoothZN, unlist(smoothZm[i], recursive=FALSE)) 
+    } else {
+      smoothZN <- c(smoothZN, smoothZm[i])
+    }
   }
   
   smoothZt <- lapply(smoothZN, t)
@@ -32,8 +38,9 @@ semireg_tmb <- function(formula, data, family = gaussian(), smoothZ = list(), zi
   glmmTMBcall$prt <- NULL
   glmmTMBcall$predict_info <- NULL
   
-  if (!length(smoothZt))             
+  if (!length(smoothZt)) {             
     return(eval.parent(glmmTMBcall))
+  }
   Zt_name <- names(smoothZt)
   
   stopifnot(is.list(smoothZt),        # check the smoothZt argument
@@ -60,8 +67,9 @@ semireg_tmb <- function(formula, data, family = gaussian(), smoothZ = list(), zi
   Zt <- cond_reTrms$Zt
   for (i in seq_along(smoothZt)) {
     tn <- which(match(Zt_name[i], names(fl)) == asgn)
-    if (length(tn) > 1)
+    if (length(tn) > 1) {
       stop("a smoothZt factor must be associated with only one r.e. term")
+    }
     ind <- (cond_reTrms$Gp)[tn:(tn+1L)]
     rowsi <- (ind[1]+1L):ind[2]
     stopifnot(all(dim(Zt[rowsi,])==dim(smoothZt[[i]])))
@@ -70,24 +78,15 @@ semireg_tmb <- function(formula, data, family = gaussian(), smoothZ = list(), zi
   
   tmbf$data.tmb$Z <- t(Zt)
   semer <- fitTMB(tmbf)  
-  if (prt) print(semer)  
+  if (prt) {
+    print(semer)  
+  }
   
-  if (predict_info){
+  if (predict_info) {
     beta <- fixef(semer)$cond
     n_beta <- length(beta)
     s <- sigma(semer) 
-    
-    cond_reTrms <- tmbf$condList$reTrms
-    n_diag <- sum(cond_reTrms$lower==0)
-    theta_ini <- getME(semer, "theta")
-    if (length(theta_ini)!=n_diag) {
-      theta <- cond_reTrms$lower
-      theta[theta==0] <- exp(theta_ini[1:n_diag])/s
-      theta[theta!=0] <- theta_ini[-1:-n_diag]/s
-    }else theta <- exp(theta_ini)/s
-    
-    Lambdat <- cond_reTrms$Lambdat
-    Lambdat@x <- theta[cond_reTrms$Lind]
+    Lambdat <- reTrms_tmb(semer)$Lambdat	
     b_cov_inv <- Matrix::tcrossprod(t(Lambdat)) 
     
     if (any(eigen(b_cov_inv)$values <= 0)) {
@@ -101,18 +100,20 @@ semireg_tmb <- function(formula, data, family = gaussian(), smoothZ = list(), zi
     
     weights <- tmbf$data.tmb$weights
     family_n <- semer$modelInfo$family$family
-    if (family_n=="binomial") yobs <- unique(tmbf$data.tmb$yobs)
+    if (family_n=="binomial") {
+      yobs <- unique(tmbf$data.tmb$yobs)
+    }
     link_n <- semer$modelInfo$family$link
     uHat <- unlist(ranef(semer)$cond) # cbind(uHat, getME(semer, "b"))
     C <- cbind(getME(semer, "X"), getME(semer, "Z"))
     
-    if (family_n != "gaussian"){
-      if (family_n =="binomial" && all(yobs%in%c(0,1))){
+    if (family_n != "gaussian") {
+      if (family_n =="binomial" && all(yobs%in%c(0,1))) {
         wVec <- switch(link_n,
                        "logit" = 3/(pi^2),
                        "probit" = 1,
                        "cloglog" = 6/(pi^2))	
-      }else{
+      } else {
         if (inherits(semer, "glmmTMB")) {
           weight_fun <- function(eta, mod){
             family_fun <- mod$modelInfo$family
@@ -120,18 +121,33 @@ semireg_tmb <- function(formula, data, family = gaussian(), smoothZ = list(), zi
           }
           y_hat <- as.vector(C%*%c(beta, uHat))
           wVec <- as.vector(weight_fun(y_hat, semer))*tmbf$data.tmb$weights 
-          if (length(tmbf$data.tmb$size) > 0) wVec <- wVec*tmbf$data.tmb$size
-        }else wVec <- semer@resp$sqrtWrkWt()^2 
+          if (length(tmbf$data.tmb$size) > 0) {
+            wVec <- wVec*tmbf$data.tmb$size
+          }
+        } else {
+          wVec <- semer@resp$sqrtWrkWt()^2
+        }
       }
-    }else wVec <- weights 
+    } else {
+      wVec <- weights 
+    }
     
     if (isLMM(semer)) { 
       CTC <- Matrix::tcrossprod(t(C))	
-    }else{
+    } else {
       CTC <- crossprod(C*wVec,C)
     }
     
-    fullCovMat <- Matrix::solve(CTC + D)
+    # fullCovMat <- Matrix::solve(CTC + D)
+    
+    AA <- CTC + D
+    if (any(eigen(AA)$values <= 0)) {
+      AAmatrixpd <- nearPD(AA, doSym =TRUE)$mat
+      AA <- AAmatrixpd@x
+      dim(AA) <- AAmatrixpd@Dim
+    }
+    fullCovMat <- Matrix::solve(AA)
+    
     # Compute the degrees of freedom  formula
     df <- sum(diag(fullCovMat%*%CTC)) 
     
@@ -176,7 +192,9 @@ semireg_tmb <- function(formula, data, family = gaussian(), smoothZ = list(), zi
       range_lst[[i]] <- attr(smoothZm[[i]], "range.x")
       type_lst[[i]] <- attr(smoothZm[[i]], "type")
     }
-  }else knots_lst <- range_lst <- type_lst <- cov_lst <- u_lst <- fullCovMat <- vcov_ind <- vcov_indN <- df <- NULL
+  } else {
+    knots_lst <- range_lst <- type_lst <- cov_lst <- u_lst <- fullCovMat <- vcov_ind <- vcov_indN <- df <- NULL
+  }
   
   ans <- list(semer=semer, data=data, fomul_vars=fomul_vars, sm_vars=sm_vars, smoothZ_call=mc$smoothZ, knots_lst=knots_lst, range_lst=range_lst, type_lst=type_lst, cov_lst=cov_lst, u_lst=u_lst, CovMat=fullCovMat, Cov_ind=vcov_ind, Cov_indN=vcov_indN, df=df, tmbf=tmbf)
   class(ans) <- c("semireg", "list")

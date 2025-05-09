@@ -8,16 +8,16 @@ This function provides permutation t-tests for coefficients of (fixed) effects a
 for the terms in a linear model such as \code{aov}, \code{lm}, \code{glm}, \code{gls}, \code{lme}, and \code{lmer}.
 }
 \usage{
-permmodels(model, nperm=4999, type=c("I", "II", "III", 1, 2, 3), 
+permmodels(model, nperm=999, type=c("I", "II", "III", 1, 2, 3), 
   test.statistic=c("Chisq", "F", "LR", "Wald"), exact=FALSE, data=NULL, 
-  fo=NULL, prt=TRUE, ncore=3, seed)
+  fo=NULL, prt=TRUE, ncore=3L, seed)
 }
 \arguments{
   \item{model}{
 Model object returned by \code{aov}, \code{lm}, \code{glm}, \code{gls}, \code{lme}, and \code{lmer}. 
 }
   \item{nperm}{
-The number of permutations. The default is 4999.  
+The number of permutations. The default is 999.  
 }
   \item{type}{
 type of ANOVA test, "I", "II", "III", 1, 2, or 3. Roman numerals are equivalent to the corresponding Arabic numerals.
@@ -50,24 +50,24 @@ Dongwen Luo, Siva Ganesh and John Koolaard
 }
 
 \examples{
-## Not run for simplifying process of submiting pkg to CRAN
-#library(predictmeans)
-#Oats$nitro <- factor(Oats$nitro) 
-#fm <- lme(yield ~ nitro*Variety, random=~1|Block/Variety, data=Oats)
-## library(lme4)
-## fm <- lmer(yield ~ nitro*Variety+(1|Block/Variety), data=Oats)
-#
-## Permutation Test for model terms
-#system.time(
-#  permlme <- permmodels(model=fm, nperm=999)
-#)  
-#
-## Permutation Test for multiple comparisons
-#predictmeans(model=fm, modelterm="nitro:Variety", atvar="Variety", adj="BH", 
-#  permlist=permlme, plot=FALSE)
-#
-## Permutation Test for specified contrasts
-#cm <- rbind(c(-1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0), 
-#            c(0, 0, 1, 0, 0, 0, 0, -1, 0, 0, 0, 0))
-#contrastmeans(model=fm, modelterm="nitro:Variety", ctrmatrix=cm, permlist=permlme)
+# # Not run for simplifying process of submiting pkg to CRAN
+# library(predictmeans)
+# Oats$nitro <- factor(Oats$nitro) 
+# fm <- lme(yield ~ nitro*Variety, random=~1|Block/Variety, data=Oats)
+# # library(lme4)
+# # fm <- lmer(yield ~ nitro*Variety+(1|Block/Variety), data=Oats)
+# 
+# # Permutation Test for model terms
+# system.time(
+#   permlme <- permmodels(model=fm, nperm=999)
+# )  
+# 
+# # Permutation Test for multiple comparisons
+# predictmeans(model=fm, modelterm="nitro:Variety", atvar="Variety", adj="BH", 
+#              permlist=permlme, plot=FALSE)
+# 
+# # Permutation Test for specified contrasts
+# cm <- rbind(c(-1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0), 
+#             c(0, 0, 1, 0, 0, 0, 0, -1, 0, 0, 0, 0))
+# contrastmeans(model=fm, modelterm="nitro:Variety", ctrmatrix=cm, permlist=permlme)
 }

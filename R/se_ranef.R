@@ -3,7 +3,11 @@
 
 se_ranef <- function (object, rand_term=NULL) {
   stopifnot(inherits(object, c("glmmTMB", "lmerModLmerTest", "merMod")))
-  if (inherits(object, "glmmTMB")) se.bygroup <- ranef(object, condVar = TRUE)[["cond"]] else se.bygroup <- ranef(object, condVar = TRUE)
+  if (inherits(object, "glmmTMB")) {
+    se.bygroup <- ranef(object, condVar = TRUE)[["cond"]] 
+  } else {
+    se.bygroup <- ranef(object, condVar = TRUE)
+  }
   rand_names <- names(se.bygroup)
   
   if (!is.null(rand_term)) {
@@ -12,7 +16,11 @@ se_ranef <- function (object, rand_term=NULL) {
   }
   
   for (m in rand_names) {
-    if (inherits(object, "glmmTMB")) vars.m <- attr(se.bygroup[[m]], "condVar") else vars.m <- attr(se.bygroup[[m]], "postVar")
+    if (inherits(object, "glmmTMB")) {
+      vars.m <- attr(se.bygroup[[m]], "condVar") 
+    } else {
+      vars.m <- attr(se.bygroup[[m]], "postVar")
+    }
     K <- dim(vars.m)[1]
     J <- dim(vars.m)[3]
     names.full <- dimnames(se.bygroup[[m]])
@@ -22,6 +30,8 @@ se_ranef <- function (object, rand_term=NULL) {
     }
     dimnames(se.bygroup[[m]]) <- list(names.full[[1]], names.full[[2]])
   }
-  if (!is.null(rand_term)) se.bygroup <- se.bygroup[[m]]
+  if (!is.null(rand_term)) {
+    se.bygroup <- se.bygroup[[m]]
+  }
   return(se.bygroup)
 }

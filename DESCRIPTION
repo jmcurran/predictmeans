@@ -1,6 +1,26 @@
 Package: predictmeans
-Version: 1.1.1
-Author: Dongwen Luo, Siva Ganesh and John Koolaard
+Version: 1.1.2
+Authors@R: c(person(given = "Dongwen",
+                    family = "Luo",
+                    role = c("aut", "cre"),
+                    email = "dongwen.luo@agresearch.co.nz"),
+			 person(given = "James",
+                    family = "Curran",
+                    role = "ctb"),
+             person(given = "Simon",
+                    family = "Urbanek",
+                    role = "ctb"),
+             person(given = "Siva",
+                    family = "Ganesh",
+                    role = "ctb"),
+             person(given = "John",
+                    family = "Koolaard",
+                    role = "ctb"))
+Author: Dongwen Luo [aut, cre],
+  James Curran [ctb],
+  Simon Urbanek [ctb],
+  Siva Ganesh [ctb],
+  John Koolaard [ctb]
 Maintainer: Dongwen Luo <dongwen.luo@agresearch.co.nz>
 Title: Predicted Means for Linear and Semiparametric Models
 Description: Providing functions to diagnose and make inferences from various linear models, 
@@ -8,13 +28,13 @@ Description: Providing functions to diagnose and make inferences from various li
 	Inferences include predicted means and standard errors, contrasts, multiple comparisons, 
 	permutation tests, adjusted R-square and graphs.
 Depends: R (>= 3.5.0), glmmTMB, lme4, nlme, lmerTest
-Imports: car, ggplot2, graphics, grDevices, HRW, lmeInfo, lmeSplines, Matrix, MASS, methods, numDeriv, parallel, pbkrtest, plotly, plyr, splines2, stats, utils
+Imports: car, ggplot2, graphics, grDevices, HRW, lmeInfo, lmeSplines, Matrix, MASS, methods, numDeriv, parallel, pbkrtest, plotly, plyr, reformulas, splines2, stats, utils
 License: GPL (>= 2)
-Packaged: 2024-04-03
+Packaged: 2025-05-08
 URL: https://CRAN.R-project.org/package=predictmeans
 Repository: CRAN
 LazyLoad: yes
 NeedsCompilation: yes
 Encoding: UTF-8
 ByteCompile: true
-Date/Publication: 2024-04-03
+Date/Publication: 2025-05-08

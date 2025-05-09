@@ -45,133 +45,183 @@ vec2mat2 <- function (x, sep = "-")
 {
   splits <- strsplit(x, sep)
   n.spl <- sapply(splits, length)
-  if (any(n.spl != 2)) 
+  if (any(n.spl != 2)) {
     stop("Names must contain exactly one '", sep, "' each;  instead got ", 
          paste(x, collapse = ", "))
+  }
   x2 <- t(as.matrix(as.data.frame(splits)))
   dimnames(x2) <- list(x, NULL)
   x2
 }
 
-multcompLetters <- function (x, compare = "<", threshold = 0.05,   # function from package 'multcompView'
-                             Letters = c(letters, LETTERS, "."), reversed = FALSE) 
-{
-  x.is <- deparse(substitute(x))
-  if (inherits(x, "dist")) 
-    x <- as.matrix(x)
-  if (!is.logical(x)) 
+multcompLetters <- function (x, compare = "<", threshold = 0.05, 
+                            Letters = c(letters, LETTERS, "."), 
+                            reversed = FALSE) {
+  
+  # Fast input validation and conversion
+  if (!is.logical(x)) {
     x <- do.call(compare, list(x, threshold))
-  dimx <- dim(x)
-  {
-    if ((length(dimx) == 2) && (dimx[1] == dimx[2])) {
-      Lvls <- dimnames(x)[[1]]
-      if (length(Lvls) != dimx[1]) 
-        stop("Names requred for ", x.is)
-      else {
-        x2. <- t(outer(Lvls, Lvls, paste, sep = ""))
-        x2.n <- outer(Lvls, Lvls, function(x1, x2) nchar(x2))
-        x2.2 <- x2.[lower.tri(x2.)]
-        x2.2n <- x2.n[lower.tri(x2.n)]
-        x2a <- substring(x2.2, 1, x2.2n)
-        x2b <- substring(x2.2, x2.2n + 1)
-        x2 <- cbind(x2a, x2b)
-        x <- x[lower.tri(x)]
-      }
-    }
-    else {
-      namx <- names(x)
-      if (length(namx) != length(x)) 
-        stop("Names required for ", x.is)
-      x2 <- vec2mat2(namx)
-      Lvls <- unique(as.vector(x2))
-    }
   }
-  n <- length(Lvls)
-  LetMat <- array(TRUE, dim = c(n, 1), dimnames = list(Lvls, NULL))
-  k2 <- sum(x)
-  if (k2 == 0) {
-    Ltrs <- rep(Letters[1], n)
-    names(Ltrs) <- Lvls
-    dimnames(LetMat)[[2]] <- Letters[1]
-    return(Ltrs)
+  
+  Lvls <- rownames(x)
+  if (is.null(Lvls)) {
+    stop("Matrix must have row names")
   }
-  distinct.pairs <- x2[x, , drop = FALSE]
-  absorb <- function(A.) {
-    k. <- dim(A.)[2]
-    if (k. > 1) {
-      for (i. in 1:(k. - 1)) for (j. in (i. + 1):k.) {
-        if (all(A.[A.[, j.], i.])) {
-          A. <- A.[, -j., drop = FALSE]
-          return(absorb(A.))
-        }
-        else {
-          if (all(A.[A.[, i.], j.])) {
-            A. <- A.[, -i., drop = FALSE]
-            return(absorb(A.))
+  n <- nrow(x)
+  
+  # Quick return for no differences
+  if (!any(x[lower.tri(x)])) {
+    return(structure(rep(Letters[1], n), names = Lvls))
+  }
+  
+  # Initialize LetMat more efficiently
+  LetMat <- matrix(TRUE, n, 1L, dimnames = list(Lvls, NULL))
+  
+  # Get significant pairs more efficiently using which() with arr.ind = TRUE
+  sig_indices <- which(x[lower.tri(x)])
+  if (length(sig_indices) == 0) {
+    return(structure(rep(Letters[1], n), names = Lvls))
+  }
+  
+  lt_indices <- which(lower.tri(x), arr.ind = TRUE)
+  sig_pairs <- lt_indices[sig_indices, , drop = FALSE]
+  
+  # Optimized absorb function
+  absorb <- function(mat) {
+    nc <- ncol(mat)
+    if (nc <= 1) {
+      return(mat)
+    }
+    
+    # Pre-compute column sums for efficiency
+    col_sums <- colSums(mat)
+    
+    i <- 1
+    while(i < nc) {
+      j <- i + 1
+      while(j <= nc) {
+        # Quick check using column sums
+        if(col_sums[i] >= col_sums[j]) {
+          if(all(mat[mat[,j], i])) {
+            mat <- mat[, -j, drop = FALSE]
+            col_sums <- col_sums[-j]
+            nc <- nc - 1
+            next
+          }
+        } else {
+          if(all(mat[mat[,i], j])) {
+            mat <- mat[, -i, drop = FALSE]
+            col_sums <- col_sums[-i]
+            nc <- nc - 1
+            i <- i - 1
+            break
           }
         }
+        j <- j + 1
+      }
+      i <- i + 1
+    }
+    mat
+  }
+  
+  # Process pairs more efficiently
+  for (i in seq_len(nrow(sig_pairs))) {
+    idx1 <- sig_pairs[i, 1]
+    idx2 <- sig_pairs[i, 2]
+    
+    common_cols <- which(LetMat[idx1,] & LetMat[idx2,])
+    
+    if (length(common_cols)) {
+      new_col <- LetMat[, common_cols, drop = FALSE]
+      new_col[idx1,] <- FALSE
+      LetMat[idx2, common_cols] <- FALSE
+      LetMat <- cbind(LetMat, new_col)
+      
+      if (ncol(LetMat) > 2) {
+        LetMat <- absorb(LetMat)
       }
     }
-    A.
   }
-  for (i in 1:k2) {
-    dpi <- distinct.pairs[i, ]
-    ijCols <- (LetMat[dpi[1], ] & LetMat[dpi[2], ])
-    if (any(ijCols)) {
-      A1 <- LetMat[, ijCols, drop = FALSE]
-      A1[dpi[1], ] <- FALSE
-      LetMat[dpi[2], ijCols] <- FALSE
-      LetMat <- cbind(LetMat, A1)
-      LetMat <- absorb(LetMat)
+  
+  # Optimized column sorting
+  sort_cols <- function(mat) {
+    if (ncol(mat) <= 1) {
+      return(mat)
     }
-  }
-  sortCols <- function(B) {
-    firstRow <- apply(B, 2, function(x) which(x)[1])
-    B <- B[, order(firstRow)]
-    firstRow <- apply(B, 2, function(x) which(x)[1])
-    reps <- (diff(firstRow) == 0)
-    if (any(reps)) {
-      nrep <- table(which(reps))
-      irep <- as.numeric(names(nrep))
-      k <- dim(B)[1]
-      for (i in irep) {
-        i. <- i:(i + nrep[as.character(i)])
-        j. <- (firstRow[i] + 1):k
-        B[j., i.] <- sortCols(B[j., i., drop = FALSE])
+    
+    first_true <- apply(mat, 2, function(x) match(TRUE, x, nomatch = nrow(mat) + 1))
+    ord <- order(first_true)
+    mat <- mat[, ord, drop = FALSE]
+    
+    # Handle ties more efficiently
+    rle_result <- rle(first_true[ord])
+    if (any(rle_result$lengths > 1)) {
+      pos <- 1
+      for (i in seq_along(rle_result$lengths)) {
+        len <- rle_result$lengths[i]
+        if (len > 1) {
+          start_row <- rle_result$values[i]
+          if (start_row < nrow(mat)) {
+            idx <- pos:(pos + len - 1)
+            sub_mat <- mat[(start_row + 1):nrow(mat), idx, drop = FALSE]
+            if (nrow(sub_mat) > 0) {
+              mat[(start_row + 1):nrow(mat), idx] <- sort_cols(sub_mat)
+            }
+          }
+        }
+        pos <- pos + len
       }
     }
-    B
+    mat
   }
-  LetMat. <- sortCols(LetMat)
-  if (reversed) 
-    LetMat. <- LetMat.[, rev(1:ncol(LetMat.))]
-  k.ltrs <- dim(LetMat.)[2]
-  makeLtrs <- function(kl, ltrs = Letters) {
-    kL <- length(ltrs)
-    if (kl < kL) 
-      return(ltrs[1:kl])
-    ltrecurse <- c(paste(ltrs[kL], ltrs[-kL], sep = ""), 
-                   ltrs[kL])
-    c(ltrs[-kL], makeLtrs(kl - kL + 1, ltrecurse))
+  
+  # Sort and potentially reverse columns
+  LetMat <- sort_cols(LetMat)
+  if (reversed) {
+    LetMat <- LetMat[, ncol(LetMat):1, drop = FALSE]
   }
-  Ltrs <- makeLtrs(k.ltrs, Letters)
-  dimnames(LetMat.)[[2]] <- Ltrs
-  LetVec <- rep(NA, n)
-  names(LetVec) <- Lvls
-  for (i in 1:n) LetVec[i] <- paste(Ltrs[LetMat.[i, ]], collapse = "")
-  nch.L <- nchar(Ltrs)
-  blk.L <- rep(NA, k.ltrs)
-  for (i in 1:k.ltrs) blk.L[i] <- paste(rep(" ", nch.L[i]), 
-                                        collapse = "")
-  monoVec <- rep(NA, n)
-  names(monoVec) <- Lvls
-  for (j in 1:n) {
-    ch2 <- blk.L
-    if (any(LetMat.[j, ])) 
-      ch2[LetMat.[j, ]] <- Ltrs[LetMat.[j, ]]
-    monoVec[j] <- paste(ch2, collapse = "")
+  
+  # Efficient letter assignment
+  k_ltrs <- ncol(LetMat)
+  Letters <- if (k_ltrs <= length(Letters)) {
+    Letters[seq_len(k_ltrs)]
+  } else {
+    make_letters <- function(k, ltrs) {
+      if (k <= length(ltrs)) {
+        return(ltrs[seq_len(k)])
+      }
+      extra <- paste0(ltrs[length(ltrs)], 
+                      c(ltrs[-length(ltrs)], ltrs[length(ltrs)]))
+      c(ltrs[-length(ltrs)], 
+        make_letters(k - length(ltrs) + 1, extra))
+    }
+    make_letters(k_ltrs, Letters)
   }
-  return(monoVec)
+  
+  # Pre-compute letter widths and blanks
+  letter_widths <- nchar(Letters)
+  blanks <- vapply(letter_widths, function(w) {
+    paste(rep(" ", w), collapse = "")
+  }, character(1))
+  
+  # Create result vector efficiently
+  result <- character(n)
+  names(result) <- Lvls
+  
+  # Use vectorized operations where possible
+  for (i in seq_len(n)) {
+    letter_pos <- which(LetMat[i,])
+    if (length(letter_pos)) {
+      chars <- character(k_ltrs)
+      chars[] <- blanks
+      chars[letter_pos] <- Letters[letter_pos]
+      result[i] <- paste(chars, collapse = "")
+    } else {
+      result[i] <- paste(rep(" ", sum(letter_widths)), collapse = "")
+    }
+  }
+  
+  result
 }
 
 ######################## Functions from lmerTest begin #################
@@ -180,11 +230,18 @@ get_contrasts_type1 <- function(model) {
   terms <- terms(model)
   X <- model.matrix(model)
   p <- ncol(X)
-  if(p == 0L) return(list(matrix(numeric(0L), nrow=0L))) # no fixef
-  if(p == 1L && attr(terms, "intercept")) # intercept-only model
+  if (p == 0L) {
+    return(list(matrix(numeric(0L), nrow=0L))) # no fixef
+  }
+  if (p == 1L && attr(terms, "intercept")) {# intercept-only model
     return(list(matrix(numeric(0L), ncol=1L)))
+  }
   # Compute 'normalized' doolittle factorization of XtX:
-  L <- if(p == 1L) matrix(1L) else t(doolittle(crossprod(X))$L)
+  L <- if (p == 1L) {
+    matrix(1L) 
+  } else {
+    t(doolittle(crossprod(X))$L)
+  }
   dimnames(L) <- list(colnames(X), colnames(X))
   # Determine which rows of L belong to which term:
   ind.list <- term2colX(terms, X)[attr(terms, "term.labels")]
@@ -195,16 +252,22 @@ term2colX <- function(terms, X) {
   # Compute map from terms to columns in X using the assign attribute of X.
   # Returns a list with one element for each term containing indices of columns
   #   in X belonging to that term.
-  if(is.null(asgn <- attr(X, "assign")))
+  if (is.null(asgn <- attr(X, "assign"))) {
     stop("Invalid design matrix:",
          "design matrix 'X' should have a non-null 'assign' attribute",
          call. = FALSE)
+  }
   term_names <- attr(terms, "term.labels")
   has_intercept <- attr(terms, "intercept") > 0
-  col_terms <- if(has_intercept) c("(Intercept)", term_names)[asgn + 1] else
+  col_terms <- if (has_intercept) {
+    c("(Intercept)", term_names)[asgn + 1]
+  } else {
     term_names[asgn[asgn > 0]]
-  if(!length(col_terms) == ncol(X)) # should never happen.
+  }
+  if(!length(col_terms) == ncol(X)) {
+  # should never happen.						  
     stop("An error happended when mapping terms to columns of X")
+  }
   # get names of terms (including aliased terms)
   nm <- union(unique(col_terms), term_names)
   res <- lapply(setNames(as.list(nm), nm), function(x) numeric(0L))
@@ -214,19 +277,20 @@ term2colX <- function(terms, X) {
 }
 
 doolittle <- function(x, eps = 1e-6) {
-  if(!is.matrix(x) || ncol(x) != nrow(x) || !is.numeric(x))
+  if(!is.matrix(x) || ncol(x) != nrow(x) || !is.numeric(x)) {
     stop("argument 'x' should be a numeric square matrix")
+  }
   stopifnot(ncol(x) > 1L)
   n <- nrow(x)
   L <- U <- matrix(0, nrow=n, ncol=n)
   diag(L) <- rep(1, n)
-  for(i in 1:n) {
+  for (i in 1:n) {
     ip1 <- i + 1
     im1 <- i - 1
-    for(j in 1:n) {
+    for (j in 1:n) {
       U[i,j] <- x[i,j]
       if (im1 > 0) {
-        for(k in 1:im1) {
+        for (k in 1:im1) {
           U[i,j] <- U[i,j] - L[i,k] * U[k,j]
         }
       }
@@ -239,7 +303,11 @@ doolittle <- function(x, eps = 1e-6) {
             L[j,i] <- L[j,i] - L[j,k] * U[k,i]
           }
         }
-        L[j, i] <- if(abs(U[i, i]) < eps) 0 else L[j,i] / U[i,i]
+        L[j, i] <- if (abs(U[i, i]) < eps) {
+          0 
+        } else {
+          L[j,i] / U[i,i]
+        }
       }
     }
   }
@@ -248,79 +316,27 @@ doolittle <- function(x, eps = 1e-6) {
   list( L=L, U=U )
 }
 
-# df_term <- function (model, term) {
-# if(!getME(model, "is_REML"))
-# stop("Kenward-Roger's method is only available for REML model fits")
-# if(!requireNamespace("pbkrtest", quietly = TRUE))
-# stop("pbkrtest package required for Kenward-Roger's method")
-# Lc <- get_contrasts_type1(model)[[term]]
-# Lc <- Kmatrix(model, term)$K
-# vcov_beta_adj <- try(pbkrtest::vcovAdj(model), silent=TRUE) # Adjusted vcov(beta)
-# ddf <- try(pbkrtest::Lb_ddf(L=Lc, V0=vcov(model),
-# Vadj=vcov_beta_adj), silent=TRUE) # vcov_beta_adj need to be dgeMatrix!
-# if(any(inherits(vcov_beta_adj, "try-error"), inherits(ddf, "try-error"))) {
-# warning("Unable to compute Kenward-Roger Df: using Satterthwaite instead")
-# if(!inherits(model, "lmerModLmerTest")) model <- as_lmerModLmerTest(model)
-# beta <- model@beta
-# # Compute Var(L beta) and eigen-decompose:
-# VLbeta <- Lc %*% model@vcov_beta %*% t(Lc) # Var(contrast) = Var(Lbeta)
-# eig_VLbeta <- eigen(VLbeta)
-# P <- eig_VLbeta$vectors
-# d <- eig_VLbeta$values
-# tol <- max(sqrt(.Machine$double.eps) * d[1], 0)
-# pos <- d > tol
-# q <- sum(pos) # rank(VLbeta)
-
-# PtL <- crossprod(P, Lc)[1:q, ]
-# if(q == 1) { # 1D case:
-# ddf <- contest1D(model, PtL, rhs=0, confint=FALSE)$df
-# return(ddf)
-# } # multi-D case proceeds:
-
-# # Compute q-list of gradients of (PtL)' cov(beta) (PtL) wrt. varpar vector:
-# grad_PLcov <- lapply(1:q, function(m) {
-# vapply(model@Jac_list, function(J) qform(PtL[m, ], J), numeric(1L))
-# })
-# # Compute degrees of freedom for the q t-statistics:
-# nu_m <- vapply(1:q, function(m) {
-# 2*(d[m])^2 / qform(grad_PLcov[[m]], model@vcov_varpar) }, numeric(1L)) # 2D_m^2 / g'Ag
-# # Compute ddf for the F-value:
-# ddf <- get_Fstat_ddf(nu_m, tol=1e-8)
-# }
-# return(ddf)
-# }
-
-# ##########
-# get_Fstat_ddf <- function(nu, tol=1e-8) {
-# fun <- function(nu) {
-# if(any(nu <= 2)) 2 else {
-# E <- sum(nu / (nu - 2))
-# 2 * E / (E - (length(nu))) # q = length(nu) : number of t-statistics
-# }
-# }
-# stopifnot(length(nu) >= 1,
-# # all(nu > 0), # returns 2 if any(nu < 2)
-# all(sapply(nu, is.numeric)))
-# if(length(nu) == 1L) return(nu)
-# if(all(abs(diff(nu)) < tol)) return(mean(nu))
-# if(!is.list(nu)) fun(nu) else vapply(nu, fun, numeric(1L))
-# }
-
 ########################
 
 df_term <- function(model, modelterm, covariate=NULL, ctrmatrix=NULL, ctrnames=NULL, type=c("Kenward-Roger", "Satterthwaite")) {
-
+  
   stopifnot(inherits(model, "lmerMod"))
   
-  if(!getME(model, "is_REML"))
+  if (!getME(model, "is_REML")) {
     stop("This function works properly only for REML model fits")
-  
+  }
   if (!is.null(ctrmatrix)) {
-    if (is.vector(ctrmatrix)) Lc <- matrix(ctrmatrix, nrow=1) else Lc <- ctrmatrix
+    if (is.vector(ctrmatrix)) {
+      Lc <- matrix(ctrmatrix, nrow=1)
+    } else {
+      Lc <- ctrmatrix
+    }
     stopifnot(is.numeric(Lc), ncol(Lc)==length(fixef(model))) 
     
-    if (!is.null(ctrnames)) rownames(Lc) <- ctrnames
-  }else{
+    if (!is.null(ctrnames)) {
+      rownames(Lc) <- ctrnames
+    }
+  } else {
     Lc <- Kmatrix(model, modelterm, covariate)$K
   }	
   
@@ -332,17 +348,23 @@ df_term <- function(model, modelterm, covariate=NULL, ctrmatrix=NULL, ctrnames=N
     ddf <- try(apply(Lc, 1, function(x) pbkrtest::Lb_ddf(x, V0=vcov(model),
                                                          Vadj=vcov_beta_adj)), silent=TRUE) # vcov_beta_adj need to be dgeMatrix!
     
-    if (any(inherits(vcov_beta_adj, "try-error"), 
-	        inherits(ddf, "try-error"), 
-			ddf >= nrow(model.frame(model)),
-			ddf <= 0)) {
+    if (
+      any(
+        inherits(vcov_beta_adj, "try-error"), 
+        inherits(ddf, "try-error"), 
+        ddf >= nrow(model.frame(model)),
+        ddf <= 0
+      )
+    ) {
       warning("Unable to compute Kenward-Roger Df: using Satterthwaite instead")
       type <- "Satterthwaite"	
     }
   }
   
   if (type == "Satterthwaite") {
-    if(!inherits(model, "lmerModLmerTest")) model <- as_lmerModLmerTest(model)
+    if (!inherits(model, "lmerModLmerTest")) {
+      model <- as_lmerModLmerTest(model)
+    }
     ddf <- apply(Lc, 1, function(x) suppressMessages(lmerTest::calcSatterth(model, x)$denom))
   }
   return(ddf)
@@ -366,15 +388,15 @@ as_lmerModLT <- function(model, devfun, tol=1e-8) {
   neg <- evals < -tol
   pos <- evals > tol
   zero <- evals > -tol & evals < tol
-  if(sum(neg) > 0) { # negative eigenvalues
-    eval_chr <- if(sum(neg) > 1) "eigenvalues" else "eigenvalue"
+  if (sum(neg) > 0) { # negative eigenvalues
+    eval_chr <- ifelse(sum(neg) > 1, "eigenvalues", "eigenvalue")
     evals_num <- paste(sprintf("%1.1e", evals[neg]), collapse = " ")
     warning(sprintf("Model failed to converge with %d negative %s: %s",
                     sum(neg), eval_chr, evals_num), call.=FALSE)
   }
   # Note: we warn about negative AND zero eigenvalues:
-  if(sum(zero) > 0) { # some eigenvalues are zero
-    eval_chr <- if(sum(zero) > 1) "eigenvalues" else "eigenvalue"
+  if (sum(zero) > 0) { # some eigenvalues are zero
+    eval_chr <- ifelse(sum(zero) > 1, "eigenvalues", "eigenvalue")
     evals_num <- paste(sprintf("%1.1e", evals[zero]), collapse = " ")
     warning(sprintf("Model may not have converged with %d %s close to zero: %s",
                     sum(zero), eval_chr, evals_num))
@@ -405,7 +427,9 @@ devfun_vp <- function(varpar, devfun, reml) {
   # Compute deviance for ML:
   dev <- df_envir$pp$ldL2() + (df_envir$resp$wrss() + df_envir$pp$sqrL(1))/sigma2 +
     n * log(2 * pi * sigma2)
-  if(!reml) return(dev)
+  if (!reml) {
+    return(dev)
+  }
   # Adjust if REML is used:
   RX <- df_envir$pp$RX() # X'V^{-1}X ~ crossprod(RX^{-1}) = cov(beta)^{-1} / sigma^2
   dev + 2*c(determinant(RX)$modulus) - ncol(RX) * log(2 * pi * sigma2)
@@ -423,49 +447,8 @@ get_covbeta <- function(varpar, devfun) {
 
 ######################## Functions from lmerTest end #################
 
-
 #######################
 # https://rpubs.com/bbolker/waldvar
-
-# waldVar2 <- function(object) {
-# ## test for/warn if ML fit?
-# dd <- lme4::devfun2(object,useSc=TRUE,signames=FALSE)
-# nvp <- length(attr(dd,"thopt"))+1 ## variance parameters (+1 for sigma)
-# pars <- attr(dd,"optimum")[seq(nvp)] ## var params come first
-# hh <- numDeriv::hessian(dd,pars)
-# ## factor of 2: deviance -> negative log-likelihood
-# vv <- 2*solve(hh)
-# nn <- tn(object)
-# dimnames(vv) <- list(nn,nn)
-# return(vv)
-# }
-
-# tn <- function(object) {
-# c(names(getME(object,"theta")),"sigma")
-# }
-
-# confintlmer <- function (object, parm, level = 0.95, ...) 
-# {
-# cf <- coef(object)
-# pnames <- names(cf)
-# if (missing(parm)) 
-# parm <- pnames
-# else if (is.numeric(parm)) 
-# parm <- pnames[parm]
-# a <- (1 - level)/2
-# a <- c(a, 1 - a)
-# pct <- format.perc(a, 3)
-# fac <- qnorm(a)
-# ci <- array(NA, dim = c(length(parm), 2L), dimnames = list(parm, pct))
-# ses <- sqrt(diag(object$vcov))[parm]
-# ci[] <- cf[parm] + ses %o% fac
-# ci
-# }
-
-# format.perc <- function (probs, digits) {
-# paste(format(100 * probs, trim = TRUE, scientific = FALSE,
-# digits = digits), "%")
-# }
 
 ###################### for print
 print.pdmlist = function(x, ...){
@@ -473,61 +456,35 @@ print.pdmlist = function(x, ...){
   x = x[names(x)[-pos]]
   NextMethod()
 }
-######################
-# vcov.VarCorr.merMod <- function(object,fit,...) {
-# if (isREML(fit)) {
-# warning("refitting model with ML")
-# fit <- refitML(fit)
-# }
-# if (!require("numDeriv")) stop("numDeriv package required")
-# useSc <- attr(object,"useSc")
-# dd <- lme4:::devfun2(fit,useSc=useSc,signames=FALSE)
-# vdd <- as.data.frame(object,order="lower.tri")
-# pars <- vdd[,"sdcor"]
-# npar0 <- length(pars)
-# if (isGLMM(fit)) {
-# pars <- c(pars,fixef(fit))
-# }
-# hh1 <- hessian(dd,pars)
-# vv2 <- 2*solve(hh1)
-# if (isGLMM(fit)) {
-# vv2 <- vv2[1:npar0,1:npar0,drop=FALSE]
-# }
-# nms <- apply(vdd[,1:3],1,
-# function(x) paste(na.omit(x),collapse="."))
-# dimnames(vv2) <- list(nms,nms)
-# return(vv2)
-# }
-
 # http://rstudio-pubs-static.s3.amazonaws.com/28864_dd1f084207d54f5ea67c9d1a9c845d01.html
 
 #######################################################
 # from package merDeriv vcov.lmerMod.R
 
 vcov_lmerMod <- function (object, ...) {  
-  if (!is(object, "lmerMod")) 
+  if (!is(object, "lmerMod")) {
     stop("vcov.lmerMod() only works for lmer() models.")
+  }
   dotdotdot <- list(...)
   if ("full" %in% names(dotdotdot)) {
     full <- dotdotdot$full
-  }
-  else {
+  } else {
     full <- FALSE
   }
   if ("information" %in% names(dotdotdot)) {
     information <- dotdotdot$information
-  }
-  else {
+  } else {
     information <- "expected"
   }
-  if (!(full %in% c("TRUE", "FALSE"))) 
+  if (!(full %in% c("TRUE", "FALSE"))) {
     stop("invalid 'full' argument supplied")
-  if (!(information %in% c("expected", "observed"))) 
+  }
+  if (!(information %in% c("expected", "observed"))) {
     stop("invalid 'information' argument supplied")
+  }
   if ("ranpar" %in% names(dotdotdot)) {
     ranpar <- dotdotdot$ranpar
-  }
-  else {
+  } else {
     ranpar <- "var"
   }
   parts <- getME(object, "ALL")
@@ -545,32 +502,25 @@ vcov_lmerMod <- function (object, ...) {
   fixvar <- solve(tcrossprod(crossprod(parts$X, invV), t(parts$X)))
   if (full == FALSE) {
     fixvar
-  }
-  else {
+  } else {
     fixhes <- tcrossprod(crossprod(parts$X, invV), t(parts$X))
     uluti <- length(parts$theta)
     devV <- vector("list", (uluti + 1))
     devLambda <- vector("list", uluti)
     score_varcov <- matrix(NA, nrow = length(parts$y), ncol = uluti)
     for (i in 1:uluti) {
-      devLambda[[i]] <- Matrix::forceSymmetric(LambdaInd == i, 
-                                               uplo = "L")
-      devV[[i]] <- tcrossprod(tcrossprod(parts$Z, t(devLambda[[i]])), 
-                              parts$Z)
+      devLambda[[i]] <- Matrix::forceSymmetric(LambdaInd == i, uplo = "L")
+      devV[[i]] <- tcrossprod(tcrossprod(parts$Z, t(devLambda[[i]])), parts$Z)
     }
     devV[[(uluti + 1)]] <- Matrix::Diagonal(nrow(parts$X), 1)
-    ranhes <- matrix(NA, nrow = (uluti + 1), ncol = (uluti + 
-                                                       1))
+    ranhes <- matrix(NA, nrow = (uluti + 1), ncol = (uluti + 1))
     entries <- rbind(matrix(rep(1:(uluti + 1), each = 2), 
-                            (uluti + 1), 2, byrow = TRUE), t(combn((uluti + 1), 
-                                                                   2)))
-    entries <- entries[order(entries[, 1], entries[, 2]), 
-    ]
+                            (uluti + 1), 2, byrow = TRUE), t(combn((uluti + 1), 2)))
+    entries <- entries[order(entries[, 1], entries[, 2]), ]
     if (parts$devcomp$dims[["REML"]] == 0) {
       if (information == "expected") {
-        ranhes[lower.tri(ranhes, diag = TRUE)] <- apply(entries, 
-                                                        1, function(x) as.numeric((1/2) * lav_matrix_trace(tcrossprod(tcrossprod(crossprod(invV, 
-                                                                                                                                           devV[[x[1]]]), invV), t(devV[[x[2]]])))))
+        ranhes[lower.tri(ranhes, diag = TRUE)] <- apply(entries,
+                                                        1, function(x) as.numeric((1/2) * lav_matrix_trace(tcrossprod(tcrossprod(crossprod(invV, devV[[x[1]]]), invV), t(devV[[x[2]]])))))
       }
       if (information == "observed") {
         ranhes[lower.tri(ranhes, diag = TRUE)] <- unlist(apply(entries, 
@@ -611,8 +561,7 @@ vcov_lmerMod <- function (object, ...) {
     if (ranpar == "var") {
       ranhes <- ranhes
       varcov_beta <- varcov_beta
-    }
-    else if (ranpar == "sd") {
+    } else if (ranpar == "sd") {
       sdcormat <- as.data.frame(VarCorr(object, comp = "Std.Dev"), 
                                 order = "lower.tri")
       sdcormat$sdcor2[which(is.na(sdcormat$var2))] <- sdcormat$sdcor[which(is.na(sdcormat$var2))] * 
@@ -625,8 +574,7 @@ vcov_lmerMod <- function (object, ...) {
       ranhes[lower.tri(ranhes, diag = TRUE)] <- weight * 
         ranhes[lower.tri(ranhes, diag = TRUE)]
       ranhes <- Matrix::forceSymmetric(ranhes, uplo = "L")
-    }
-    else {
+    } else {
       stop("ranpar needs to be var or sd for lmerMod object.")
     }
     full_varcov <- solve(rbind(cbind(fixhes, t(varcov_beta)), 
@@ -634,28 +582,29 @@ vcov_lmerMod <- function (object, ...) {
     colnames(full_varcov) <- c(names(parts$fixef), paste("cov", 
                                                          names(parts$theta), sep = "_"), "residual")
     callingFun <- try(deparse(sys.call(-2)), silent = TRUE)
-    if (length(callingFun) > 1) 
+    if (length(callingFun) > 1) {
       callingFun <- paste(callingFun, collapse = "")
-    if (!inherits(callingFun, "try-error") & grepl("summary.merMod", 
-                                                   callingFun)) {
-      return(fixvar)
     }
-    else {
+    if (!inherits(callingFun, "try-error") & grepl("summary.merMod", callingFun)) {
+      return(fixvar)
+    } else {
       return(full_varcov)
     }
   }
 }
 
 vcov_glmerMod <- function(object, ...) {
-  if (!(family(object)$family %in% c("binomial", "poisson"))) stop("family has to be binomial or poisson") 
-
+  if (!(family(object)$family %in% c("binomial", "poisson"))) {
+    stop("family has to be binomial or poisson") 
+  }
+  
   dotdotdot <- list(...)
-  if("full" %in% names(dotdotdot)){
+  if("full" %in% names(dotdotdot)) {
     full <- dotdotdot$full
   } else {
     full <- FALSE
   }
-
+  
   if("ranpar" %in% names(dotdotdot)){
     ranpar <- dotdotdot$ranpar
   } else {
@@ -665,17 +614,21 @@ vcov_glmerMod <- function(object, ...) {
   if (full == FALSE) {
     full_vcov <- vcov.merMod(object)
   } else {
-    if (length(getME(object, "l_i")) > 1L) stop("Multiple cluster variables detected. This type of model is currently not supported for full vcov.")
+    if (length(getME(object, "l_i")) > 1L) {
+      stop("Multiple cluster variables detected. This type of model is currently not supported for full vcov.")
+    }
     
     ## Hessian was based on deviance function, which is the 
     ## -2*LogLik. That's why divided by -2
-    if (object@devcomp$dims[['nAGQ']] == 0L) stop("For full vcov, nAGQ of at least 1 is required.")
+    if (object@devcomp$dims[['nAGQ']] == 0L) {
+      stop("For full vcov, nAGQ of at least 1 is required.")
+    }
     full_vcov_noorder <- -solve(object@optinfo$derivs$Hessian/(-2))
-  
+    
     ## Block order in Hessian was theta, beta. Reorganize to 
     ## put fixed parameter block first to match with score 
     ## matrix order.
-  
+    
     ## count parameter numbers
     p <- nrow(full_vcov_noorder)
     pfix <- length(object@beta)
@@ -687,102 +640,93 @@ vcov_glmerMod <- function(object, ...) {
     full_vcov[(pfix + 1):p, 1:pfix] <- full_vcov_noorder[1:pran, (pran + 1): p]
     full_vcov[1:pfix, (pfix + 1): p] <- full_vcov_noorder[(pran + 1): p, 1:pran]
     
-
+    
     ## reparameterize for sd and var for random variance/covariance parameters.
     if (ranpar == "theta") {
-       full_vcov <- full_vcov
+      full_vcov <- full_vcov
     }
-      
+    
     if (ranpar == "sd") {
-        dd <- devfun2(object,useSc=FALSE,signames=TRUE)
-        nvp <- length(attr(dd,"thopt"))
-        pars <- attr(dd,"optimum")
-        pars <- pars[!is.na(names(pars))] 
-        hh <- hessian(dd, pars)/(-2)
-
-        full_vcov_noorder <- -solve(hh)
-        full_vcov <- matrix(NA, nrow(full_vcov_noorder),
-          ncol(full_vcov_noorder))
-        full_vcov[1:pfix, 1:pfix] <-
-          full_vcov_noorder[(pran + 1):p, (pran + 1):p]
-        full_vcov[(pfix + 1):p, (pfix + 1): p] <-
-          full_vcov_noorder[1:pran, 1:pran]
-        full_vcov[(pfix + 1):p, 1:pfix] <-
-          full_vcov_noorder[1:pran, (pran + 1): p]
-        full_vcov[1:pfix, (pfix + 1): p] <-
-            full_vcov_noorder[(pran + 1): p, 1:pran]
-     }
-        
-    if (ranpar == "var"){
-        dd <- devfun2(object,useSc=FALSE,signames=TRUE)
-        nvp <- length(attr(dd,"thopt"))
-        pars <- attr(dd,"optimum")
-        pars <- pars[!is.na(names(pars))] 
-        hh <- hessian(dd, pars)/(-2)
-           
-        sdcormat <- as.data.frame(VarCorr(object,comp = "Std.Dev"),
-          order = "lower.tri")
-        sdcormat$sdcor2[which(is.na(sdcormat$var2))] <-
-          (1/2)*(sdcormat$sdcor[which(is.na(sdcormat$var2))])^(-1/2)
-        sdcormat$sdcor2[which(!is.na(sdcormat$var2))] <- (-1)*
-          (sdcormat$vcov[which(!is.na(sdcormat$var2))]/
-             sdcormat$sdcor[which(!is.na(sdcormat$var2))])^(-1)
-        hh[((pran + 1):p), (1:pran)] <- sweep(as.matrix(hh[((pran + 1):p),
-          (1:pran)]), MARGIN = 2, sdcormat$sdcor2, `*`)
-        hh[(1:pran), ((pran + 1):p)] <- t(hh[((pran + 1):p), (1:pran)])
-        ## ranhes reparameterization
-        if (pran == 1){
-            entries = matrix(1, 1, 1)
-            weight <- (sdcormat$sdcor2)^2
-        } else {
-          entries <- rbind(matrix(rep(1: pran, each = 2),
-            pran, 2, byrow = TRUE), t(combn(pran, 2)))
-          entries <- entries[order(entries[,1], entries[,2]), ]
-          weight <- apply(entries, 1, function(x)
-            sdcormat$sdcor2[x[1]] * sdcormat$sdcor2[x[2]])
-        }
- 
-        hh[1:pran, 1:pran][lower.tri(hh[1:pran, 1:pran], diag = TRUE)] <-
-          weight * hh[1:pran, 1:pran][lower.tri(hh[1:pran, 1:pran],
-                                                diag = TRUE)]
-        if (pran > 1){
-          hh[1:pran, 1:pran] <- as.matrix(forceSymmetric(hh[1:pran, 1:pran],
-            uplo = "L"))
-        }
-        
-        full_vcov_noorder <- -solve(hh)
-        full_vcov <- matrix(NA, nrow(full_vcov_noorder),
-          ncol(full_vcov_noorder))
-        full_vcov[1:pfix, 1:pfix] <-
-          full_vcov_noorder[(pran + 1):p, (pran + 1):p]
-        full_vcov[(pfix + 1):p, (pfix + 1): p] <-
-          full_vcov_noorder[1:pran, 1:pran]
-        full_vcov[(pfix + 1):p, 1:pfix] <-
-          full_vcov_noorder[1:pran, (pran + 1): p]
-        full_vcov[1:pfix, (pfix + 1): p] <-
-          full_vcov_noorder[(pran + 1): p, 1:pran]
-    }
-    if (!(ranpar %in% c("sd", "theta", "var"))){
-       stop("ranpar needs to be sd, theta or var for glmerMod object.")
-    }
+      dd <- devfun2(object,useSc=FALSE,signames=TRUE)
+      nvp <- length(attr(dd,"thopt"))
+      pars <- attr(dd,"optimum")
+      pars <- pars[!is.na(names(pars))] 
+      hh <- hessian(dd, pars)/(-2)
       
+      full_vcov_noorder <- -solve(hh)
+      full_vcov <- matrix(NA, nrow(full_vcov_noorder),
+                          ncol(full_vcov_noorder))
+      full_vcov[1:pfix, 1:pfix] <-
+        full_vcov_noorder[(pran + 1):p, (pran + 1):p]
+      full_vcov[(pfix + 1):p, (pfix + 1): p] <-
+        full_vcov_noorder[1:pran, 1:pran]
+      full_vcov[(pfix + 1):p, 1:pfix] <-
+        full_vcov_noorder[1:pran, (pran + 1): p]
+      full_vcov[1:pfix, (pfix + 1): p] <-
+        full_vcov_noorder[(pran + 1): p, 1:pran]
+    }
+    
+    if (ranpar == "var") {
+      dd <- devfun2(object,useSc=FALSE,signames=TRUE)
+      nvp <- length(attr(dd,"thopt"))
+      pars <- attr(dd,"optimum")
+      pars <- pars[!is.na(names(pars))] 
+      hh <- hessian(dd, pars)/(-2)
+      
+      sdcormat <- as.data.frame(VarCorr(object,comp = "Std.Dev"),
+                                order = "lower.tri")
+      sdcormat$sdcor2[which(is.na(sdcormat$var2))] <-
+        (1/2)*(sdcormat$sdcor[which(is.na(sdcormat$var2))])^(-1/2)
+      sdcormat$sdcor2[which(!is.na(sdcormat$var2))] <- (-1)*
+        (sdcormat$vcov[which(!is.na(sdcormat$var2))]/
+           sdcormat$sdcor[which(!is.na(sdcormat$var2))])^(-1)
+      hh[((pran + 1):p), (1:pran)] <- sweep(as.matrix(hh[((pran + 1):p),
+                                                         (1:pran)]), MARGIN = 2, sdcormat$sdcor2, `*`)
+      hh[(1:pran), ((pran + 1):p)] <- t(hh[((pran + 1):p), (1:pran)])
+      ## ranhes reparameterization
+      if (pran == 1) {
+        entries = matrix(1, 1, 1)
+        weight <- (sdcormat$sdcor2)^2
+      } else {
+        entries <- rbind(matrix(rep(1: pran, each = 2),
+                                pran, 2, byrow = TRUE), t(combn(pran, 2)))
+        entries <- entries[order(entries[,1], entries[,2]), ]
+        weight <- apply(entries, 1, function(x)
+          sdcormat$sdcor2[x[1]] * sdcormat$sdcor2[x[2]])
+      }
+      
+      hh[1:pran, 1:pran][lower.tri(hh[1:pran, 1:pran], diag = TRUE)] <-
+        weight * hh[1:pran, 1:pran][lower.tri(hh[1:pran, 1:pran], diag = TRUE)]
+      if (pran > 1) {
+        hh[1:pran, 1:pran] <- as.matrix(forceSymmetric(hh[1:pran, 1:pran], uplo = "L"))
+      }
+      
+      full_vcov_noorder <- -solve(hh)
+      full_vcov <- matrix(NA, nrow(full_vcov_noorder), ncol(full_vcov_noorder))
+      full_vcov[1:pfix, 1:pfix] <- full_vcov_noorder[(pran + 1):p, (pran + 1):p]
+      full_vcov[(pfix + 1):p, (pfix + 1): p] <- full_vcov_noorder[1:pran, 1:pran]
+      full_vcov[(pfix + 1):p, 1:pfix] <- full_vcov_noorder[1:pran, (pran + 1): p]
+      full_vcov[1:pfix, (pfix + 1): p] <- full_vcov_noorder[(pran + 1): p, 1:pran]
+    }
+    if (!(ranpar %in% c("sd", "theta", "var"))) {
+      stop("ranpar needs to be sd, theta or var for glmerMod object.")
+    }
+    
     ## name the matrix
     parts <- getME(object, c("fixef", "theta"))
-    colnames(full_vcov) <- c(names(parts$fixef), paste("cov",
-      names(parts$theta), sep="_"))
+    colnames(full_vcov) <- c(names(parts$fixef), paste("cov", names(parts$theta), sep="_"))
   }
   return(full_vcov)
 }
 
-lav_matrix_trace <- function (..., check = TRUE) 
-{
-  if (nargs() == 0L) 
+lav_matrix_trace <- function (..., check = TRUE) {
+  if (nargs() == 0L) {
     return(as.numeric(NA))
+  }
   dots <- list(...)
   if (is.list(dots[[1]])) {
     mlist <- dots[[1]]
-  }
-  else {
+  } else {
     mlist <- dots
   }
   nMat <- length(mlist)
@@ -792,18 +736,15 @@ lav_matrix_trace <- function (..., check = TRUE)
       stopifnot(NROW(S) == NCOL(S))
     }
     out <- sum(S[lav_matrix_diag_idx(n = NROW(S))])
-  }
-  else if (nMat == 2L) {
+  } else if (nMat == 2L) {
     out <- sum(mlist[[1]] * t(mlist[[2]]))
-  }
-  else if (nMat == 3L) {
+  } else if (nMat == 3L) {
     A <- mlist[[1]]
     B <- mlist[[2]]
     C <- mlist[[3]]
     B2 <- B %*% C
     out <- sum(A * t(B2))
-  }
-  else {
+  } else {
     M1 <- mlist[[1]]
     M2 <- mlist[[2]]
     for (m in 3L:nMat) {
@@ -814,8 +755,7 @@ lav_matrix_trace <- function (..., check = TRUE)
   out
 }
 
-lav_matrix_diag_idx <- function (n = 1L) 
-{
+lav_matrix_diag_idx <- function (n = 1L) {
   1L + (seq_len(n) - 1L) * (n + 1L)
 }
 
@@ -823,18 +763,19 @@ lav_matrix_diag_idx <- function (n = 1L)
 # For creation of O'Sullivan-type Z matrices.
 # Last changed: 04 OCT 2021 by M.P.Wand.
 
-ZOSull <- function(x,intKnots, range.x, drv=0) {
-  if (drv>2) stop("splines not smooth enough for more than 2 derivatives")
+ZOSull <- function(x,intKnots, range.x, drv = 0) {
+  if (drv > 2) {
+    stop("splines not smooth enough for more than 2 derivatives")
+  }
   
   # Set defaults for `range.x' and `intKnots'
-  if (missing(range.x))
+  if (missing(range.x)) {
     range.x <- c(1.05*min(x)-0.05*max(x),1.05*max(x)-0.05*min(x))
+  }
   
-  if (missing(intKnots))
-  {
+  if (missing(intKnots)) {
     numIntKnots <- min(length(unique(x)),35)
-    intKnots <- quantile(unique(x),seq(0,1,length=
-                                         (numIntKnots+2))[-c(1,(numIntKnots+2))])
+    intKnots <- quantile(unique(x),seq(0,1,length=(numIntKnots+2))[-c(1,(numIntKnots+2))])
   }
   numIntKnots <- length(intKnots)
   
@@ -867,10 +808,10 @@ ZOSull <- function(x,intKnots, range.x, drv=0) {
   B <- splines::spline.des(allKnots,x,derivs=rep(drv,length(x)),
                            outer.ok=TRUE)$design
   
-  Z <- crossprod(t(B),LZ)
+  Z <- crossprod(t(B), LZ)
   
   # Order the columns of Z with respect to the eigenvalues of "Omega":
-  Z <- Z[,order(eigOmega$values[indsZ])]
+  Z <- Z[, order(eigOmega$values[indsZ])]
   
   # Add the `range.x' and 'intKnots' as attributes
   # of the return object.
@@ -885,31 +826,33 @@ ZOSull <- function(x,intKnots, range.x, drv=0) {
 Ztps <- function(x, k, knots=NULL, range.x=NULL) {
   # Set up thin plate spline generalised
   # covariance function:
-  tps.cov <- function(r,m=2,d=1)
-  {     
+  tps.cov <- function(r,m=2,d=1) {     
     r <- as.matrix(r)
     num.row <- nrow(r)
     num.col <- ncol(r)
     r <- as.vector(r)
     nzi <- (1:length(r))[r!=0]
     ans <- rep(0,length(r))
-    if ((d+1)%%2!=0)    
+    if ((d+1)%%2!=0) {   
       ans[nzi] <- (abs(r[nzi]))^(2*m-d)*log(abs(r[nzi])) # d is even
-    else
+    } else {
       ans[nzi] <- (abs(r[nzi]))^(2*m-d)
+    }
     
-    if (num.col>1) ans <- matrix(ans,num.row,num.col)     # d is odd
+    if (num.col>1) {
+      ans <- matrix(ans,num.row,num.col)     # d is odd
+    }
     return(ans)
   }
   
   # Set up function for matrix square-roots:
-  matrix.sqrt <- function(A)
-  {
+  matrix.sqrt <- function(A) {
     sva <- svd(A)
-    if (min(sva$d)>=0)
+    if (min(sva$d) >= 0) {
       Asqrt <- t(sva$v %*% (t(sva$u) * sqrt(sva$d)))
-    else
+    } else {
       stop("Matrix square root is not defined")
+    }
     return(Asqrt)
   }
   
@@ -967,7 +910,7 @@ f_loj_krc <- function(x, y, by.x, by.y) {
   
   # replace column names of y with same names of x
   # to avoid duplicate fields
-  for(i in 1:length(by.y)) {
+  for (i in 1:length(by.y)) {
     colnames(y)[which(y.cn == by.y[i])] <- by.x[i]
   }
   by.y <- by.x # since two fields are the same now
@@ -996,15 +939,17 @@ f_loj_krc <- function(x, y, by.x, by.y) {
 ## trt_n -- names of treatment
 
 ci_mcp <- function(LL, UL, trt_n=NULL) { 
-
+  
   stopifnot("Check your LL and UL input!"={
     is.numeric(LL)
-	is.numeric(UL)
-	length(LL)==length(UL)
-	all(LL <= UL)
+    is.numeric(UL)
+    length(LL)==length(UL)
+    all(LL <= UL)
   })
   trt_len <- length(LL)
-  if(is.null(trt_n) || length(unique(trt_n))!=trt_len) trt_n <- as.character(1:trt_len)
+  if (is.null(trt_n) || length(unique(trt_n))!=trt_len) {
+    trt_n <- as.character(1:trt_len)
+  }
   
   ci_mcp_letters_0 <- rep("A", trt_len)
   names(ci_mcp_letters_0) <- trt_n
@@ -1013,7 +958,9 @@ ci_mcp <- function(LL, UL, trt_n=NULL) {
   
   for (i in 1:trt_len) { 
     for (j in (i+1):trt_len) { 
-      if (j > trt_len) break
+      if (j > trt_len) {
+        break
+      }
       ci1 <- c(LL[i],  UL[i])
       ci2 <-  c(LL[j],  UL[j])
       if (max(ci1) < min(ci2) || max(ci2) < min(ci1)) {
@@ -1024,8 +971,9 @@ ci_mcp <- function(LL, UL, trt_n=NULL) {
     }
   }
   
-  if (all(unique(na.omit(as.vector(results)))==0.08)) ci_mcp_letters <- ci_mcp_letters_0  
-  else{
+  if (all(unique(na.omit(as.vector(results)))==0.08)) {
+    ci_mcp_letters <- ci_mcp_letters_0  
+  } else {
     rownames(results) <- colnames(results) <- trt_n
     results[lower.tri(results)] <- t(results)[lower.tri(results)]
     ci_mcp_letters <- multcompLetters(results, Letters=LETTERS)
@@ -1063,4 +1011,31 @@ aovlist_lmer <- function(object) {
   return(lmer_object)
 }
 
+########################################################
+reTrms_tmb <- function(model, ...) {
+  form <- formula(model)
+  cond_reTrms <- reformulas::mkReTrms(
+    reformulas::findbars(form, ...),
+    model.frame(model), reorder.terms=FALSE, calc.lambdat=TRUE)    
+  
+  rmattr <- function(x, a = c("correlation",  "blockCode", "stddev")) {
+    for (aa in a) attr(x, aa) <- NULL
+    x
+  }
+  
+  mktheta <- function(model) {
+    vc <- VarCorr(model)$cond
+    get_chol <- function(v) {
+      cc <- t(chol(rmattr(v)))
+      cc[lower.tri(cc, diag = TRUE)]
+    }
+    theta <- lapply(vc, get_chol)
+    return(unlist(theta)/sigma(model))
+  }
+  
+  cond_reTrms$Lambdat@x <- unname(mktheta(model)[cond_reTrms$Lind])
+  return(cond_reTrms)
+}
+
+########################################################
 

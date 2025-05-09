@@ -11,20 +11,19 @@ This package provides functions to diagnose and make inferences from various lin
 \tabular{ll}{
 Package: \tab predictmeans\cr
 Type: \tab Package\cr
-Version: \tab 1.1.1\cr
-Date: \tab 2024-04-03\cr
+Version: \tab 1.1.2\cr
+Date: \tab 2025-05-08\cr
 License: \tab GPL (>= 2)\cr
 }
 }
 \author{
-Dongwen Luo, Siva Ganesh and John Koolaard
+Dongwen Luo, James Curran, Simon Urbanek, Siva Ganesh and John Koolaard
 
 Maintainer: Dongwen Luo <dongwen.luo@agresearch.co.nz>
 }
 \references{
 	Welham, S., Cullis, B., Gogel, B., Gilmour, A., & Thompson, R. (2004),
 	\emph{Prediction in linear mixed models}, Australian and New Zealand Journal of Statistics, 46(3), 325-347. 
-
 }
 
 \keyword{ package }
