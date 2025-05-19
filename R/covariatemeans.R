@@ -1,28 +1,28 @@
 covariatemeans <- function (model, modelterm=NULL, covariate, as.is=FALSE, covariateV=NULL, data=NULL, level=0.05, Df=NULL, trans=NULL, transOff=0, responsen=NULL, trellis=TRUE, plotord=NULL, mtitle=NULL, ci=TRUE, point=TRUE, jitterv=0, newwd=FALSE) {
-  
-  if (is.null(modelterm) || all(modelterm %in% c("NULL", ""))) {
+
+  if (is.null(modelterm) || all(modelterm  %in%  c("NULL", ""))) {
     modelterm <- covariate
     trellis=FALSE
   }
-  
+
   if (!is.null(covariateV) && length(covariate) > 1) {
     stopifnot(is.matrix(covariateV), dim(covariateV)[2] == length(covariate))
     colnames(covariateV) <- covariate
   }
-  
+
   vars <- unlist(strsplit(modelterm, "\\:"))
-  if (!is.null(plotord) && !unique(plotord %in% c("NULL", ""))) {
+  if (!is.null(plotord) && !unique(plotord  %in%  c("NULL", ""))) {
     if (length(plotord) != length(vars)) {
       stop(paste("plotord must be a character vector of length", length(vars)))
     }
-    if (is.character(plotord)) {      
+    if (is.character(plotord)) {
       i = match(plotord, vars)
       if (any(is.na(i))) {
         stop(paste("The entries", paste0(plotord[is.na(i)], sep = ", "), "do not match any term in ", modelterm))
       } else {
         plotord = i
       }
-    }	
+    }
   }
   ctr.matrix <- Kmatrix(model, modelterm, covariate, covariateV, data)
   KK <- ctr.matrix$K
@@ -30,9 +30,9 @@ covariatemeans <- function (model, modelterm=NULL, covariate, as.is=FALSE, covar
   response <- ctr.matrix$response
   preddf <- ctr.matrix$preddf
   mp <- mymodelparm(model)
-  bhat <- mp$coef 
-  
-  if (!setequal(modelterm, covariate) & as.is) {  
+  bhat <- mp$coef
+
+  if (!setequal(modelterm, covariate) & as.is) {
     agg_formula <- formula(paste(covariate, "~", paste(vars, collapse="+")))
     min_df <- aggregate(agg_formula, preddf, min, na.rm=TRUE)
     names(min_df)[ncol(min_df)] <- "min_value"
@@ -40,21 +40,21 @@ covariatemeans <- function (model, modelterm=NULL, covariate, as.is=FALSE, covar
     names(max_df)[ncol(max_df)] <- "max_value"
     pltdf <- merge(merge(pltdf, min_df, by=vars, sort=FALSE), max_df, by=vars, sort=FALSE)
     pltdf <- pltdf[pltdf[[covariate]] >= pltdf[["min_value"]] & pltdf[[covariate]] <= pltdf[["max_value"]], ]
-    KK <- KK[as.numeric(rownames(pltdf)),] 
+    KK <- KK[as.numeric(rownames(pltdf)),]
   }
-  
+
   # We'll work only with the non-NA elements of bhat
-  KK <- KK[, mp$estimable, drop=FALSE]   
+  KK <- KK[, mp$estimable, drop=FALSE]
   pltdf$yhat <- as.numeric(KK%*%bhat)
   pltdf$ses <- sqrt(base::diag(KK %*% tcrossprod(mp$vcov, KK)))
-  
-  if (is.null(Df) || all(Df%in%c("NULL", ""))) {
+
+  if (is.null(Df) || all(Df %in% c("NULL", ""))) {
     if (inherits(model, "lme")) {
       Df <- terms(model$fixDF)[modelterm]
     } else if (inherits(model, "lmerMod")) {
       # Df <- try(median(df_term(model, modelterm, covariate), na.rm=TRUE))
       # Df <- mp$df[modelterm]
-      # if(inherits(Df, "try-error")) stop("You need provide Df for this model!") 
+      # if(inherits(Df, "try-error")) stop("You need provide Df for this model!")
       L_term <- get_contrasts_type1(model)[[modelterm]]
       Df <- mean(df_term(model, ctrmatrix=L_term))
       if (is.nan(Df)) {
@@ -67,7 +67,7 @@ covariatemeans <- function (model, modelterm=NULL, covariate, as.is=FALSE, covar
       stop("You need provide Df for this model!")
     }
   }
-  
+
   if (inherits(model, "glm") && is.null(trans)) {
     trans <- model$family$linkinv
   }
@@ -77,7 +77,7 @@ covariatemeans <- function (model, modelterm=NULL, covariate, as.is=FALSE, covar
   if (inherits(model, "glmmTMB") && is.null(trans)) {
     trans <- model$modelInfo$family$linkinv
   }
-  
+
   Mean <- LL <- UL <- xvar <- factors <- bky <- NULL
   if (is.null(trans)) {
     pltdf$Mean <- pltdf$yhat
@@ -91,18 +91,18 @@ covariatemeans <- function (model, modelterm=NULL, covariate, as.is=FALSE, covar
     pltdf$LL <- trans(pltdf$yhat - qt(1 - level/2, df = Df) * pltdf$ses)-transOff
     pltdf$UL <- trans(pltdf$yhat + qt(1 - level/2, df = Df) * pltdf$ses)-transOff
   }
-  
-  # pltdf$yhat <- pltdf$ses <- NULL 
-  pltdf$yhat <- NULL 
-  
+
+  # pltdf$yhat <- pltdf$ses <- NULL
+  pltdf$yhat <- NULL
+
   if (setequal(modelterm, covariate)) {
     pltdf$factors <- factor(1)
   } else {
     pltdf$factors <- factor(do.call("paste", c(pltdf[, vars, drop=FALSE], sep=":")))
   }
   colnames(pltdf)[colnames(pltdf)==covariate] <- "xvar"
-  
-  # delete empty factor combinations  
+
+  # delete empty factor combinations
   if (!is.null(data)) {
     mdf <- data
   } else {
@@ -111,16 +111,16 @@ covariatemeans <- function (model, modelterm=NULL, covariate, as.is=FALSE, covar
   if (length(setdiff(response, names(mdf)))!=0) {
     mdf[,response] <- eval(parse(text=response), mdf)
   }
-  mdf <- cbind(mdf, preddf[, !names(preddf)%in%names(mdf), drop=FALSE])
-  
+  mdf <- cbind(mdf, preddf[, !names(preddf) %in% names(mdf), drop=FALSE])
+
   ndf <- data.frame(table(mdf[, vars, drop = FALSE]))
-  if (any(ndf$Freq==0)) { 
-    ndf0 <- ndf[ndf$Freq==0, , drop=FALSE] 
+  if (any(ndf$Freq==0)) {
+    ndf0 <- ndf[ndf$Freq==0, , drop=FALSE]
     ndf0$factors <- factor(do.call("paste", c(ndf0[, vars, drop=FALSE], sep=":")))
-    pltdf <- pltdf[!pltdf$factors%in%ndf0$factors, ]
-  }   
-  
-  if (is.null(mtitle) || mtitle%in%c("NULL", "")) {
+    pltdf <- pltdf[!pltdf$factors %in% ndf0$factors, ]
+  }
+
+  if (is.null(mtitle) || mtitle %in% c("NULL", "")) {
     mtitle <- paste("Fitted and observed relationship with", (1-level)*100, "% CI")
   }
   if (is.null(trans)) {
@@ -146,7 +146,7 @@ covariatemeans <- function (model, modelterm=NULL, covariate, as.is=FALSE, covar
           if (inherits(model, "glmmTMB")) {
             mdf$bky <- ifelse(mdf$bky >=1 | mdf$bky <= 0, NA, model$modelInfo$family$linkfun(mdf$bky))
           }
-          response <- "Response"		  
+          response <- "Response"
         }
       } else {
         mdf$bky <- trans(mdf[, response])
@@ -155,7 +155,7 @@ covariatemeans <- function (model, modelterm=NULL, covariate, as.is=FALSE, covar
     } else {       ## Transformed y within modelling
       response <- regmatches(response, regexec("\\(([^<]+)\\)", response))[[1]][2]
       if (length(setdiff(response, names(mdf)))!=0) {
-        if (is.null(responsen) || all(responsen%in%c("NULL", ""))) {
+        if (is.null(responsen) || all(responsen %in% c("NULL", ""))) {
           stop("Please provide suitable name for response variable using option 'responsen'!")
         }
         response <- responsen
@@ -163,7 +163,7 @@ covariatemeans <- function (model, modelterm=NULL, covariate, as.is=FALSE, covar
       mdf$bky <- mdf[, response]
     }
   }
-  
+
   if (all(is.na(mdf$bky))) {
     point <- FALSE
   }
@@ -174,7 +174,7 @@ covariatemeans <- function (model, modelterm=NULL, covariate, as.is=FALSE, covar
   }
   names(mdf)[names(mdf)==covariate] <- "xvar"
   pltdf[, c("Mean", "LL", "UL")] <- lapply(pltdf[, c("Mean", "LL", "UL")], as.numeric)
-  
+
   if (!trellis) {
     if (newwd) {
       dev.new()
@@ -194,7 +194,7 @@ covariatemeans <- function (model, modelterm=NULL, covariate, as.is=FALSE, covar
       plt <- ggplot(pltdf, aes(xvar, Mean, colour=factors))+
         labs(title=paste(mtitle, "\n", sep=""), x=paste("\n", covariate, sep=""), y=paste(response, "\n"))+
         geom_line(linewidth=0.5)+
-        theme_bw()			
+        theme_bw()
       if (ci) {
         plt <- plt + geom_ribbon(aes(ymin = LL, ymax = UL, fill=factors), alpha = 0.2, data=pltdf, stat="identity")
       }
@@ -230,24 +230,24 @@ covariatemeans <- function (model, modelterm=NULL, covariate, as.is=FALSE, covar
       if (newwd) {
         dev.new()
       }
-      if (is.null(plotord) || all(plotord %in% c("NULL", ""))) {
+      if (is.null(plotord) || all(plotord  %in%  c("NULL", ""))) {
         plotord <- 1:2
       }
       fact1 <- (vars[plotord])[1]
       fact2 <- (vars[plotord])[2]
-      plt <- ggplot(pltdf, aes(xvar, Mean, colour=factor(eval(parse(text = fact1)))))+
+      plt <- ggplot(pltdf, aes(xvar, Mean, colour=factor(.data[[fact1]])))+
         labs(title=paste(mtitle, "\n", sep=""), x=paste("\n", covariate, sep=""), y=paste(response, "\n"))+
-        geom_line(linewidth=0.5)+		   
-        facet_grid(eval(parse(text = paste("~",fact2, sep=""))))+
+        geom_line(linewidth=0.5)+
+        facet_grid(as.formula(paste("~",fact2, sep="")))+
         theme_bw()
       if (ci) {
-        plt <- plt + 
-          geom_ribbon(aes(ymin = LL, ymax = UL, fill=factor(eval(parse(text = fact1)))), 
+        plt <- plt +
+          geom_ribbon(aes(ymin = LL, ymax = UL, fill=factor(.data[[fact1]])),
                       alpha = 0.2, data=pltdf, stat="identity")
       }
       if (point) {
-        plt <- plt + 
-          geom_point(aes(x=xvar, y=bky), 
+        plt <- plt +
+          geom_point(aes(x=xvar, y=bky),
                      position = position_jitter(width = jitterv, height = jitterv), data=mdf)
       }
       plt <- plt+guides(col = guide_legend(fact1), fill=guide_legend(fact1))
@@ -257,31 +257,31 @@ covariatemeans <- function (model, modelterm=NULL, covariate, as.is=FALSE, covar
       if (newwd) {
         dev.new()
       }
-      if (is.null(plotord) || all(plotord%in%c("NULL", ""))){
+      if (is.null(plotord) || all(plotord %in% c("NULL", ""))){
         plotord <- 1:3
       }
       fact1 <- (vars[plotord])[1]
       fact2 <- (vars[plotord])[2]
       fact3 <- (vars[plotord])[3]
-      plt <- ggplot(pltdf, aes(xvar, Mean, colour=factor(eval(parse(text = fact1)))))+
+      plt <- ggplot(pltdf, aes(xvar, Mean, colour=factor(.data[[fact1]])))+
         labs(title=paste(mtitle, "\n", sep=""), x=paste("\n", covariate, sep=""), y=paste(response, "\n"))+
-        geom_line(linewidth=0.5)+	
-        facet_grid(eval(parse(text = paste(fact2, "~",fact3, sep=""))))+
+        geom_line(linewidth=0.5)+
+        facet_grid(as.formula(paste(fact2, "~",fact3, sep="")))+
         theme_bw()
       if (ci) {
-        plt <- plt + 
-          geom_ribbon(aes(ymin = LL, ymax = UL, fill=factor(eval(parse(text = fact1)))), 
+        plt <- plt +
+          geom_ribbon(aes(ymin = LL, ymax = UL, fill=factor(.data[[fact1]])),
                       alpha = 0.2, data=pltdf, stat="identity")
       }
       if (point) {
-        plt <- plt + 
-          geom_point(aes(x=xvar, y=bky), 
+        plt <- plt +
+          geom_point(aes(x=xvar, y=bky),
                      position = position_jitter(width = jitterv, height = jitterv), data=mdf)
       }
       plt <- plt+guides(col = guide_legend(fact1), fill=guide_legend(fact1))
       print(plt)
     }
   }
-  
+
   return(invisible(list(plt=plt, pltdf=pltdf)))
 }

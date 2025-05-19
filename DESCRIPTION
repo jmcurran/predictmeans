@@ -7,9 +7,6 @@ Authors@R: c(person(given = "Dongwen",
 			 person(given = "James",
                     family = "Curran",
                     role = "ctb"),
-             person(given = "Simon",
-                    family = "Urbanek",
-                    role = "ctb"),
              person(given = "Siva",
                     family = "Ganesh",
                     role = "ctb"),
@@ -18,7 +15,6 @@ Authors@R: c(person(given = "Dongwen",
                     role = "ctb"))
 Author: Dongwen Luo [aut, cre],
   James Curran [ctb],
-  Simon Urbanek [ctb],
   Siva Ganesh [ctb],
   John Koolaard [ctb]
 Maintainer: Dongwen Luo <dongwen.luo@agresearch.co.nz>
@@ -34,7 +30,6 @@ Packaged: 2025-05-08
 URL: https://CRAN.R-project.org/package=predictmeans
 Repository: CRAN
 LazyLoad: yes
-NeedsCompilation: yes
 Encoding: UTF-8
 ByteCompile: true
 Date/Publication: 2025-05-08
