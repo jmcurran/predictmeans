@@ -1,4 +1,5 @@
 S3method(print, pdmlist)
+S3method(plot, pdmlist)
 
 if (requireNamespace("ggplot2", quietly = TRUE)) {
     import(ggplot2)
@@ -22,8 +23,7 @@ if (requireNamespace("plyr", quietly = TRUE)) {
   import(glmmTMB)
   importFrom("plotly", "plot_ly", "add_trace")  
   importFrom("HRW", "pointsInPoly")
-  importFrom("lme4", "devfun2", "isLMM", "lmerControl", "mkGlmerDevfun", "mkLmerDevfun", "mkMerMod", "optimizeGlmer", "optimizeLmer", 
-             "updateGlmerDevfun", "vcov.merMod")
+  importFrom("lme4", "devfun2", "isLMM", "lmerControl", "mkGlmerDevfun", "mkLmerDevfun", "mkMerMod", "optimizeGlmer", "optimizeLmer", "updateGlmerDevfun", "vcov.merMod")
   importFrom("lmeSplines", "approx.Z", "smspline")
   importFrom("numDeriv", "hessian", "jacobian")
   importFrom("MASS", "theta.ml", "negative.binomial")

@@ -141,9 +141,9 @@ predictmeans <- function (model, modelterm, data=NULL, pairwise=FALSE, atvar=NUL
     rows <- rep(1:Knum_pairs, 2)  # The rows are the same for each pair of indices
     cols <- c(K_indices[, 1], K_indices[, 2])  # Indices of the pairs
     values <- c(rep(1, Knum_pairs), rep(-1, Knum_pairs))  # Corrected to 1 for the second species and -1 for the first
-    # Create the sparse matrix CM
-    CM <- Matrix::sparseMatrix(i = rows, j = cols, x = values, dims = c(Knum_pairs, nK))
-    rK <- as.matrix(CM %*% K)
+    # Create the sparse matrix CMatrix
+    CMatrix <- Matrix::sparseMatrix(i = rows, j = cols, x = values, dims = c(Knum_pairs, nK))
+    rK <- as.matrix(CMatrix %*% K)
     varn1 <- rnK[K_indices[, 2]]
     varn2 <- rnK[K_indices[, 1]]
 
@@ -331,7 +331,7 @@ predictmeans <- function (model, modelterm, data=NULL, pairwise=FALSE, atvar=NUL
 
         if (!is.null(meandecr) && is.logical(meandecr)) {
           groupRn <- rnK[order(mt$pm, decreasing = meandecr)]
-        }else {
+        } else {
           groupRn <- NULL
         }
         t.p.valuemGrp <- t.p.valuem
@@ -488,7 +488,7 @@ predictmeans <- function (model, modelterm, data=NULL, pairwise=FALSE, atvar=NUL
           if (newwd) {
             dev.new()
           }
-          meanPlot <- mean_plot(plotmt, vars, y_var="pm", plot_title = plottitle, plotxlab=plotxlab, plotylab=response, bar_value = LSD_value, bar_label = bar_label, level = level, basesz = basesz, lineplot = lineplot)
+          meanPlot <- mean_plot(plotmt, vars, y_var="pm", title = plottitle, xlab=plotxlab, ylab=response, bar_value = LSD_value, bar_label = bar_label, level = level, basesz = basesz, line = lineplot)
           if (prtplt) {
             print(meanPlot)
           }
@@ -497,7 +497,7 @@ predictmeans <- function (model, modelterm, data=NULL, pairwise=FALSE, atvar=NUL
           if (newwd) {
             dev.new()
           }
-          predictmeansBarPlot <- bar_plot(plotmt, vars, y_var="pm", se="ses", plot_title = plottitle, plotxlab=plotxlab, plotylab=response, basesz = basesz)
+          predictmeansBarPlot <- bar_plot(plotmt, vars, y_var="pm", se_var="ses", title = plottitle, xlab=plotxlab, ylab=response, basesz = basesz)
           if (prtplt) {
             print(predictmeansBarPlot)
           }
@@ -518,7 +518,7 @@ predictmeans <- function (model, modelterm, data=NULL, pairwise=FALSE, atvar=NUL
           if (newwd) {
             dev.new()
           }
-          meanPlot <- mean_plot(plotmt, fact1, y_var="pm", col_var = fact2, plot_title = plottitle, plotxlab=plotxlab, plotylab=response, bar_value = LSD_value, bar_label = bar_label, level = level, basesz = basesz, lineplot = lineplot)
+          meanPlot <- mean_plot(plotmt, fact1, y_var="pm", col_var = fact2, title = plottitle, xlab=plotxlab, ylab=response, bar_value = LSD_value, bar_label = bar_label, level = level, basesz = basesz, line = lineplot)
           if (prtplt) {
             print(meanPlot)
           }
@@ -527,7 +527,7 @@ predictmeans <- function (model, modelterm, data=NULL, pairwise=FALSE, atvar=NUL
           if (newwd) {
             dev.new()
           }
-          predictmeansBarPlot <- bar_plot(plotmt, fact1, y_var="pm", se="ses", col_var = fact2, plot_title = plottitle, plotxlab=plotxlab, plotylab=response, basesz = basesz)
+          predictmeansBarPlot <- bar_plot(plotmt, fact1, y_var="pm", se_var="ses", col_var = fact2, title = plottitle, xlab=plotxlab, ylab=response, basesz = basesz)
           if (prtplt) {
             print(predictmeansBarPlot)
           }
@@ -549,7 +549,7 @@ predictmeans <- function (model, modelterm, data=NULL, pairwise=FALSE, atvar=NUL
           if (newwd) {
             dev.new()
           }
-          meanPlot <- mean_plot(plotmt, fact1, y_var="pm", col_var = fact2, panel_var = fact3, plot_title = plottitle, plotxlab=plotxlab, plotylab=response, bar_value = LSD_value, bar_label = bar_label, level = level, basesz = basesz, lineplot = lineplot)
+          meanPlot <- mean_plot(plotmt, fact1, y_var="pm", col_var = fact2, panel_var = fact3, title = plottitle, xlab=plotxlab, ylab=response, bar_value = LSD_value, bar_label = bar_label, level = level, basesz = basesz, line = lineplot)
           if (prtplt) {
             print(meanPlot)
           }
@@ -559,7 +559,7 @@ predictmeans <- function (model, modelterm, data=NULL, pairwise=FALSE, atvar=NUL
           if (newwd) {
             dev.new()
           }
-          predictmeansBarPlot <- bar_plot(plotmt, fact1, y_var="pm", se="ses", col_var = fact2, panel_var = fact3, plot_title = plottitle, plotxlab=plotxlab, plotylab=response, basesz = basesz)
+          predictmeansBarPlot <- bar_plot(plotmt, fact1, y_var="pm", se_var="ses", col_var = fact2, panel_var = fact3, title = plottitle, xlab=plotxlab, ylab=response, basesz = basesz)
           if (prtplt) {
             print(predictmeansBarPlot)
           }
