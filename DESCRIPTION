@@ -33,3 +33,4 @@ LazyLoad: yes
 Encoding: UTF-8
 ByteCompile: true
 Date/Publication: 2025-05-08
+RoxygenNote: 7.3.2
