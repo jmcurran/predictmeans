@@ -1,6 +1,8 @@
 mymodelparm <- function(model, coef., vcov., df, ...)
   UseMethod("mymodelparm")
 
+#' @export
+#' @keywords internal
 mymodelparm.default <- function(model, coef. = coef, vcov. = vcov, df = NULL, ...) {
   ### extract coefficients and their covariance matrix
   if(inherits(model, "glmmTMB")) {
