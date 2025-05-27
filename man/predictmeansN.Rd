@@ -10,7 +10,7 @@ Predicted Means of a Linear Model
   and permutation tests.
 }
 \usage{
-predictmeansN(model, modelterm, data=NULL, pairwise=FALSE, atvar=NULL, adj="none", Df=NULL, lsd_bar=TRUE, level=0.05, covariate=NULL, meandecr=NULL, letterCI=FALSE, trans = NULL, transOff=0, responsen=NULL, count=FALSE, plotord=NULL, lineplot=TRUE, mplot=TRUE, barplot=FALSE, pplot=TRUE, plot=TRUE, prtnum=TRUE, prtplt=TRUE, permlist=NULL, ncore=3L, ndecimal=4L)
+predictmeansN(model, modelterm, data=NULL, pairwise=FALSE, atvar=NULL, adj="none", Df=NULL, level=0.05, covariate=NULL, meandecr=NULL, letterCI=FALSE, trans = I, transOff=0, responsen=NULL, count=FALSE, prtnum=TRUE, permlist=NULL, ncore=3L, ndecimal=4L)
 }
 \arguments{
   \item{model}{
@@ -37,9 +37,6 @@ predictmeansN(model, modelterm, data=NULL, pairwise=FALSE, atvar=NULL, adj="none
 }
   \item{Df}{
   A degree of freedom for calculating LSD. For the above models, Df is obtained from the function automatically.
-}
-  \item{lsd_bar}{
-  A logical variable to indicate to print an average LSD or SED bar on the means plot. The default is TRUE.
 }
   \item{level}{
   A significant level for calculating LSD, CI etc. The default value is 0.05.
@@ -68,33 +65,8 @@ When you use \code{trans=exp(x+1)}, then \code{transOff=1}, the default is 0.
   \item{count}{
   An option for indicating the back transformed mean values are counts or not. The default is FALSE.
 }
- \item{plotord}{
-  A numeric (or character) vector specifying the order of plotting for two or three way interaction (e.g.
-  \code{plotord = c(2, 1, 3)} or \code{plotord = c("B", "A", "C")} will put the second variable 'B' in
-  \code{modelterm} on the \code{X} axis, the first variable 'A' as the grouping variable, and the third one
-  'C' as the panel variable). The defaults are \code{c(1, 2)} and \code{c(1, 2, 3)} for two and three way
-  interactions.
-}
-  \item{lineplot}{
-  An option for drawing a line chart, or dot chart. The default is TRUE.
-}
-  \item{mplot}{
-  An option for drawing a means plot, or not. The default is TRUE.
-}
-  \item{barplot}{
-  An option for drawing a bar chart, or not. The default is FALSE.
-}
-  \item{pplot}{
-  An option for drawing a p-values plot, or not when there are more than six p-values. The default is TRUE.
-}
-  \item{plot}{
-  An option for drawing plots, or not. The default is TRUE.
-}
   \item{prtnum}{
   An option for printing covariate information on the screen, or not. The default is TRUE.
-}
-  \item{prtplt}{
-  An option for printing plots on the screen, or not. The default is TRUE.
 }
   \item{permlist}{
   A model parameter list produced by the function \code{permmodels}. When \code{permlist != NULL},
@@ -118,9 +90,6 @@ Number of core for parallel computing when \code{permlist != NULL}, the default 
  matrix of pairwise comparison p-values for each level of \code{atvar}.}
  \item{mean_table}{A summary of predicted means result including 'Predicted means', 'Standard error', 'Df'
  and 'CIs'. When \code{trans!=NULL} or \code{trans!=I}, a table of back transformed means with CIs are also shown.}
- \item{predictmeansPlot}{ggplot of predicted means.}
- \item{predictmeansBKPlot}{ggplot of back transformed means.}
- \item{predictmeansBarPlot}{gg bar plot of predicted means.}
  \item{p_valueMatrix}{p_value matrix for pairwise comparison.}
 }
 

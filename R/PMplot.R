@@ -1,78 +1,175 @@
-PMplot <- function(pmatrix, level=0.05, mtitle=NULL, xylabel=NULL, margin=5, legendx=0.73, newwd=FALSE) {  
-  
+PMplot <- function(pmatrix, level=0.05, mtitle=NULL, xylabel=NULL, margin=5, legendx=0.73, newwd=FALSE) {
+
+  # Simple block diagonal function to replace adiag
+  # block_diag <- function(mat_list) {
+  # if (length(mat_list) == 1) return(mat_list[[1]])
+
+  # # Calculate dimensions
+  # nrows <- sapply(mat_list, nrow)
+  # ncols <- sapply(mat_list, ncol)
+  # total_rows <- sum(nrows)
+  # total_cols <- sum(ncols)
+
+  # # Create result matrix filled with NA
+  # result <- matrix(NA, nrow = total_rows, ncol = total_cols)
+
+  # # Fill in blocks
+  # row_start <- 1
+  # col_start <- 1
+  # for (i in seq_along(mat_list)) {
+  # row_end <- row_start + nrows[i] - 1
+  # col_end <- col_start + ncols[i] - 1
+  # result[row_start:row_end, col_start:col_end] <- mat_list[[i]]
+  # row_start <- row_end + 1
+  # col_start <- col_end + 1
+  # }
+
+  # return(result)
+  # }
+
+  # Handle matrix input
   if (is.matrix(pmatrix)) {
     nr <- nrow(pmatrix)
-    pmatrix[upper.tri(pmatrix, diag=TRUE)] <- NA
+    pmatrix[upper.tri(pmatrix, diag = TRUE)] <- NA
     if (is.null(rownames(pmatrix))) {
-      rnpltm <- as.character(1:nrow(pmatrix))  
+      rnpltm <- as.character(1:nrow(pmatrix))
     } else {
       rnpltm <- rownames(pmatrix)
     }
   }
-  
+
+  # Handle list input using base R block diagonal
   if (is.list(pmatrix)) {
-    for (i in 1:length(pmatrix)) pmatrix[[i]][upper.tri(pmatrix[[i]], diag=TRUE)] <- NA
-    pmatrix <- do.call(adiag, c(pmatrix, pad=NA))     
+    for (i in 1:length(pmatrix)) {
+      pmatrix[[i]][upper.tri(pmatrix[[i]], diag = TRUE)] <- NA
+    }
+    # pmatrix <- block_diag(pmatrix)
+    pmatrix <- do.call(adiag, c(pmatrix, pad=NA))
     nr <- nrow(pmatrix)
     if (is.null(xylabel)) {
-      rnpltm <- as.character(1:nrow(pmatrix)) 
+      rnpltm <- as.character(1:nrow(pmatrix))
     } else {
       rnpltm <- xylabel
     }
   }
-  
+
+  # Check minimum size
   if (nr <= 3) {
     cat("\nThere is no plot for p-values matrix less than six values!\n")
+    return(invisible(NULL))
+  }
+
+  # Set default title
+  if (is.null(mtitle)) {
+    mtitle <- "Level Plot of p-value Matrix"
+  }
+
+  # Prepare matrix for plotting (flip vertically to match base R image)
+  pltmm <- pmatrix[nr:1, ]
+
+  # Create significance categories
+  if (level == 0.05) {
+    # Create cut categories
+    pltm_cut <- cut(as.numeric(pltmm),
+                    breaks = c(-0.1, 0.01, 0.05, 0.1, 1),
+                    labels = c("<= 0.01", "0.01 < p <= 0.05", "0.05 < p <= 0.1", "> 0.1"),
+                    include.lowest = TRUE)
+    fact_level <- rev(c("<= 0.01", "0.01 < p <= 0.05", "0.05 < p <= 0.1", "> 0.1"))
+
+    # Define colors
+    pcolr <- c("<= 0.01" = "#0D0DFF",
+               "0.01 < p <= 0.05" = "#5D5DFF",
+               "0.05 < p <= 0.1" = "#A1A1FF",
+               "> 0.1" = "#E4E4FF")
   } else {
-    if (is.null(mtitle)) {
-      mtitle <- paste("Level Plot of p-value Matrix")
-    }
-    if (newwd) {
-      dev.new()
-    }
-    pltmm <- t(pmatrix[nr:1,])
-    if (level == 0.05) {
-      pltm <- matrix(as.numeric(cut(as.numeric(pltmm), c(-0.1, 0.01, 0.05, 0.1, 1))), nrow=nr)
-      pltmm <- matrix(as.numeric(droplevels(cut(as.numeric(pltmm), c(-0.1, 0.01, 0.05, 0.1, 1)))), nrow=nr)
-    } else {
-      pltmm <- pltm <- matrix(as.numeric(cut(as.numeric(pltmm), c(-0.1, level, 1))), nrow=nr)
-    }
-    
-    if (level == 0.05) {
-      pcolr <- c("#0D0DFF", "#5D5DFF", "#A1A1FF", "#E4E4FF") 
-    } else {
-      pcolr <-  c("#0D0DFF", "#A1A1FF")
-    }
-    colr <- pcolr[sort(unique(na.omit(as.numeric(pltm))))]
-    max.len <- max(nchar(rnpltm))/6
-    mar <- rep(margin, 2) #c(8, 8)
-    
-    op <- par(mar = c(mar[1] + max.len, mar[1] + max.len, 4, 4))
-    zlim <- range(pltmm, na.rm=TRUE)
-    image(pltmm, col = colr, axes = FALSE, main = mtitle, zlim = zlim)
-    at1 <- (0:(nr - 1))/(nr - 1)
-    tk <- at1 - 0.5/(nr - 1)
-    if (max.len > 0.5) {
-      axis(1, at = at1, labels = rnpltm, las = 2)
-      axis(2, at = at1, labels = rnpltm[nr:1], las = 1)
-    } else {
-      axis(1, at = at1, labels = rnpltm)
-      axis(2, at = at1, labels = rnpltm[nr:1], las = 1)
-    }
-    abline(h = tk[-1], v = tk[-1], col = "white")
-    box()
-    
-    if (level == 0.05) {
-      legen.lab <- c(expression(p > 0.1), 
-                     expression("0.05 <  p " <= 0.1), 
-                     expression("0.01 < p " <= 0.05), 
-                     expression(p <= 0.01))[rev(5-sort(unique(na.omit(as.numeric(pltm)))))]
-      legend(legendx, 0.99, legen.lab, pch = rep(15, length(colr)), col = rev(colr), pt.cex = 1.5, cex = 0.9)
-    } else {
-      legend(legendx, 0.99, title = paste("At", round(level, 4), "level"), 
-             c("significant", "insignificant")[3-sort(unique(na.omit(as.numeric(pltm))))],
-             pch = rep(15, length(colr)), col = rev(colr), pt.cex = 1.5, cex = 0.9)
-    }
-    par(op)
-  }# end of if(nr <= 3)
+    # Simple significant/non-significant
+    pltm_cut <- cut(as.numeric(pltmm),
+                    breaks = c(-0.1, level, 1),
+                    labels = c("significant", "insignificant"),
+                    include.lowest = TRUE)
+
+    fact_level <- rev(c("significant", "insignificant"))
+
+    # Define colors
+    pcolr <- c("significant" = "#0D0DFF",
+               "insignificant" = "#A1A1FF")
+  }
+
+  # Convert to long format for ggplot using base R
+  # # x_coords <- rep(1:ncol(pltmm), each = nrow(pltmm))
+  # # y_coords <- rep(1:nrow(pltmm), times = ncol(pltmm))
+  # # values <- as.numeric(pltmm)
+  # # categories <- factor(as.character(pltm_cut), levels=fact_level)
+  x <- rep(1:ncol(pltmm), each = nrow(pltmm))
+  y <- rep(1:nrow(pltmm), times = ncol(pltmm))
+  values <- as.numeric(pltmm)
+  category <- factor(as.character(pltm_cut), levels=fact_level)
+
+  # Create data frame
+  plot_data <- data.frame(
+    x = x,
+    y = y,
+    value = values,
+    category = category,
+    stringsAsFactors = FALSE
+  )
+
+  # Remove NA values
+  plot_data <- plot_data[!is.na(plot_data$category), ]
+
+  # Create the plot
+  p <- ggplot(plot_data, aes(x = x, y = y, fill = category)) +
+    geom_tile(color = "white", size = 0.5) +
+    scale_fill_manual(values = pcolr,
+                      name = if (level == 0.05) "p-value" else paste("At", round(level, 4), "level")) +
+    scale_x_continuous(
+      breaks = 1:length(rnpltm),
+      labels = rnpltm,
+      expand = c(0, 0)
+    ) +
+    scale_y_continuous(
+      breaks = 1:length(rnpltm),
+      labels = rev(rnpltm),
+      expand = c(0, 0)
+    ) +
+    labs(
+      title = mtitle,
+      x = "",
+      y = ""
+    ) +
+    theme_minimal(base_size = 14) +
+    theme(
+      panel.grid = element_blank(),
+      panel.border = element_rect(color = "black", fill = NA, size = 1),
+      axis.text.x = element_text(angle = if (max(nchar(rnpltm))/6 > 0.5) 90 else 0,
+                                 hjust = if (max(nchar(rnpltm))/6 > 0.5) 1 else 0.5,
+                                 vjust = 0.5),
+      axis.text.y = element_text(hjust = 1),
+      axis.ticks = element_blank(),
+      plot.title = element_text(hjust = 0.5),
+      legend.position = c(legendx, 0.99),
+      legend.justification = c(0, 1),
+      legend.background = element_rect(fill = "white", color = "black", size = 0.5),
+      legend.margin = margin(6, 6, 6, 6),
+      aspect.ratio = 1
+    ) +
+    coord_fixed()
+
+  # Display plot
+  # if (newwd && interactive()) {
+  # # Open new graphics device if requested and in interactive session
+  # if (.Platform$OS.type == "windows") {
+  # windows()
+  # } else if (Sys.info()["sysname"] == "Darwin") {
+  # quartz()
+  # } else {
+  # x11()
+  # }
+  # }
+
+  if (newwd) {
+    dev.new()
+  }
+ # print(p)
+  return(invisible(p))
 }
