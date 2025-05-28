@@ -26,7 +26,7 @@ This function calculates SE and CI of variance components for \code{lmer},
 \examples{
 
 library(predictmeans)
-Oats$nitro <- factor(Oats$nitro) 
+Oats$nitro <- factor(Oats$nitro)
 fm <- lmer(yield ~ nitro*Variety+(1|Block/Variety), data=Oats)
 \dontrun{varcomp(fm)}
 fm1 <- lme(yield ~ nitro*Variety, random=~1|Block/Variety, data=Oats)
@@ -37,7 +37,6 @@ mod <- lmer(distance ~ age + (age|Subject), data=Orthodont)
 \dontrun{varcomp(mod)}
 mod1 <- lme(distance ~ age, random=~age|Subject, data=Orthodont)
 varcomp(mod1)
-
 }
 \author{
 Dongwen Luo, Siva Ganesh and John Koolaard

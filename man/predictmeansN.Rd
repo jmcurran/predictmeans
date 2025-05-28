@@ -147,7 +147,6 @@ available for \code{model}.
   names(predictout)
   print(predictout$predictmeansPlot)
   print(predictout$predictmeansBarPlot)
-
 }
 \references{
 Maghsoodloo Saeed, Ching-Ying Huang (2010), \emph{Comparing the

@@ -1,14 +1,14 @@
 #' Fitting Semi Parametric Models Using lme4 Ecosystem
-#' 
+#'
 #' Fit a semi parametric model based on lme4 ecosystem including \code{lmer},
 #' \code{glmer} and \code{glmer.nb}.
-#' 
+#'
 #' A semi parametric model can be parameterized as a linear (or generalized
 #' linear) mixed model in which its random effects are smooth functions of some
 #' covariates (named ‘smooth term’). \code{semireg} follows the approach
 #' suggested by Wand and Ormerod (2008) and represents the 'smooth term' using
 #' O'Sullivan-type of Z.
-#' 
+#'
 #' @param formula A two-sided linear formula object describing both the
 #' fixed-effects and random-effects part of the model, with the response on the
 #' left of a ~ operator and the terms, separated by + operators, on the right.
@@ -83,49 +83,55 @@
 #' regression with O'Sullivan penalized splines. \emph{Australian and New
 #' Zealand Journal of Statistics.} \bold{50}, 179-198.
 #' @examples
-#' 
-#' ## NOT RUN
-#' # library(predictmeans)
-#' # library(HRW) 
-#' # data(WarsawApts)
-#' # help(WarsawApts)
-#' # str(WarsawApts)
-#' # fit1 <- semireg(areaPerMzloty ~ construction.date,
-#' #                 smoothZ=list(
-#' #                   grp=smZ(construction.date, k=25)
-#' #                 ),
-#' #                 data = WarsawApts)
-#' # sp_out1 <- semipred(fit1, "construction.date", "construction.date")
-#' # 
-#' # WarsawApts$district <- factor(WarsawApts$district)
-#' # fit2 <- semireg(areaPerMzloty ~ construction.date*district, resp_scale = TRUE,
-#' #                 smoothZ=list(group=smZ(construction.date, k=15,
-#' #                                        by = district, group=TRUE)), 
-#' #                 data=WarsawApts)
-#' # sp_out2_1 <- semipred(fit2, "district", "construction.date")
-#' # sp_out2_2 <- semipred(fit2, "district", "construction.date", contr=c(2,1))
-#' # 
-#' # data(indonRespir)
-#' # help(indonRespir)
-#' # str(indonRespir)
-#' # fit3 <- semireg(respirInfec ~ age+vitAdefic + female + height
-#' #                 + stunted + visit2 + visit3 + visit4  + visit5 + visit6+(1|idnum),
-#' #                 smoothZ=list(
-#' #                   grp=smZ(age)
-#' #                 ),
-#' #                 family = binomial,
-#' #                 data = indonRespir)
-#' # sp_out3 <- semipred(fit3, "age", "age")
-#' # library(ggplot2)
-#' # sp_out3$plt+
-#' #   geom_rug(data = subset(indonRespir, respirInfec==0), sides = "b", col="deeppink") +
-#' #   geom_rug(data = subset(indonRespir, respirInfec==1), sides = "t", col="deeppink")+
-#' #   ylim(0, 0.2)                  
-#' 
-semireg <- function(formula, data, family = NULL, ngbinomial=FALSE, REML = TRUE, 
-                    smoothZ = list(), ncenter=TRUE, nscale=FALSE, resp_scale=FALSE, 
-                    control = lmerControl(optimizer="bobyqa"), start = NULL, 
-                    verbose = FALSE, drop.unused.levels=TRUE, subset, weights, 
+#'
+#' \dontrun{
+#'  library(predictmeans)
+#'  library(HRW)
+#'  data(WarsawApts)
+#'  help(WarsawApts)
+#'  str(WarsawApts)
+#'  fit1 <- semireg(areaPerMzloty ~ construction.date,
+#'                  smoothZ=list(
+#'                    grp=smZ(construction.date, k=25)
+#'                  ),
+#'                  data = WarsawApts)
+#'  sp_out1 <- semipred(fit1, "construction.date", "construction.date")
+#'
+#'  WarsawApts$district <- factor(WarsawApts$district)
+#'  fit2 <- semireg(areaPerMzloty ~ construction.date*district, resp_scale = TRUE,
+#'                  smoothZ=list(group=smZ(construction.date, k=15,
+#'                                         by = district, group=TRUE)),
+#'                  data=WarsawApts)
+#'  sp_out2_1 <- semipred(fit2, "district", "construction.date")
+#'  sp_out2_2 <- semipred(fit2, "district", "construction.date", contr=c(2,1))
+#'
+#'  data(indonRespir)
+#'  help(indonRespir)
+#'  str(indonRespir)
+#'  fit3 <- semireg(respirInfec ~ age+vitAdefic + female + height
+#'                  + stunted + visit2 + visit3 + visit4  + visit5 + visit6+(1|idnum),
+#'                  smoothZ=list(
+#'                    grp=smZ(age)
+#'                  ),
+#'                  family = binomial,
+#'                  data = indonRespir)
+#'  sp_out3 <- semipred(fit3, "age", "age")
+#'  library(ggplot2)
+#'  sp_out3$plt+
+#'    geom_rug(data = subset(indonRespir, respirInfec==0), sides = "b", col="deeppink") +
+#'    geom_rug(data = subset(indonRespir, respirInfec==1), sides = "t", col="deeppink")+
+#'    ylim(0, 0.2)
+#' }
+#'
+#' @importFrom lme4 mkGlmerDevfun mkLmerDevfun mkMerMod optimizeGlmer
+#' @importFrom lme4 optimizeLmer updateGlmerDevfun
+#' @importFrom Matrix .bdiag Matrix nearPD
+#' @importFrom stats model.response
+#' @export
+semireg <- function(formula, data, family = NULL, ngbinomial=FALSE, REML = TRUE,
+                    smoothZ = list(), ncenter=TRUE, nscale=FALSE, resp_scale=FALSE,
+                    control = lmerControl(optimizer="bobyqa"), start = NULL,
+                    verbose = FALSE, drop.unused.levels=TRUE, subset, weights,
                     offset, contrasts = NULL, prt=TRUE, predict_info=TRUE, ...)
 {
   mc <- match.call()
@@ -138,20 +144,20 @@ semireg <- function(formula, data, family = NULL, ngbinomial=FALSE, REML = TRUE,
   if (any(unlist(lapply(data[, setdiff(sm_vars, fomul_vars)], is.factor)))) {
     stop("Any factor in 'smoothZ' list must be in the formula!")
   }
-  response_n <- fomul_vars[1] 
+  response_n <- fomul_vars[1]
   fomul_vars <- fomul_vars[-1]
-  
+
   data <- droplevels(as.data.frame(na.omit(data[, intersect(all.vars(mc), names(data))])))
-  
+
   if (resp_scale) {
-    numeric_n <- names(data)[sapply(data, is.numeric)] 
+    numeric_n <- names(data)[sapply(data, is.numeric)]
   } else {
     numeric_n <- setdiff(names(data)[sapply(data, is.numeric)], response_n)
   }
   if (any(ncenter, nscale)) {
     for (i in numeric_n) {
       data_i <- data[,i]
-      if (!is.matrix(data_i)) {  
+      if (!is.matrix(data_i)) {
         scaled_i <- scale(data[i], center=ncenter, scale=nscale)
         data[i] <- as.numeric(scaled_i)
         if (ncenter) {
@@ -164,15 +170,15 @@ semireg <- function(formula, data, family = NULL, ngbinomial=FALSE, REML = TRUE,
     }
     attr(data, "numeric_var") <- numeric_n
   }
-  smoothZm <-  eval(substitute(smoothZ), data) 
+  smoothZm <-  eval(substitute(smoothZ), data)
   Z_namem <- names(smoothZm)
-  
+
   # if (any(!sapply(smoothZm, is, class2 = "sparseMatrix"))) {
   # smoothZm <- lapply(smoothZm, function(x) {
   # attr(x, "class") <- "matrix"
   # x_N_attr <- attributes(x)
   # x_N <- as(x, "sparseMatrix")
-  
+
   # for (i in setdiff(names(x_N_attr), c("dim", "class"))) attr(x_N,i) <- x_N_attr[[i]]
   # if (!is.null(attr(x_N,"Boundary.knots"))) {
   # attr(x_N,"range.x") <- attr(x_N,"Boundary.knots")
@@ -181,17 +187,17 @@ semireg <- function(formula, data, family = NULL, ngbinomial=FALSE, REML = TRUE,
   # x_N
   # })
   # }
-  
+
   smoothZN <- list()
   for (i in Z_namem){
     if (is.list(smoothZm[[i]])) {
-      smoothZN <- c(smoothZN, unlist(smoothZm[i], recursive=FALSE)) 
+      smoothZN <- c(smoothZN, unlist(smoothZm[i], recursive=FALSE))
     } else {
       smoothZN <- c(smoothZN, smoothZm[i])
     }
   }
   smoothZt <- lapply(smoothZN, t)
-  
+
   gaus <- FALSE
   if (is.null(family)) {
     gaus <- TRUE
@@ -207,10 +213,10 @@ semireg <- function(formula, data, family = NULL, ngbinomial=FALSE, REML = TRUE,
       stop("unknown family type")
     }
     gaus <- family$family == "gaussian" && family$link == "identity"
-  }  
-  
+  }
+
   lmerc <- mc                         # create a call to lmer
-  
+
   lmerc[[1]] <- ifelse(gaus, as.name("lmer"), as.name("glmer"))
   if (ngbinomial) {
     lmerc[[1]] <- as.name("glmer")
@@ -223,30 +229,30 @@ semireg <- function(formula, data, family = NULL, ngbinomial=FALSE, REML = TRUE,
   lmerc$ngbinomial <- NULL
   lmerc$prt <- NULL
   lmerc$predict_info <- NULL
-  
+
   if (!gaus) {
     lmerc$REML <- NULL
   }
-  
+
   if (!length(smoothZt)) {              # call [g]lmer instead
     return(eval.parent(lmerc))
   }
-  Zt_name <- names(smoothZt)	
-  
+  Zt_name <- names(smoothZt)
+
   stopifnot(is.list(smoothZt),        # check the smoothZt argument
             length(Zt_name) == length(smoothZt),
             all(sapply(smoothZt, is, class2 = "sparseMatrix")))
-  
-  # adding the constructed variables to the model frame avoiding name duplication		  
-  for (i in Zt_name) { 
+
+  # adding the constructed variables to the model frame avoiding name duplication
+  for (i in Zt_name) {
     data[[i]] <- factor(rep(1:nrow(smoothZt[[i]]), length=ncol(smoothZt[[i]])))
     lmerc$formula <- paste(paste(format(lmerc$formula), collapse = ""), "+ (1|",i,")")
   }
-  
+
   lmerc$formula <- as.formula(lmerc$formula)
   assign(as.character(lmerc$data), data)
   lmf <- eval(lmerc)
-  
+
   pnms <- names(smoothZt)
   pp <- lmf@pp
   resp <- lmf@resp
@@ -274,25 +280,25 @@ semireg <- function(formula, data, family = NULL, ngbinomial=FALSE, REML = TRUE,
     devfun <- updateGlmerDevfun(devfun, dfl$reTrms)
     opt <- optimizeGlmer(devfun, stage=2,start=start,verbose=verbose,optimizer=control$optimizer, control=control$optCtrl, ...)
     semer1 <- mkMerMod(environment(devfun), opt, reTrms, lmf@frame, mc)
-    
+
     Y <- model.response(model.frame(semer1))
     mu <- na.omit(fitted(semer1))
     theta_v <- MASS::theta.ml(Y, mu, weights = semer1@resp$weights, limit = 20)
-    
+
     dfl$family <- bquote(MASS::negative.binomial(theta = .(theta_v)))
     devfun <- do.call(mkGlmerDevfun,dfl)
     opt <- optimizeGlmer(devfun,start=start,verbose=verbose,optimizer=control$optimizer, control=control$optCtrl, ...)
     devfun <- updateGlmerDevfun(devfun, dfl$reTrms)
     opt <- optimizeGlmer(devfun, stage=2,start=start,verbose=verbose,optimizer=control$optimizer, control=control$optCtrl, ...)
     semer <- mkMerMod(environment(devfun), opt, reTrms, lmf@frame, mc)
-    
+
   } else {
     if (gaus) {
       dfl$REML = resp$REML > 0L
       devfun <- do.call(mkLmerDevfun,dfl)
-      opt <- optimizeLmer(devfun, start=start, verbose=verbose, optimizer=control$optimizer, control=control$optCtrl, ...) 
+      opt <- optimizeLmer(devfun, start=start, verbose=verbose, optimizer=control$optimizer, control=control$optCtrl, ...)
       semer0 <- mkMerMod(environment(devfun), opt, reTrms, lmf@frame, mc)
-      
+
       orig_call <- lmerc
       args <- as.list(lmerc)
       args$devFunOnly <- TRUE
@@ -300,7 +306,7 @@ semireg <- function(formula, data, family = NULL, ngbinomial=FALSE, REML = TRUE,
         args$control <- lme4::lmerControl(check.rankX = "silent.drop.cols")
       }
       Call <- as.call(c(list(quote(lme4::lmer)), args[-1]))
-      
+
       options(warn = -1)
       assign(as.character(Call$data), data)
       devfun <- suppressMessages(eval(Call))
@@ -314,53 +320,53 @@ semireg <- function(formula, data, family = NULL, ngbinomial=FALSE, REML = TRUE,
       opt <- optimizeGlmer(devfun,start=start,verbose=verbose,optimizer=control$optimizer, control=control$optCtrl, ...)
       devfun <- updateGlmerDevfun(devfun, dfl$reTrms)
       opt <- optimizeGlmer(devfun, stage=2,start=start,verbose=verbose,optimizer=control$optimizer, control=control$optCtrl, ...)
-      semer <- mkMerMod(environment(devfun), opt, reTrms, lmf@frame, mc) 
+      semer <- mkMerMod(environment(devfun), opt, reTrms, lmf@frame, mc)
     }
   }
   if (prt) {
     print(semer)
   }
-  
+
   if (predict_info) {
     n_beta <- getME(semer, "p")
     C <- cbind(getME(semer, "X"), getME(semer, "Z"))
-    
+
     if (gaus) {
-      CTC <- Matrix::tcrossprod(t(C))	
+      CTC <- Matrix::tcrossprod(t(C))
     } else {
       family_n <- semer@resp$family$family
-      link_n <- semer@resp$family$link 
+      link_n <- semer@resp$family$link
       yobs <- unique(semer@resp$y)
       if (family_n =="binomial" && all(yobs%in%c(0,1))) {
         wVec <- switch(link_n,
                        "logit" = 3/(pi^2),
                        "probit" = 1,
-                       "cloglog" = 6/(pi^2))	
+                       "cloglog" = 6/(pi^2))
       } else {
-        wVec <- semer@resp$sqrtWrkWt()^2 
+        wVec <- semer@resp$sqrtWrkWt()^2
       }
-      
+
       CTC <- crossprod(C*wVec,C)
     }
-    
+
     beta_cov <- Matrix(0, n_beta, n_beta)
     #  b_cov <- Matrix::solve(Matrix::tcrossprod(getME(semer, "Lambda")))
-    
-    b_cov_inv <- Matrix::tcrossprod(getME(semer, "Lambda")) 
+
+    b_cov_inv <- Matrix::tcrossprod(getME(semer, "Lambda"))
     if (any(eigen(b_cov_inv)$values <= 0)) {
       Amatrixpd <- nearPD(b_cov_inv)$mat
       b_cov_inv <- Amatrixpd@x
       dim(b_cov_inv) <- Amatrixpd@Dim
     }
     b_cov <- Matrix::solve(b_cov_inv)
-    
+
     # b_cov <- Matrix::tcrossprod(getME(semer, "Lambda"))*(sigma(semer)^2)
-    
+
     D <- .bdiag(list(beta_cov, b_cov))
     fullCovMat <- Matrix::solve(CTC + D)
     # Compute the degrees of freedom  formula
-    df <- sum(diag(fullCovMat%*%CTC)) 		
-    
+    df <- sum(diag(fullCovMat%*%CTC))
+
     u_ind <- sapply(getME(semer, "Ztlist"), function(x) x@Dim[1])
     u_indn <- sub("\\.\\(Intercept\\)$", "",names(u_ind))
     vcov_ind <- cumsum(c(n_beta, u_ind))
@@ -374,27 +380,27 @@ semireg <- function(formula, data, family = NULL, ngbinomial=FALSE, REML = TRUE,
       mch_id <- match(i, names(vcov_ind))
       contInds <- c(1:n_beta, (vcov_ind[mch_id-1]+1):vcov_ind[mch_id])
       cov_lst[[i]] <- fullCovMat[contInds, contInds]
-      u_lst[[i]] <- uHat[(uHat_ind[mch_id-1]+1):uHat_ind[mch_id]]  
+      u_lst[[i]] <- uHat[(uHat_ind[mch_id-1]+1):uHat_ind[mch_id]]
     }
     vcov_indN <- vcov_ind
     names(vcov_indN) <- gsub("\\..*","",names(vcov_ind))
     vcov_indN <- rev(vcov_indN)[unique(names(vcov_indN))]
     uHat_indN <- vcov_indN-n_beta
-    
+
     for (i in setdiff(names(vcov_indN), names(vcov_ind))) {
       mch_idN <- match(i, names(vcov_indN))
       contIndsN <- c(1:n_beta, (vcov_indN[mch_idN-1]+1):vcov_indN[mch_idN])
       cov_lst[[i]] <- fullCovMat[contIndsN, contIndsN]
-      #  u_lst[[i]] <- uHat[(uHat_indN[mch_idN-1]+1):uHat_indN[mch_idN]]  
-    }  
-    
+      #  u_lst[[i]] <- uHat[(uHat_indN[mch_idN-1]+1):uHat_indN[mch_idN]]
+    }
+
     sm_contInds <- 1:n_beta
     for (i in Zt_name) {
       mch_id <- match(i, names(vcov_ind))
       sm_contInds <- c(sm_contInds, (vcov_ind[mch_id-1]+1):vcov_ind[mch_id])
-    }  
+    }
     cov_lst$sm_Cov <- fullCovMat[sm_contInds, sm_contInds]
-    
+
     Z_namem <- intersect(names(vcov_indN), Z_namem)
     knots_lst <- range_lst <- type_lst <- vector("list", length(Z_namem))
     names(knots_lst) <- names(range_lst) <- names(type_lst) <- Z_namem
@@ -404,7 +410,7 @@ semireg <- function(formula, data, family = NULL, ngbinomial=FALSE, REML = TRUE,
       type_lst[[i]] <- attr(smoothZm[[i]], "type")
     }
   }else knots_lst <- range_lst <- type_lst <- cov_lst <- u_lst <- fullCovMat <- vcov_ind <- vcov_indN <- df <- NULL
-  
+
   ans <- list(semer=semer, data=data, fomul_vars=fomul_vars, sm_vars=sm_vars, smoothZ_call=mc$smoothZ, knots_lst=knots_lst, range_lst=range_lst, type_lst=type_lst, cov_lst=cov_lst, u_lst=u_lst, CovMat=fullCovMat, Cov_ind=vcov_ind, Cov_indN=vcov_indN, df=df, lmerc=lmerc)
   class(ans) <- c("semireg", "list")
   return(ans)

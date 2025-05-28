@@ -207,12 +207,11 @@ available for \code{model}.
 # fm <- lmer(yield ~ nitro*Variety+(1|Block/Variety), data=Oats)
   predictmeans(fm, "nitro", adj="BH")
   predictmeans(fm, "nitro:Variety", atvar="Variety", adj="BH", line=FALSE)
-  predictout <- predictmeans(fm, "nitro:Variety", atvar="Variety", adj="BH", 
+  predictout <- predictmeans(fm, "nitro:Variety", atvar="Variety", adj="BH",
     barplot=TRUE, line=FALSE)
   names(predictout)
   print(predictout$predictmeansPlot)
   print(predictout$predictmeansBarPlot)
-
 }
 \references{
 Maghsoodloo Saeed, Ching-Ying Huang (2010), \emph{Comparing the

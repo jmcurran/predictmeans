@@ -1,11 +1,11 @@
 #' Predicted Means of a Linear Model
-#' 
+#'
 #' This function obtains predicted means, SE of means, SED of means, LSDs and
 #' plots of means with SE bar or LSD bar for parametric models such as
 #' \code{aov}, \code{lm}, \code{glm}, \code{gls}, \code{lme}, and \code{lmer}.
 #' The function also perfomrs pairwise comparisons and permutation tests.
-#' 
-#' 
+#'
+#'
 #' @param model Model object returned by \code{aov}, \code{lm}, \code{glm},
 #' \code{gls}, \code{lme}, and \code{lmer}.
 #' @param modelterm Name (in "quotes") for indicating which factor term's
@@ -75,11 +75,11 @@
 #' \code{as.factor(income)}) will cause errors. Instead, create the modified
 #' variables outside of the model formula (e.g., \code{fincome <-
 #' as.factor(income)}) and then use them in the model formula.
-#' 
+#'
 #' Factors cannot have colons in level names (e.g., \code{"level:A"}); the
 #' \code{predictmeans} function will confuse the colons with interactions;
 #' rename levels to avoid colons.
-#' 
+#'
 #' For \code{predictmeans} function, it is assumed that methods \code{coef},
 #' \code{vcov}, \code{model.matrix}, \code{model.frame} and \code{terms} are
 #' available for \code{model}.
@@ -89,16 +89,16 @@
 #' interval for two normal population parameters}, Journal of Statistical
 #' Planning and Inference, 140(11), 3295-3305.
 #' https://www.sciencedirect.com/science/article/pii/S0378375810002405.
-#' 
+#'
 #' Torsten Hothorn, Frank Bretz and Peter Westfall (2008), \emph{Simultaneous
 #' Inference in General Parametric Models. Biometrical}, Journal 50(3),
 #' 346-363.
-#' 
+#'
 #' Welham S., Cullis B., Gogel B., Gilmour A., & Thompson R. (2004),
 #' \emph{Prediction in linear mixed models}, Australian and New Zealand Journal
 #' of Statistics, 46(3), 325-347.
 #' @examples
-#' 
+#'
 #'   library(predictmeans)
 #'   ftable(xtabs(yield ~ Block+Variety+nitro, data=Oats))
 #'   Oats$nitro <- factor(Oats$nitro)
@@ -111,7 +111,7 @@
 #'   names(predictout)
 #'   print(predictout$predictmeansPlot)
 #'   print(predictout$predictmeansBarPlot)
-#' 
+#' @export
 predictmeansN <- function (model, modelterm, data=NULL, pairwise=FALSE, atvar=NULL, adj="none", Df=NULL,
                            level=0.05, covariate=NULL, meandecr=NULL, letterCI=FALSE, trans = I, transOff=0,
                            responsen=NULL, count=FALSE, prtnum=TRUE, permlist=NULL, ncore=3L, ndecimal=4L) {
