@@ -126,7 +126,7 @@
 #' @importFrom lme4 mkGlmerDevfun mkLmerDevfun mkMerMod optimizeGlmer
 #' @importFrom lme4 optimizeLmer updateGlmerDevfun
 #' @importFrom Matrix .bdiag Matrix nearPD
-#' @importFrom stats model.response
+#' @importFrom stats fitted model.response
 #' @export
 semireg <- function(formula, data, family = NULL, ngbinomial=FALSE, REML = TRUE,
                     smoothZ = list(), ncenter=TRUE, nscale=FALSE, resp_scale=FALSE,
