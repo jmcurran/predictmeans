@@ -30,7 +30,7 @@ was crafted following the guidance provided by Professor Hans-Peter Piepho.
   R2_glmm(fm)
   (gm <- glmer(cbind(incidence, size - incidence) ~ period + (1 | herd),
               data = cbpp, family = binomial))
-  R2_glmm(gm)		  
+  R2_glmm(gm)
 
 }
 \references{
