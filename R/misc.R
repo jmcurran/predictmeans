@@ -321,11 +321,11 @@ doolittle <- function(x, eps = 1e-6) {
 
 
 #' Calculate degree of freedom of a modelterm (contrast) for a lmer model
-#' 
+#'
 #' Calculate the degree of freedom of a modelterm (contrast) for a \code{lmer}
 #' model using "Kenward-Roger" or "Satterthwaite" method.
-#' 
-#' 
+#'
+#'
 #' @param model Model object returned by \code{lmer}.
 #' @param modelterm Name (in "quotes") for indicating which factor term's
 #' degree of freedom to be calculated.  The \code{modelterm} must be given
@@ -342,35 +342,36 @@ doolittle <- function(x, eps = 1e-6) {
 #' default method is "Kenward-Roger".
 #' @author Dongwen Luo, Siva Ganesh and John Koolaard
 #' @examples
-#' 
+#'
 #' library(predictmeans)
 #' # ftable(xtabs(yield ~ Block+Variety+nitro, data=Oats))
 #' Oats$nitro <- factor(Oats$nitro)
 #' fm <- lmer(yield ~ nitro*Variety+(1|Block/Variety), data=Oats)
 #' df_term(fm, "nitro:Variety")
-#' ## Not run: 
+#' ## Not run:
 #' ## The contrast has a contrast matrix as follows:
-#' #     0:Golden Rain 0:Marvellous 0:Victory 
-#' #[1,]            -1            0         1 
-#' #[2,]             0            0         1 
-#' #     0.2:Golden Rain 0.2:Marvellous 0.2:Victory 
-#' #[1,]               0              0           0 
-#' #[2,]               0              0           0 
+#' #     0:Golden Rain 0:Marvellous 0:Victory
+#' #[1,]            -1            0         1
+#' #[2,]             0            0         1
+#' #     0.2:Golden Rain 0.2:Marvellous 0.2:Victory
+#' #[1,]               0              0           0
+#' #[2,]               0              0           0
 #' #     0.4:Golden Rain  0.4:Marvellous 0.4:Victory
 #' #[1,]               0               0           0
 #' #[2,]               0              -1           0
 #' #      0.6:Golden Rain 0.6:Marvellous 0.6:Victory
 #' #[1,]                0              0           0
 #' #[2,]                0              0           0
-#' 
+#'
 #' # 1. Enter above contrast matrix into a pop up window, then close the window
 #' # df_term(fm, "nitro:Variety")
-#'  
+#'
 #' # 2. Construct the contrast matrix directly
-#' cm <- rbind(c(-1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0), 
+#' cm <- rbind(c(-1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0),
 #'             c(0, 0, 1, 0, 0, 0, 0, -1, 0, 0, 0, 0))
 #' df_term(fm, ctrmatrix=cm, type="Satterthwaite")
-#' 
+#' @importFrom lmerTest as_lmerModLmerTest
+#' @export
 df_term <- function(model, modelterm, covariate=NULL, ctrmatrix=NULL, ctrnames=NULL, type=c("Kenward-Roger", "Satterthwaite")) {
 
   stopifnot(inherits(model, "lmerMod"))
@@ -987,15 +988,15 @@ f_loj_krc <- function(x, y, by.x, by.y) {
 
 
 #' Multiple Comparisons Based on the Confidence Intervals
-#' 
+#'
 #' This function produces letter representations for a multiple comparison test
 #' by analyzing the confidence intervals associated with the mean values of
 #' different treatments. In particular, if the confidence intervals of two
 #' treatments overlap, it indicates that there is no significant difference
 #' between them. Conversely, if the confidence intervals do not overlap, it
 #' indicates that the treatments are significantly different from each other.
-#' 
-#' 
+#'
+#'
 #' @param LL Lower limits of treatments' confidence interval.
 #' @param UL Upper limits of treatments' confidence interval.
 #' @param trt_n Treatments' names.
@@ -1004,17 +1005,17 @@ f_loj_krc <- function(x, y, by.x, by.y) {
 #' 83.4\% confidence interval for comparing means},
 #' https://vsni.co.uk/blogs/confidence_trick.
 #' @examples
-#' 
+#'
 #'   library(predictmeans)
 #'   ci_mcp(LL=c(68.2566,  87.7566, 103.0899, 112.2566), UL=c(90.5212, 110.0212, 125.3545, 134.5212))
-#'   
+#'
 #'   data("Oats", package="nlme")
 #'   Oats$nitro <- factor(Oats$nitro)
 #'   fm <- lme(yield ~ nitro*Variety, random=~1|Block/Variety, data=Oats)
 #' # fm <- lmer(yield ~ nitro*Variety+(1|Block/Variety), data=Oats)
 #'   predictmeans(fm, "nitro", adj="BH", plot=FALSE)$mean_table
 #'   predictmeans(fm, "nitro", pair=TRUE, level=0.166, letterCI = TRUE, plot=FALSE)$mean_table
-#' 
+#'
 ci_mcp <- function(LL, UL, trt_n=NULL) {
 
   stopifnot("Check your LL and UL input!"={
@@ -1135,11 +1136,11 @@ plot.pdmlist <- function(x, ...) {
   if (!all(c("Mean", "SE") %in% names(plotmt))) {
     stop("Mean table must have columns named 'Mean' and 'SE'")
   }
-  
+
   facts <- names(plotmt)[sapply(plotmt, is.factor)]
   if (length(facts) > 3) {
       stop("There is no plot for more than three-way interaction!")
-    }	
+    }
   names(facts) <- facts
   dots <- list(...)
   if ("plotord" %in% names(dots)) {
@@ -1206,7 +1207,7 @@ plot.pdmlist <- function(x, ...) {
  # ciPlot <- ci_plot(plotmt, mod_df=mod_df, resp_name=resp_name, ...)
   if (!is.null(x$p_valueMatrix)) {
     pmPlot <- PMplot(x$p_valueMatrix, level=0.05, legendx=0.69)
-  }  
+  }
 
   return(list(meanPlot=meanPlot, barPlot=barPlot, ciPlot=ciPlot, pmPlot=pmPlot))
 

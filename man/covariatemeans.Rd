@@ -103,7 +103,6 @@ values.
 # fm <- lmer(yield ~ nitro*Variety+(1|Block/Variety), data=Oats)
   covariatemeans(fm, "Variety", covariate="nitro")
   covariatemeans(fm, "Variety", covariate="nitro", covariateV=seq(0, 0.6, 0.1))$pltdf
-
 }
 \author{
 Dongwen Luo, Siva Ganesh and John Koolaard

@@ -1,4 +1,4 @@
-
+#' @importFrom stats complete.cases
 get_cor_grouping <- function(mod, levels = NULL) {
   if (!is.null(mod$groups)) {
     struct <- mod$modelStruct$corStruct

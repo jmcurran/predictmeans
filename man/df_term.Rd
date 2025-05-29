@@ -45,14 +45,14 @@ library(predictmeans)
 Oats$nitro <- factor(Oats$nitro)
 fm <- lmer(yield ~ nitro*Variety+(1|Block/Variety), data=Oats)
 df_term(fm, "nitro:Variety")
-## Not run: 
+## Not run:
 ## The contrast has a contrast matrix as follows:
-#     0:Golden Rain 0:Marvellous 0:Victory 
-#[1,]            -1            0         1 
-#[2,]             0            0         1 
-#     0.2:Golden Rain 0.2:Marvellous 0.2:Victory 
-#[1,]               0              0           0 
-#[2,]               0              0           0 
+#     0:Golden Rain 0:Marvellous 0:Victory
+#[1,]            -1            0         1
+#[2,]             0            0         1
+#     0.2:Golden Rain 0.2:Marvellous 0.2:Victory
+#[1,]               0              0           0
+#[2,]               0              0           0
 #     0.4:Golden Rain  0.4:Marvellous 0.4:Victory
 #[1,]               0               0           0
 #[2,]               0              -1           0
@@ -62,12 +62,11 @@ df_term(fm, "nitro:Variety")
 
 # 1. Enter above contrast matrix into a pop up window, then close the window
 # df_term(fm, "nitro:Variety")
- 
+
 # 2. Construct the contrast matrix directly
-cm <- rbind(c(-1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0), 
+cm <- rbind(c(-1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0),
             c(0, 0, 1, 0, 0, 0, 0, -1, 0, 0, 0, 0))
 df_term(fm, ctrmatrix=cm, type="Satterthwaite")
-
 }
 \author{
 Dongwen Luo, Siva Ganesh and John Koolaard

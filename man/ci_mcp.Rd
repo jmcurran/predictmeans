@@ -25,7 +25,7 @@ indicates that the treatments are significantly different from each other.
 
   library(predictmeans)
   ci_mcp(LL=c(68.2566,  87.7566, 103.0899, 112.2566), UL=c(90.5212, 110.0212, 125.3545, 134.5212))
-  
+
   data("Oats", package="nlme")
   Oats$nitro <- factor(Oats$nitro)
   fm <- lme(yield ~ nitro*Variety, random=~1|Block/Variety, data=Oats)
