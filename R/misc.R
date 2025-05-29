@@ -1015,7 +1015,7 @@ f_loj_krc <- function(x, y, by.x, by.y) {
 #' # fm <- lmer(yield ~ nitro*Variety+(1|Block/Variety), data=Oats)
 #'   predictmeans(fm, "nitro", adj="BH", plot=FALSE)$mean_table
 #'   predictmeans(fm, "nitro", pair=TRUE, level=0.166, letterCI = TRUE, plot=FALSE)$mean_table
-#'
+#' @export
 ci_mcp <- function(LL, UL, trt_n=NULL) {
 
   stopifnot("Check your LL and UL input!"={
@@ -1118,6 +1118,7 @@ reTrms_tmb <- function(model, ...) {
 ########################################################
 ###################### for print
 # Define print method for objects of class 'pdmlist'
+#' @exportS3Method print pdmlist
 print.pdmlist = function(x, ...){
   pos = grep('predictmeansPlot|predictmeansciPlot|predictmeansBKPlot|predictmeansBarPlot|p_valueMatrix', names(x))
   x = x[names(x)[-pos]]
@@ -1126,7 +1127,7 @@ print.pdmlist = function(x, ...){
 
 ###################### for plot
 # Define plot method for objects of class 'pdmlist'
-#' @exportS3Method package::generic
+#' @exportS3Method print pdmlist
 plot.pdmlist <- function(x, ...) {
 
   plotmt <- x$mean_table

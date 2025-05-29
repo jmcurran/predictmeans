@@ -31,7 +31,6 @@ was crafted following the guidance provided by Professor Hans-Peter Piepho.
   (gm <- glmer(cbind(incidence, size - incidence) ~ period + (1 | herd),
               data = cbpp, family = binomial))
   R2_glmm(gm)
-
 }
 \references{
 Piepho HP. An adjusted coefficient of determination (R2 ) for

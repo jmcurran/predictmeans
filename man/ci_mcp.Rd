@@ -32,7 +32,6 @@ indicates that the treatments are significantly different from each other.
 # fm <- lmer(yield ~ nitro*Variety+(1|Block/Variety), data=Oats)
   predictmeans(fm, "nitro", adj="BH", plot=FALSE)$mean_table
   predictmeans(fm, "nitro", pair=TRUE, level=0.166, letterCI = TRUE, plot=FALSE)$mean_table
-
 }
 \references{
 Vanessa, C. (05 October 2022), \emph{Confidence tricks: the
