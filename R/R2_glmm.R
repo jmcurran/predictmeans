@@ -23,7 +23,7 @@
 #'   (gm <- glmer(cbind(incidence, size - incidence) ~ period + (1 | herd),
 #'               data = cbpp, family = binomial))
 #'   R2_glmm(gm)
-#'
+#' @importFrom Matrix t
 #' @export
 R2_glmm <- function(model, over_disp=FALSE) {
   stopifnot(
@@ -118,7 +118,7 @@ R2_glmm <- function(model, over_disp=FALSE) {
   }
 
   n <- nrow(X)
-  Zt <- t(Z)
+  Zt <- Matrix::t(Z)
   s <- sigma(model)
   G <- Matrix::tcrossprod(Lambda)*(s^2)
   V <- Z %*% G %*% Zt+diag(n)*(s^2/prior_weight)

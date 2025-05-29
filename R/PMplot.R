@@ -31,7 +31,7 @@
 #'   PMplot(predictout$p_valueMatrix)
 #'
 #' @importFrom ggplot2 aes coord_fixed element_blank element_rect element_text
-#' @importFrom ggplot2 ggplot geom_tile labs
+#' @importFrom ggplot2 ggplot geom_tile labs margin
 #' @importFrom ggplot2 scale_fill_manual scale_x_continuous scale_y_continuous
 #' @importFrom ggplot2 theme theme_minimal
 #'

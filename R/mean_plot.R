@@ -1,5 +1,4 @@
 #' @importFrom ggplot2 lims
-#' @importFrom rlang .data
 mean_plot <- function(plot_mt, x_var, y_var, col_var = NULL, panel_var = NULL, title = NULL, xlab=NULL, ylab=NULL, scales="fixed", bar_value = 0, bar_label = c("Aveg.LSD", "Aveg.SED"), level = 0.05, basesz = 12, line = TRUE){
 
   plot_mt <- na.omit(plot_mt)

@@ -24,7 +24,7 @@ Description: Providing functions to diagnose and make inferences from various li
 	Inferences include predicted means and standard errors, contrasts, multiple comparisons, 
 	permutation tests, adjusted R-square and graphs.
 Depends: R (>= 3.5.0), glmmTMB, lme4, nlme, lmerTest
-Imports: car, ggplot2, graphics, grDevices, HRW, lmeInfo, lmeSplines, Matrix, MASS, methods, numDeriv, parallel, pbkrtest, plotly, plyr, reformulas, splines2, stats, utils
+Imports: car, ggplot2, graphics, grDevices, HRW, lmeInfo, lmeSplines, Matrix, MASS, methods, numDeriv, parallel, pbkrtest, plotly, plyr, reformulas, rlang, splines2, stats, utils
 License: GPL (>= 2)
 Packaged: 2025-05-08
 URL: https://CRAN.R-project.org/package=predictmeans
