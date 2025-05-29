@@ -115,7 +115,7 @@
 #' @importFrom glmmTMB getME
 #' @importFrom lme4 fixef isLMM lmerControl ranef
 #' @importFrom methods is
-#' @importFrom stats lm poisson qnorm
+#' @importFrom stats lm poisson qnorm sigma
 #'
 #' @export
 semipred <- function(semireg, modelterm=NULL, covariate, sm_term=NULL, contr=NULL,

@@ -93,7 +93,6 @@ str(zosuMat_by)
 
 zosuMat_by <- smZ(x, intKnots = knots, by=f, group=TRUE) # a list of sparse matrix
 str(zosuMat_by)
-
 }
 \references{
 O'Sullivan, F. (1986). A statistical perspective on ill-posed

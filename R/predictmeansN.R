@@ -111,6 +111,13 @@
 #'   names(predictout)
 #'   print(predictout$predictmeansPlot)
 #'   print(predictout$predictmeansBarPlot)
+#' @importFrom lme4 devfun2 vcov.merMod
+#' @importFrom Matrix forceSymmetric
+#' @importFrom parallel clusterExport makeCluster mclapply parLapplyLB stopCluster
+#' @importFrom numDeriv hessian
+#' @importFrom stats family ftable make.link p.adjust pnorm pt ptukey qt
+#' @importFrom stats xtabs
+
 #' @export
 predictmeansN <- function (model, modelterm, data=NULL, pairwise=FALSE, atvar=NULL, adj="none", Df=NULL,
                            level=0.05, covariate=NULL, meandecr=NULL, letterCI=FALSE, trans = I, transOff=0,
@@ -123,7 +130,7 @@ predictmeansN <- function (model, modelterm, data=NULL, pairwise=FALSE, atvar=NU
     stop(paste("The", modelterm, "must be exactly a term in the model (especially check the order of interaction)."))
   }
 
-  # if (inherits(model, "aovlist")) stop("Plese use model 'lme' instead of 'aov'!")
+  # if (inherits(model, "aovlist")) stop("Plese use model 'lme' instead of ???'aov'!")
   if (inherits(model, "aovlist")) {
     model <- aovlist_lmer(model)
   }

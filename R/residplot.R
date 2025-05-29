@@ -1,9 +1,9 @@
 #' Diagnostic Plots for a Linear (Mixed) Model
-#' 
+#'
 #' This function produces diagnostic plots for linear models including 'aov',
 #' 'lm', 'glm', 'gls', 'lme' and 'lmer'.
-#' 
-#' 
+#'
+#'
 #' @param model Model object returned by \code{aov}, \code{lm}, \code{glm},
 #' \code{gls}, \code{lme}, and \code{lmer}.
 #' @param group Name (in "quotes") for indicating the variable used to show
@@ -22,22 +22,25 @@
 #' asked for input, before a new figure is drawn.
 #' @author Dongwen Luo, Siva Ganesh and John Koolaard
 #' @examples
-#' 
-#' ## Note that the order of levels of nested random effects is oposite 
+#'
+#' ## Note that the order of levels of nested random effects is oposite
 #' ## between lme and lmer objects.
-#' 
+#'
 #' library(predictmeans)
 #' Oats$nitro <- factor(Oats$nitro)
 #' fm <- lme(yield ~ nitro*Variety, random=~1|Block/Variety, data=Oats)
 #' residplot(fm, level=2)    #lme: level=2 for random effect "Block:Variety"
-#' 
-#' #  Not Run
-#' #  library(lme4)
-#' #  fm <- lmer(yield ~ nitro*Variety+(1|Block/Variety), data=Oats)
-#' #  residplot(fm) # lmer: By default level=1 for random effect "Block:Variety"
-#' 
-residplot <- function(model, group="none", level=1, slope=FALSE, id=FALSE, newwd=FALSE, ask=FALSE) { 
-  
+#'
+#' \dontrun{
+#' library(lme4)
+#' fm <- lmer(yield ~ nitro*Variety+(1|Block/Variety), data=Oats)
+#' residplot(fm) # lmer: By default level=1 for random effect "Block:Variety"
+#' }
+#'
+#' @importFrom stats lm.influence ppoints predict residuals
+#' @export
+residplot <- function(model, group="none", level=1, slope=FALSE, id=FALSE, newwd=FALSE, ask=FALSE) {
+
   if (inherits(model, "aovlist")) {
     model <- aovlist_lmer(model)
   }
@@ -56,8 +59,8 @@ residplot <- function(model, group="none", level=1, slope=FALSE, id=FALSE, newwd
       } else {
         glmfit$prior.weights
       }
-      sd <- switch(family(glmfit)$family[1L], gaussian = sqrt(glmfit$deviance/glmfit$df.residual), 
-                   Gamma = sqrt(sum(w * (glmfit$y/fitted(glmfit) - 1)^2)/glmfit$df.residual), 
+      sd <- switch(family(glmfit)$family[1L], gaussian = sqrt(glmfit$deviance/glmfit$df.residual),
+                   Gamma = sqrt(sum(w * (glmfit$y/fitted(glmfit) - 1)^2)/glmfit$df.residual),
                    1)
       dev <- residuals(glmfit, type = "deviance")/sd
       pear <- residuals(glmfit, type = "pearson")/sd
@@ -128,8 +131,8 @@ residplot <- function(model, group="none", level=1, slope=FALSE, id=FALSE, newwd
   if (inherits(model, "gls")) {
     rsplot.gls(model, group, id, ask)
   }
-  if (inherits(model, "lme") || inherits(model, "lmerMod") 
-      || inherits(model, "merModLmerTest") || inherits(model, "glmerMod") 
+  if (inherits(model, "lme") || inherits(model, "lmerMod")
+      || inherits(model, "merModLmerTest") || inherits(model, "glmerMod")
       || inherits(model, "glmmTMB")) {
     rsplot.lme(model, group, level, slope, id, ask)
   }
