@@ -19,21 +19,21 @@
 #' @references Oliver E. Lee and Thomas M. Braun (2012), \emph{Permutation
 #' Tests for Random Effects in Linear Mixed Models. Biometrics}, Journal 68(2).
 #' @examples
-#'
-#'  library(predictmeans)
+#' library(predictmeans)
 #' # Test random effects
-#'  fm1 <- lmer(Reaction ~ Days + (Days | Subject), sleepstudy)
-#'  fm2 <- lmer(Reaction ~ Days + (Days || Subject), sleepstudy)
-#'  fm3 <- update(fm1, . ~ . - (Days | Subject) + (1 | Subject))
-#'  anova(fm1, fm2, fm3)
-#'  permlmer(fm3, fm2)
-#'  permlmer(fm2, fm1)
+#' fm1 <- lmer(Reaction ~ Days + (Days | Subject), sleepstudy)
+#' fm2 <- lmer(Reaction ~ Days + (Days || Subject), sleepstudy)
+#' fm3 <- update(fm1, . ~ . - (Days | Subject) + (1 | Subject))
+#' anova(fm1, fm2, fm3)
+#' permlmer(fm3, fm2)
+#' permlmer(fm2, fm1)
 #'
 #' # Test fixed effects
-#'  Oats$nitro <- factor(Oats$nitro)
-#'  fm0 <- lmer(yield ~ nitro+Variety+(1|Block/Variety), data=Oats)
-#'  fm <- lmer(yield ~ nitro*Variety+(1|Block/Variety), data=Oats)
-#'  permlmer(fm0, fm)
+#' Oats$nitro <- factor(Oats$nitro)
+#' fm0 <- lmer(yield ~ nitro+Variety+(1|Block/Variety), data=Oats)
+#' fm <- lmer(yield ~ nitro*Variety+(1|Block/Variety), data=Oats)
+#' permlmer(fm0, fm)
+#'
 #' @importFrom parallel clusterEvalQ
 #' @importFrom stats density logLik
 #' @export
@@ -122,6 +122,23 @@ permlmer <- function(lmer0, lmer1, nperm = 999, ncore=3L, plot=FALSE, seed){
   lrtest1 <- ifelse(lrtest1 < 0, 0, lrtest1)
 
   if (.Platform$OS.type=="windows") {
+
+    ## DONGWEN: I have added this function because the code was failing under
+    ## devtools::check(). There's a long explanation, but I am trying something
+    ## suggested by ChatGPT
+
+    get_safe_cores <- function(default = 2) {
+      limit <- Sys.getenv("_R_CHECK_LIMIT_CORES_")
+      if (limit == "TRUE") {
+        return(min(default, 2))
+      }
+      return(min(default, parallel::detectCores()))
+    }
+
+    ## this tries to respect the request from the function call to permlmer
+    ncore = get_safe_cores(ncore)
+
+
     cl <- makeCluster(ncore)
     clusterEvalQ(cl, library(lme4))
     clusterExport(cl, c("lmer0", "lmer1", "ref"), envir = environment())

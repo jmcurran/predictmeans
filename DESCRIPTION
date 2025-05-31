@@ -17,7 +17,7 @@ Author: Dongwen Luo [aut, cre],
   James Curran [ctb],
   Siva Ganesh [ctb],
   John Koolaard [ctb]
-Maintainer: Dongwen Luo <dongwen.luo@agresearch.co.nz>
+# Maintainer: Dongwen Luo <dongwen.luo@agresearch.co.nz>
 Title: Predicted Means for Linear and Semiparametric Models
 Description: Providing functions to diagnose and make inferences from various linear models, 
     such as those obtained from 'aov', 'lm', 'glm', 'gls', 'lme', 'lmer', 'glmmTMB' and 'semireg'. 

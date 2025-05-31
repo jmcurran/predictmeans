@@ -1,10 +1,10 @@
 #' Linear Contrast Tests for a Linear Model
-#' 
+#'
 #' Performs t-tests (or permuted t-tests) of specified contrasts for linear
 #' models obtained from functions \code{aov}, \code{lm}, \code{glm},
 #' \code{gls}, \code{lme}, or \code{lmer}.
-#' 
-#' 
+#'
+#'
 #' @param model Model object returned by \code{aov}, \code{lm}, \code{glm},
 #' \code{gls}, \code{lme}, and \code{lmer}.
 #' @param modelterm Name (in "quotes") for indicating which factor term's
@@ -33,44 +33,44 @@
 #' \emph{Simultaneous Inference in General Parametric Models. Biometrical},
 #' Journal 50(3), 346--363.
 #' @examples
-#' 
+#'
 #' library(predictmeans)
 #' # ftable(xtabs(yield ~ Block+Variety+nitro, data=Oats))
 #' Oats$nitro <- factor(Oats$nitro)
 #' fm <- lme(yield ~ nitro*Variety, random=~1|Block/Variety, data=Oats)
 #' # library(lme4)
 #' # fm <- lmer(yield ~ nitro*Variety+(1|Block/Variety), data=Oats)
-#' 
-#' ## Not run: 
+#'
+#' ## Not run:
 #' ## The contrast has a contrast matrix as follows:
-#' #     0:Golden Rain 0:Marvellous 0:Victory 
-#' #[1,]            -1            0         1 
-#' #[2,]             0            0         1 
-#' #     0.2:Golden Rain 0.2:Marvellous 0.2:Victory 
-#' #[1,]               0              0           0 
-#' #[2,]               0              0           0 
+#' #     0:Golden Rain 0:Marvellous 0:Victory
+#' #[1,]            -1            0         1
+#' #[2,]             0            0         1
+#' #     0.2:Golden Rain 0.2:Marvellous 0.2:Victory
+#' #[1,]               0              0           0
+#' #[2,]               0              0           0
 #' #     0.4:Golden Rain  0.4:Marvellous 0.4:Victory
 #' #[1,]               0               0           0
 #' #[2,]               0              -1           0
 #' #      0.6:Golden Rain 0.6:Marvellous 0.6:Victory
 #' #[1,]                0              0           0
 #' #[2,]                0              0           0
-#' 
+#'
 #' # 1. Enter above contrast matrix into a pop up window, then close the window
 #' # contrastmeans(fm, "nitro:Variety")
-#'  
+#'
 #' # 2. Construct the contrast matrix directly
-#' cm <- rbind(c(-1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0), 
+#' cm <- rbind(c(-1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0),
 #'             c(0, 0, 1, 0, 0, 0, 0, -1, 0, 0, 0, 0))
 #' contrastmeans(fm, "nitro:Variety", ctrmatrix=cm)
-#' 
+#' @export
 contrastmeans <- function(model, modelterm, ctrmatrix, ctrnames=NULL, adj="none", Df, permlist) {
   options(scipen=6)
-  
+
   if (inherits(model, "aovlist")) {
     model <- aovlist_lmer(model)
   }
-  
+
   if (is.null(ctrnames) || all(ctrnames%in%c("NULL", ""))) {
     ctrnames <- NULL
   }
@@ -100,7 +100,7 @@ contrastmeans <- function(model, modelterm, ctrmatrix, ctrnames=NULL, adj="none"
     adj <- "none"
   }
   rK <- ctrmatrix%*%K
-  
+
   mp <- mymodelparm(model)
   if (all(missing(permlist), missing(Df))) {
     if (length(mp$df)==1 && mp$df!=0) {
@@ -122,7 +122,7 @@ contrastmeans <- function(model, modelterm, ctrmatrix, ctrnames=NULL, adj="none"
       }
     }
   }
-  
+
   cm <- rK%*%mp$coef
   vcovm <- mp$vcov
   vcov.contr <- rK %*% tcrossprod(vcovm, rK)
@@ -131,7 +131,7 @@ contrastmeans <- function(model, modelterm, ctrmatrix, ctrnames=NULL, adj="none"
   nr <- nrow(rK)
   dv <- t(1/ses)
   cor.contr <- as.matrix(vcov.contr * (t(dv) %*% dv))
-  
+
   if (missing(permlist)) {
     # t.p.value <- 2*pt(-abs(t.v), Df)
     t.p.value <- apply(cbind(t.v, Df), 1, function(x) 2*pt(-abs(x[1]), x[2]))
@@ -150,7 +150,7 @@ contrastmeans <- function(model, modelterm, ctrmatrix, ctrnames=NULL, adj="none"
       t.v <- cm/ses
       return(t.v)
     }
-    
+
     if (nctr==1) {
       per.p <- (sum(sapply(permlist[[1]], function(x) abs(tValue(x, rK)) > abs(t.v)))+1)/(nsim + 1)
     } else {
