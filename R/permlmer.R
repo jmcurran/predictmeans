@@ -19,6 +19,7 @@
 #' @references Oliver E. Lee and Thomas M. Braun (2012), \emph{Permutation
 #' Tests for Random Effects in Linear Mixed Models. Biometrics}, Journal 68(2).
 #' @examples
+#' \dontrun{
 #' library(predictmeans)
 #' # Test random effects
 #' fm1 <- lmer(Reaction ~ Days + (Days | Subject), sleepstudy)
@@ -33,6 +34,7 @@
 #' fm0 <- lmer(yield ~ nitro+Variety+(1|Block/Variety), data=Oats)
 #' fm <- lmer(yield ~ nitro*Variety+(1|Block/Variety), data=Oats)
 #' permlmer(fm0, fm)
+#' }
 #'
 #' @importFrom parallel clusterEvalQ
 #' @importFrom stats density logLik

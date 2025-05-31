@@ -1127,7 +1127,7 @@ print.pdmlist = function(x, ...){
 
 ###################### for plot
 # Define plot method for objects of class 'pdmlist'
-#' @exportS3Method print pdmlist
+#' @exportS3Method plot pdmlist
 plot.pdmlist <- function(x, ...) {
 
   plotmt <- x$mean_table

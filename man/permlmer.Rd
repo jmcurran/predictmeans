@@ -31,6 +31,7 @@ This function provides permutation tests for the terms in a linear mixed
 model of \code{lmer}.
 }
 \examples{
+\dontrun{
 library(predictmeans)
 # Test random effects
 fm1 <- lmer(Reaction ~ Days + (Days | Subject), sleepstudy)
@@ -45,6 +46,7 @@ Oats$nitro <- factor(Oats$nitro)
 fm0 <- lmer(yield ~ nitro+Variety+(1|Block/Variety), data=Oats)
 fm <- lmer(yield ~ nitro*Variety+(1|Block/Variety), data=Oats)
 permlmer(fm0, fm)
+}
 
 }
 \references{
