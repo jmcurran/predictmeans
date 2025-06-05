@@ -8,7 +8,7 @@ get_cor_grouping <- function(mod, levels = NULL) {
     mod_formula <- nlme::getGroupsFormula(struct)
     dat <- nlme::getData(mod)
     if (inherits(na.action(mod), "exclude")) {
-      dat <- dat[-as.integer(na.action(mod)),,drop=FALSE]
+      dat <- dat[-as.integer(na.action(mod)), , drop = FALSE]
     }
     grps <- stats::model.frame(mod_formula, data = dat)
     grps <- apply(grps, 1, paste, collapse = "/")
@@ -17,7 +17,7 @@ get_cor_grouping <- function(mod, levels = NULL) {
     }
     grps <- factor(grps, levels = levels)
   } else if (!is.null(mod$modelStruct$corStruct)) {
-    grps <- factor(rep("A",mod$dims$N))
+    grps <- factor(rep("A", mod$dims$N))
   } else {
     grps <- factor(1:mod$dims$N)
   }
@@ -76,7 +76,7 @@ build_var_cor_mats <- function(mod, R_list = build_corr_mats(mod), sigma_scale =
       # if there are groups then make block-diagonal matrix-lists
       if (is.null(mod$modelStruct$varStruct)) {
         grps <- mod$groups[[1]]
-        V_list <- tapply(rep(sigma^2, length(grps)),  grps, function(x) diag(x, nrow = length(x)))
+        V_list <- tapply(rep(sigma^2, length(grps)), grps, function(x) diag(x, nrow = length(x)))
       } else {
         sort_order <- get_sort_order(mod)
         sd_vec <- sigma / as.numeric(nlme::varWeights(mod$modelStruct$varStruct))[sort_order]
@@ -134,17 +134,19 @@ build_RE_mats <- function(mod, sigma_scale = FALSE) {
     }
     data <- nlme::getData(mod)
     Z_mat <- model.matrix(mod$modelStruct$reStruc, data[complete.cases(data), ])
-    Z_names <- sapply(strsplit(colnames(Z_mat), ".", fixed=TRUE), function(x) x[1])
+    Z_names <- sapply(strsplit(colnames(Z_mat), ".", fixed = TRUE), function(x) x[1])
     row.names(Z_mat) <- NULL
-    Z_levels <- lapply(names(all_groups), function(x) Z_mat[,x==Z_names,drop=FALSE])
+    Z_levels <- lapply(names(all_groups), function(x) Z_mat[, x == Z_names, drop = FALSE])
     Z_levels <- Map(matrix_list, x = Z_levels, fac = all_groups, dim = "row")
     ZDZ_lists <- Map(ZDZt, D = D_list, Z_list = Z_levels)
     # ZDZ_lists <- Map(function(x,fac) x[order(fac)], x = ZDZ_lists, fac = all_groups)
 
     for (i in 2:length(all_groups)) {
-      ZDZ_lists[[i]] <- add_bdiag(small_mats = ZDZ_lists[[i-1]],
-                                  big_mats = ZDZ_lists[[i]],
-                                  crosswalk = all_groups[c(i-1,i)])
+      ZDZ_lists[[i]] <- add_bdiag(
+        small_mats = ZDZ_lists[[i - 1]],
+        big_mats = ZDZ_lists[[i]],
+        crosswalk = all_groups[c(i - 1, i)]
+      )
     }
 
     ZDZ_list <- ZDZ_lists[[i]]
@@ -215,4 +217,3 @@ build_Sigma_mats.lme <- function(mod, invert = FALSE, sigma_scale = FALSE) {
   attr(Sigma_list, "groups") <- Sigma_grps
   return(Sigma_list)
 }
-
