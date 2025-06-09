@@ -132,9 +132,10 @@ contrastmeans <- function(model, modelterm, ctrmatrix, ctrnames = NULL, adj = "n
   vcov.contr <- rK %*% tcrossprod(vcovm, rK)
   ses <- sqrt(diag(vcov.contr))
   t.v <- cm / ses
-  nr <- nrow(rK)
-  dv <- t(1 / ses)
-  cor.contr <- as.matrix(vcov.contr * (t(dv) %*% dv))
+  ## Next three lines commented out as none are used
+  ## nr <- nrow(rK)
+  ## dv <- t(1 / ses)
+  ## cor.contr <- as.matrix(vcov.contr * (t(dv) %*% dv))
 
   if (missing(permlist)) {
     # t.p.value <- 2*pt(-abs(t.v), Df)
@@ -143,7 +144,9 @@ contrastmeans <- function(model, modelterm, ctrmatrix, ctrnames = NULL, adj = "n
     out.put <- cbind(cm, ses, t.v, Df, t.p.value)
     colnames(out.put) <- c("Estimate", "Std. Error", "t value", "df", "Pr(>|t|)")
     rownames(out.put) <- ctrnames
-    attr(out.put, "Note") <- paste("The p-value is adjusted by", sQuote(adj), "method, if p-value = 0 means p-value < 0.0001.")
+    attr(out.put, "Note") <- paste("The p-value is adjusted by", sQuote(adj),
+                                   "method, if p-value = 0 means p-value <",
+                                   "0.0001.")
   } else {
     nsim <- length(permlist[[1]])
     tValue <- function(x, rK) {
