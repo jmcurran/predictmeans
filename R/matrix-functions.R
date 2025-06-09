@@ -1,23 +1,23 @@
-
-
-
-##------------------------------------------------------------------------
+## ------------------------------------------------------------------------
 ## block-diagonal matrix addition, multiplication, and trace functions matrix_list
-##------------------------------------------------------------------------
+## ------------------------------------------------------------------------
 
 # turn matrix into a list of sub-matrices
 
 sub_f <- function(x, fac, dim) {
-  function(f) switch(dim,
-                     row = x[fac==f, ,drop=FALSE],
-                     col = x[ ,fac==f, drop=FALSE],
-                     both = x[fac==f, fac==f, drop=FALSE])
+  function(f) {
+    switch(dim,
+      row = x[fac == f, , drop = FALSE],
+      col = x[, fac == f, drop = FALSE],
+      both = x[fac == f, fac == f, drop = FALSE]
+    )
+  }
 }
 
 matrix_list <- function(x, fac, dim) {
   if (is.vector(x)) {
     if (dim != "both") {
-      stop(paste0("Object must be a matrix in order to subset by ",dim,"."))
+      stop(paste0("Object must be a matrix in order to subset by ", dim, "."))
     }
     x_list <- split(x, fac)
     lapply(x_list, function(x) diag(x, nrow = length(x)))
@@ -29,7 +29,6 @@ matrix_list <- function(x, fac, dim) {
 # turn block-diagonal into regular matrix
 
 unblock <- function(A, block = attr(A, "groups")) {
-
   if (is.null(block)) {
     block <- factor(rep(names(A), times = sapply(A, function(x) dim(x)[1])))
   }
@@ -37,7 +36,7 @@ unblock <- function(A, block = attr(A, "groups")) {
   mat <- matrix(0, n, n)
   for (i in levels(block)) {
     index <- i == block
-    mat[index,index] <- A[[i]]
+    mat[index, index] <- A[[i]]
   }
   return(mat)
 }
@@ -45,13 +44,14 @@ unblock <- function(A, block = attr(A, "groups")) {
 
 # sum of two conformable block-diagonal matrices
 
-sum_blockblock <- function(A, B)
-  mapply(function(a,b) a + b, a = A, b = B, SIMPLIFY = FALSE)
+sum_blockblock <- function(A, B) {
+  mapply(function(a, b) a + b, a = A, b = B, SIMPLIFY = FALSE)
+}
 
 
 # generic matrix minus block-diagonal
 
-matrix_minus_block <- function(A, B, block=attr(B, "groups")) {
+matrix_minus_block <- function(A, B, block = attr(B, "groups")) {
   if (is.null(block)) {
     block <- rep(names(B), times = sapply(B, function(x) dim(x)[1]))
   }
@@ -59,7 +59,7 @@ matrix_minus_block <- function(A, B, block=attr(B, "groups")) {
   mat <- A
   for (i in unique(block)) {
     index <- i == block
-    mat[index,index] <- mat[index, index] - B[[i]]
+    mat[index, index] <- mat[index, index] - B[[i]]
   }
   return(mat)
 }
@@ -74,7 +74,7 @@ block_minus_matrix <- function(A, B, block = attr(A, "groups")) {
   mat <- -B
   for (i in unique(block)) {
     index <- i == block
-    mat[index,index] <- mat[index, index] + A[[i]]
+    mat[index, index] <- mat[index, index] + A[[i]]
   }
   return(mat)
 }
@@ -84,9 +84,9 @@ add_submatrices <- function(indices, small_mat, big_mat) {
   if (nlevels(indices) != length(small_mat)) {
     stop("Levels of indices do not match entries of small_mat.")
   }
-  for (i in 1:length(levs)) {
+  for (i in seq_along(levs)) {
     ind <- levs[i] == indices
-    big_mat[ind,ind] <- big_mat[ind,ind] + small_mat[[i]]
+    big_mat[ind, ind] <- big_mat[ind, ind] + small_mat[[i]]
   }
   big_mat
 }
@@ -112,7 +112,7 @@ add_diag_bdiag <- function(diag_mats, big_mats) {
 
 get_order <- function(A, B, block = attr(A, "groups")) {
   if (is.null(names(A))) {
-    names(A) <- 1:length(A)
+    names(A) <- seq_along(A)
   }
   A_names <- names(A)
   C_indx <- rep(A_names, times = sapply(A, function(x) dim(x)[1]))
@@ -125,8 +125,8 @@ get_order <- function(A, B, block = attr(A, "groups")) {
   for (b in A_names) {
     ind <- block == b
     ind_C <- C_indx == b
-    C[ind_C, ] <-  B[ind,]
-	B_index[ind_C] <- which(ind)
+    C[ind_C, ] <- B[ind, ]
+    B_index[ind_C] <- which(ind)
   }
 
   return(list(C, B_index))
