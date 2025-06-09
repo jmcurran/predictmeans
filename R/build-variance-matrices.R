@@ -51,7 +51,8 @@ get_sort_order <- function(mod) {
   }
 }
 
-build_var_cor_mats <- function(mod, R_list = build_corr_mats(mod), sigma_scale = FALSE) {
+build_var_cor_mats <- function(mod, R_list = build_corr_mats(mod),
+                               sigma_scale = FALSE) {
   sigma <- if (sigma_scale) {
     mod$sigma
   } else {
@@ -66,7 +67,8 @@ build_var_cor_mats <- function(mod, R_list = build_corr_mats(mod), sigma_scale =
       if (is.null(mod$modelStruct$varStruct)) {
         V_list <- as.list(rep(sigma^2, mod$dims$N))
       } else {
-        sd_vec <- sigma / as.numeric(nlme::varWeights(mod$modelStruct$varStruct))
+        vWeights <- as.numeric(nlme::varWeights(mod$modelStruct$varStruct))
+        sd_vec <- sigma / vWeights
         V_list <- as.list(sd_vec^2)
       }
       grps <- factor(1:mod$dims$N)
@@ -76,11 +78,20 @@ build_var_cor_mats <- function(mod, R_list = build_corr_mats(mod), sigma_scale =
       # if there are groups then make block-diagonal matrix-lists
       if (is.null(mod$modelStruct$varStruct)) {
         grps <- mod$groups[[1]]
-        V_list <- tapply(rep(sigma^2, length(grps)), grps, function(x) diag(x, nrow = length(x)))
+        V_list <- tapply(rep(sigma^2, length(grps)), grps,
+                         function(x) {
+                           diag(x, nrow = length(x))
+                         })
       } else {
         sort_order <- get_sort_order(mod)
-        sd_vec <- sigma / as.numeric(nlme::varWeights(mod$modelStruct$varStruct))[sort_order]
-        V_list <- tapply(sd_vec^2, mod$groups[[1]], function(x) diag(x, nrow = length(x)))
+        vWeights <- as.numeric(
+          nlme::varWeights(mod$modelStruct$varStruct)
+        )[sort_order]
+        sd_vec <- sigma / vWeights
+        V_list <- tapply(sd_vec^2, mod$groups[[1]],
+                         function(x) {
+                           diag(x, nrow = length(x))
+                         })
       }
       attr(V_list, "groups") <- mod$groups[[1]]
     }
@@ -95,7 +106,10 @@ build_var_cor_mats <- function(mod, R_list = build_corr_mats(mod), sigma_scale =
       }
     } else {
       sort_order <- get_sort_order(mod)
-      sd_vec <- sigma / as.numeric(nlme::varWeights(mod$modelStruct$varStruct))[sort_order]
+      vWeights <- as.numeric(
+        nlme::varWeights(mod$modelStruct$varStruct)
+      )[sort_order]
+      sd_vec <- sigma / vWeights
       sd_list <- split(sd_vec, attr(R_list, "groups"))
       V_list <- Map(function(R, s) tcrossprod(s) * R, R = R_list, s = sd_list)
     }
@@ -110,7 +124,8 @@ ZDZt <- function(D, Z_list) {
   lapply(Z_list, function(z) z %*% D %*% t(z))
 }
 
-# Construct list of block-diagonal matrices for each random effects grouping structure
+# Construct list of block-diagonal matrices for each random effects grouping
+# structure
 build_RE_mats <- function(mod, sigma_scale = FALSE) {
   # Get random effects structure
   all_groups <- rev(mod$groups)
@@ -128,7 +143,10 @@ build_RE_mats <- function(mod, sigma_scale = FALSE) {
     attr(ZDZ_list, "groups") <- all_groups[[1]]
   } else {
     if (sigma_scale) {
-      D_list <- lapply(mod$modelStruct$reStruct, function(x) mod$sigma^2 * as.matrix(x))
+      D_list <- lapply(mod$modelStruct$reStruct,
+                       function(x) {
+                         mod$sigma^2 * as.matrix(x)
+                       })
     } else {
       D_list <- lapply(mod$modelStruct$reStruct, as.matrix)
     }

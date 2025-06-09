@@ -17,18 +17,18 @@
 #' @author Dongwen Luo, Siva Ganesh and John Koolaard
 #' @examples
 #'
-#'   library(predictmeans)
-#'   set.seed(2013)
-#'   pvalues <- runif(28)
-#'   pmatrix <- matrix(0,8,8)
-#'   pmatrix[lower.tri(pmatrix)] <- pvalues
-#'   round(pmatrix, 4)
-#'   PMplot(pmatrix)
+#' library(predictmeans)
+#' set.seed(2013)
+#' pvalues <- runif(28)
+#' pmatrix <- matrix(0, 8, 8)
+#' pmatrix[lower.tri(pmatrix)] <- pvalues
+#' round(pmatrix, 4)
+#' PMplot(pmatrix)
 #'
-#'   Oats$nitro <- factor(Oats$nitro)
-#'   fm <- lmer(yield ~ nitro*Variety+(1|Block/Variety), data=Oats)
-#'   predictout <- predictmeans(fm, "nitro:Variety", atvar="Variety", adj="BH", barplot=TRUE)
-#'   PMplot(predictout$p_valueMatrix)
+#' Oats$nitro <- factor(Oats$nitro)
+#' fm <- lmer(yield ~ nitro * Variety + (1 | Block / Variety), data = Oats)
+#' predictout <- predictmeans(fm, "nitro:Variety", atvar = "Variety", adj = "BH", barplot = TRUE)
+#' PMplot(predictout$p_valueMatrix)
 #'
 #' @importFrom ggplot2 aes coord_fixed element_blank element_rect element_text
 #' @importFrom ggplot2 ggplot geom_tile labs margin
@@ -36,8 +36,7 @@
 #' @importFrom ggplot2 theme theme_minimal
 #'
 #' @export
-PMplot <- function(pmatrix, level=0.05, mtitle=NULL, xylabel=NULL, margin=5, legendx=0.73, newwd=FALSE) {
-
+PMplot <- function(pmatrix, level = 0.05, mtitle = NULL, xylabel = NULL, margin = 5, legendx = 0.73, newwd = FALSE) {
   # Simple block diagonal function to replace adiag
   # block_diag <- function(mat_list) {
   # if (length(mat_list) == 1) return(mat_list[[1]])
@@ -82,7 +81,7 @@ PMplot <- function(pmatrix, level=0.05, mtitle=NULL, xylabel=NULL, margin=5, leg
       pmatrix[[i]][upper.tri(pmatrix[[i]], diag = TRUE)] <- NA
     }
     # pmatrix <- block_diag(pmatrix)
-    pmatrix <- do.call(adiag, c(pmatrix, pad=NA))
+    pmatrix <- do.call(adiag, c(pmatrix, pad = NA))
     nr <- nrow(pmatrix)
     if (is.null(xylabel)) {
       rnpltm <- as.character(1:nrow(pmatrix))
@@ -109,28 +108,34 @@ PMplot <- function(pmatrix, level=0.05, mtitle=NULL, xylabel=NULL, margin=5, leg
   if (level == 0.05) {
     # Create cut categories
     pltm_cut <- cut(as.numeric(pltmm),
-                    breaks = c(-0.1, 0.01, 0.05, 0.1, 1),
-                    labels = c("<= 0.01", "0.01 < p <= 0.05", "0.05 < p <= 0.1", "> 0.1"),
-                    include.lowest = TRUE)
+      breaks = c(-0.1, 0.01, 0.05, 0.1, 1),
+      labels = c("<= 0.01", "0.01 < p <= 0.05", "0.05 < p <= 0.1", "> 0.1"),
+      include.lowest = TRUE
+    )
     fact_level <- rev(c("<= 0.01", "0.01 < p <= 0.05", "0.05 < p <= 0.1", "> 0.1"))
 
     # Define colors
-    pcolr <- c("<= 0.01" = "#0D0DFF",
-               "0.01 < p <= 0.05" = "#5D5DFF",
-               "0.05 < p <= 0.1" = "#A1A1FF",
-               "> 0.1" = "#E4E4FF")
+    pcolr <- c(
+      "<= 0.01" = "#0D0DFF",
+      "0.01 < p <= 0.05" = "#5D5DFF",
+      "0.05 < p <= 0.1" = "#A1A1FF",
+      "> 0.1" = "#E4E4FF"
+    )
   } else {
     # Simple significant/non-significant
     pltm_cut <- cut(as.numeric(pltmm),
-                    breaks = c(-0.1, level, 1),
-                    labels = c("significant", "insignificant"),
-                    include.lowest = TRUE)
+      breaks = c(-0.1, level, 1),
+      labels = c("significant", "insignificant"),
+      include.lowest = TRUE
+    )
 
     fact_level <- rev(c("significant", "insignificant"))
 
     # Define colors
-    pcolr <- c("significant" = "#0D0DFF",
-               "insignificant" = "#A1A1FF")
+    pcolr <- c(
+      "significant" = "#0D0DFF",
+      "insignificant" = "#A1A1FF"
+    )
   }
 
   # Convert to long format for ggplot using base R
@@ -141,7 +146,7 @@ PMplot <- function(pmatrix, level=0.05, mtitle=NULL, xylabel=NULL, margin=5, leg
   x <- rep(1:ncol(pltmm), each = nrow(pltmm))
   y <- rep(1:nrow(pltmm), times = ncol(pltmm))
   values <- as.numeric(pltmm)
-  category <- factor(as.character(pltm_cut), levels=fact_level)
+  category <- factor(as.character(pltm_cut), levels = fact_level)
 
   # Create data frame
   plot_data <- data.frame(
@@ -158,8 +163,10 @@ PMplot <- function(pmatrix, level=0.05, mtitle=NULL, xylabel=NULL, margin=5, leg
   # Create the plot
   p <- ggplot(plot_data, aes(x = x, y = y, fill = category)) +
     geom_tile(color = "white", size = 0.5) +
-    scale_fill_manual(values = pcolr,
-                      name = if (level == 0.05) "p-value" else paste("At", round(level, 4), "level")) +
+    scale_fill_manual(
+      values = pcolr,
+      name = if (level == 0.05) "p-value" else paste("At", round(level, 4), "level")
+    ) +
     scale_x_continuous(
       breaks = 1:length(rnpltm),
       labels = rnpltm,
@@ -179,9 +186,11 @@ PMplot <- function(pmatrix, level=0.05, mtitle=NULL, xylabel=NULL, margin=5, leg
     theme(
       panel.grid = element_blank(),
       panel.border = element_rect(color = "black", fill = NA, size = 1),
-      axis.text.x = element_text(angle = if (max(nchar(rnpltm))/6 > 0.5) 90 else 0,
-                                 hjust = if (max(nchar(rnpltm))/6 > 0.5) 1 else 0.5,
-                                 vjust = 0.5),
+      axis.text.x = element_text(
+        angle = if (max(nchar(rnpltm)) / 6 > 0.5) 90 else 0,
+        hjust = if (max(nchar(rnpltm)) / 6 > 0.5) 1 else 0.5,
+        vjust = 0.5
+      ),
       axis.text.y = element_text(hjust = 1),
       axis.ticks = element_blank(),
       plot.title = element_text(hjust = 0.5),
@@ -208,6 +217,6 @@ PMplot <- function(pmatrix, level=0.05, mtitle=NULL, xylabel=NULL, margin=5, leg
   if (newwd) {
     dev.new()
   }
- # print(p)
+  # print(p)
   return(invisible(p))
 }
