@@ -93,7 +93,8 @@ Kmatrix <- function(model, modelterm, covariate = NULL, covariateV = NULL, data 
   # eval(thecall$data, envir=envir)
 
   if (inherits(model, "mer") || inherits(model, "merMod") || inherits(model, "lme") || inherits(model, "gls")) {
-    model_data <- get_all_vars(formula(terms(model)), lme4::getData(model)) ## NOTE DONGWEN: have made getData specific to lme4
+    ## NOTE DONGWEN: have made getData specific to lme4
+    model_data <- get_all_vars(formula(terms(model)), lme4::getData(model))
     model_data <- droplevels(na.omit(model_data))
     model_data <- get_all_vars(formrhs, model_data)
   } else {
@@ -158,7 +159,8 @@ Kmatrix <- function(model, modelterm, covariate = NULL, covariateV = NULL, data 
   if ((!is.null(covariate) && !unique(covariate %in% c("NULL", ""))) && all(is.numeric(covariate))) {
     baselevs[covlevname] <- as.list(covariate)
   }
-  if ((!is.null(covariate) && !unique(covariate %in% c("NULL", ""))) && is.character(covariate) && all(covariate %in% covlevname)) {
+  if ((!is.null(covariate) && !unique(covariate %in% c("NULL", ""))) &&
+        is.character(covariate) && all(covariate %in% covlevname)) {
     if (length(covariate) == 1) {
       # if (as.is) {
       # baselevs[[covariate]] <- sort(unique(X[[covariate]]))
@@ -166,7 +168,8 @@ Kmatrix <- function(model, modelterm, covariate = NULL, covariateV = NULL, data 
       if ((!is.null(covariateV) && !unique(covariateV %in% c("NULL", ""))) && is.vector(covariateV)) {
         baselevs[[covariate]] <- covariateV
       } else {
-        baselevs[[covariate]] <- sort(unique(c(seq(min(X[[covariate]]), max(X[[covariate]]), length = 50), X[[covariate]])))
+        baselevs[[covariate]] <- sort(unique(c(seq(min(X[[covariate]]), max(X[[covariate]]), length = 50),
+                                               X[[covariate]])))
       }
       # }
     } else {
@@ -215,7 +218,8 @@ Kmatrix <- function(model, modelterm, covariate = NULL, covariateV = NULL, data 
 
   # These are the variables involved; and the label to use in the results
   facs <- all.vars(form)
-  if ((!is.null(covariate) && !unique(covariate %in% c("NULL", ""))) && all(is.character(covariate), all(!covariate %in% facs))) {
+  if ((!is.null(covariate) && !unique(covariate %in% c("NULL", ""))) &&
+        all(is.character(covariate), all(!covariate %in% facs))) {
     facs <- c(facs, covariate)
   }
   if (any(sapply(facs, function(nm) length(grep(nm, allFacs)) == 0))) {
