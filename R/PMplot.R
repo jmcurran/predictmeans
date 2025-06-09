@@ -69,7 +69,7 @@ PMplot <- function(pmatrix, level = 0.05, mtitle = NULL, xylabel = NULL, margin 
     nr <- nrow(pmatrix)
     pmatrix[upper.tri(pmatrix, diag = TRUE)] <- NA
     if (is.null(rownames(pmatrix))) {
-      rnpltm <- as.character(1:nrow(pmatrix))
+      rnpltm <- as.character(seq_len(nrow(pmatrix)))
     } else {
       rnpltm <- rownames(pmatrix)
     }
@@ -77,14 +77,14 @@ PMplot <- function(pmatrix, level = 0.05, mtitle = NULL, xylabel = NULL, margin 
 
   # Handle list input using base R block diagonal
   if (is.list(pmatrix)) {
-    for (i in 1:length(pmatrix)) {
+    for (i in seq_along(pmatrix)) {
       pmatrix[[i]][upper.tri(pmatrix[[i]], diag = TRUE)] <- NA
     }
     # pmatrix <- block_diag(pmatrix)
     pmatrix <- do.call(adiag, c(pmatrix, pad = NA))
     nr <- nrow(pmatrix)
     if (is.null(xylabel)) {
-      rnpltm <- as.character(1:nrow(pmatrix))
+      rnpltm <- as.character(seq_len(nrow(pmatrix)))
     } else {
       rnpltm <- xylabel
     }
@@ -143,8 +143,8 @@ PMplot <- function(pmatrix, level = 0.05, mtitle = NULL, xylabel = NULL, margin 
   # # y_coords <- rep(1:nrow(pltmm), times = ncol(pltmm))
   # # values <- as.numeric(pltmm)
   # # categories <- factor(as.character(pltm_cut), levels=fact_level)
-  x <- rep(1:ncol(pltmm), each = nrow(pltmm))
-  y <- rep(1:nrow(pltmm), times = ncol(pltmm))
+  x <- rep(seq_len(ncol(pltmm)), each = nrow(pltmm))
+  y <- rep(seq_len(nrow(pltmm)), times = ncol(pltmm))
   values <- as.numeric(pltmm)
   category <- factor(as.character(pltm_cut), levels = fact_level)
 
@@ -168,12 +168,12 @@ PMplot <- function(pmatrix, level = 0.05, mtitle = NULL, xylabel = NULL, margin 
       name = if (level == 0.05) "p-value" else paste("At", round(level, 4), "level")
     ) +
     scale_x_continuous(
-      breaks = 1:length(rnpltm),
+      breaks = seq_along(rnpltm),
       labels = rnpltm,
       expand = c(0, 0)
     ) +
     scale_y_continuous(
-      breaks = 1:length(rnpltm),
+      breaks = seq_along(rnpltm),
       labels = rev(rnpltm),
       expand = c(0, 0)
     ) +
