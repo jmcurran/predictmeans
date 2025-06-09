@@ -77,8 +77,8 @@ CookD <- function(model, group = NULL, plot = TRUE, idn = 3, newwd = FALSE) {
       xlab = "Obs. number", col = "blue", ylim = c(0, max(CookD) + 0.005),
       main = "Cook's Distance", ylab = "Cook's distance", type = "h"
     )
-    text((1:length(CookD))[outD], CookD[outD], labid[outD], pos = 3) # Annotation
-    points((1:length(CookD))[outD], CookD[outD], pch = 16, col = "blue")
+    text(seq_along(CookD)[outD], CookD[outD], labid[outD], pos = 3) # Annotation
+    points(seq_along(CookD)[outD], CookD[outD], pch = 16, col = "blue")
   }
   return(invisible(CookD))
 }
