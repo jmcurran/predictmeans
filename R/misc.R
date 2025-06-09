@@ -690,10 +690,7 @@ vcov_lmerMod <- function(object, ...) {
       cbind(fixhes, t(varcov_beta)),
       cbind(varcov_beta, ranhes)
     ))
-    colnames(full_varcov) <- c(names(parts$fixef), paste("cov",
-                                                         names(parts$theta),
-                                                         sep = "_"
-                                                         ),
+    colnames(full_varcov) <- c(names(parts$fixef), paste("cov", names(parts$theta), sep = "_"),
                                "residual")
     callingFun <- try(deparse(sys.call(-2)), silent = TRUE)
     if (length(callingFun) > 1) {
