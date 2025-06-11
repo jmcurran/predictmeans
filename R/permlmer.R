@@ -28,7 +28,7 @@
 #' anova(fm1, fm2, fm3)
 #' permlmer(fm3, fm2)
 #' permlmer(fm2, fm1)
-#'
+# #--------------------------------------------------------
 #' # Test fixed effects
 #' Oats$nitro <- factor(Oats$nitro)
 #' fm0 <- lmer(yield ~ nitro+Variety+(1|Block/Variety), data=Oats)
@@ -39,7 +39,13 @@
 #' @importFrom parallel clusterEvalQ
 #' @importFrom stats density logLik
 #' @export
-permlmer <- function(lmer0, lmer1, nperm = 999, ncore=3L, plot=FALSE, seed){
+
+permlmer <- function(lmer0,
+                     lmer1,
+                     nperm = 999,
+                     ncore=3L,
+                     plot=FALSE,
+                     seed){
 
   if (any(!inherits(lmer0, "lmerMod"), !inherits(lmer1, "lmerMod"))) {
     stop("The model must be a lmer object!")

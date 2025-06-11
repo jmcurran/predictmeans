@@ -127,7 +127,7 @@
 #'                      ),
 #'                      data = WarsawApts)
 #'  sp_out1 <- semipred(fit1, "construction.date", "construction.date")
-#'
+#'  #--------------------------------------------------------
 #'  WarsawApts$district <- factor(WarsawApts$district)
 #'  fit2 <- semireg_tmb(areaPerMzloty ~ construction.date*district, resp_scale = TRUE,
 #'                      smoothZ=list(group=smZ(construction.date, k=15,
@@ -135,7 +135,7 @@
 #'                      data=WarsawApts)
 #'  sp_out2_1 <- semipred(fit2, "district", "construction.date")
 #'  sp_out2_2 <- semipred(fit2, "district", "construction.date", contr=c(2,1))
-#'
+#'  #--------------------------------------------------------
 #'  data(indonRespir)
 #'  help(indonRespir)
 #'  str(indonRespir)
@@ -156,11 +156,27 @@
 #' @importFrom glmmTMB fitTMB glmmTMBControl
 #' @importFrom stats gaussian na.action setNames
 #' @export
-semireg_tmb <- function(formula, data, family = gaussian(), smoothZ = list(), ziformula = ~0, dispformula = ~1,
-                        weights = NULL, offset = NULL, contrasts = NULL, na.action, se = TRUE,
-                        verbose = FALSE, doFit = TRUE, control = glmmTMBControl(), REML = TRUE,
-                        start = NULL, map = NULL, sparseX = NULL, prt=TRUE, predict_info=TRUE)
-{
+semireg_tmb <- function(formula,
+                        data,
+                        family = gaussian(),
+                        smoothZ = list(),
+                        ziformula = ~0,
+                        dispformula = ~1,
+                        weights = NULL,
+                        offset = NULL,
+                        contrasts = NULL,
+                        na.action,
+                        se = TRUE,
+                        verbose = FALSE,
+                        doFit = TRUE,
+                        control = glmmTMBControl(),
+                        REML = TRUE,
+                        start = NULL,
+                        map = NULL,
+                        sparseX = NULL,
+                        prt=TRUE,
+                        predict_info=TRUE) {
+
   mc <- match.call()
   environment(formula) <- parent.frame()
   mc$formula <- formula

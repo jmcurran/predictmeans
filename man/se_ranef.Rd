@@ -23,8 +23,7 @@ returned by modeling functions.
 returned by lmer, glmer and glmmTMB functions.
 }
 \references{
-This function is modified from function 'se.ranef' at package
-'arm'.
+This function is modified from function 'se.ranef' at package 'arm'.
 }
 \author{
 Dongwen Luo, Siva Ganesh and John Koolaard

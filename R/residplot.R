@@ -39,7 +39,13 @@
 #'
 #' @importFrom stats lm.influence ppoints predict residuals
 #' @export
-residplot <- function(model, group="none", level=1, slope=FALSE, id=FALSE, newwd=FALSE, ask=FALSE) {
+residplot <- function(model,
+                      group="none",
+                      level=1,
+                      slope=FALSE,
+                      id=FALSE,
+                      newwd=FALSE,
+                      ask=FALSE) {
 
   if (inherits(model, "aovlist")) {
     model <- aovlist_lmer(model)

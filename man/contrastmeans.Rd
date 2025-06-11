@@ -60,7 +60,7 @@ Oats$nitro <- factor(Oats$nitro)
 fm <- lme(yield ~ nitro*Variety, random=~1|Block/Variety, data=Oats)
 # library(lme4)
 # fm <- lmer(yield ~ nitro*Variety+(1|Block/Variety), data=Oats)
-
+#--------------------------------------------------------
 ## Not run:
 ## The contrast has a contrast matrix as follows:
 #     0:Golden Rain 0:Marvellous 0:Victory
@@ -76,6 +76,7 @@ fm <- lme(yield ~ nitro*Variety, random=~1|Block/Variety, data=Oats)
 #[1,]                0              0           0
 #[2,]                0              0           0
 
+#--------------------------------------------------------
 # 1. Enter above contrast matrix into a pop up window, then close the window
 # contrastmeans(fm, "nitro:Variety")
 

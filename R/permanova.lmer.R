@@ -18,11 +18,11 @@
 #'  library(predictmeans)
 #'  Oats$nitro <- factor(Oats$nitro)
 #'  fm <- lmer(yield ~ nitro*Variety+(1|Block/Variety), data=Oats)
-#'
+#' #--------------------------------------------------------
 #'  # Permutation Test for model terms
 #'  permanova.lmer(fm)
 #'  permanova.lmer(fm, type=2)
-#'
+#' #--------------------------------------------------------
 #'  # Compare to F test
 #'  fm0 <- lme(yield ~ nitro*Variety, random=~1|Block/Variety, data=Oats)
 #'  anova(fm0)
@@ -31,7 +31,11 @@
 #' @importFrom stats anova
 #' @importFrom utils as.roman
 #' @export
-permanova.lmer <- function(model, nperm = 999, ncore=3L, type = c("I", "II", "III",  "1", "2", "3"), ...) {
+
+permanova.lmer <- function(model,
+                           nperm = 999,
+                           ncore=3L,
+                           type = c("I", "II", "III",  "1", "2", "3"), ...) {
 
   if (!inherits(model, "lmerMod")) {
     stop("The model must be a lmer object!")

@@ -20,12 +20,15 @@
 #'   Oats$nitro <- factor(Oats$nitro)
 #'   (fm <- lmer(yield ~ nitro*Variety+(1|Block/Variety), data=Oats))
 #'   R2_glmm(fm)
+#'   #--------------------------------------------------------
 #'   (gm <- glmer(cbind(incidence, size - incidence) ~ period + (1 | herd),
 #'               data = cbpp, family = binomial))
 #'   R2_glmm(gm)
 #' @importFrom Matrix t diag
 #' @export
-R2_glmm <- function(model, over_disp=FALSE) {
+
+R2_glmm <- function(model,
+                    over_disp=FALSE) {
   stopifnot(
     any(
       inherits(model, "lmerMod"),

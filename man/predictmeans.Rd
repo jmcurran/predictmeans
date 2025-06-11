@@ -204,7 +204,7 @@ available for \code{model}.
   ftable(xtabs(yield ~ Block+Variety+nitro, data=Oats))
   Oats$nitro <- factor(Oats$nitro)
   fm <- lme(yield ~ nitro*Variety, random=~1|Block/Variety, data=Oats)
-# fm <- lmer(yield ~ nitro*Variety+(1|Block/Variety), data=Oats)
+  #--------------------------------------------------------
   predictmeans(fm, "nitro", adj="BH")
   predictmeans(fm, "nitro:Variety", atvar="Variety", adj="BH", line=FALSE)
   predictout <- predictmeans(fm, "nitro:Variety", atvar="Variety", adj="BH",

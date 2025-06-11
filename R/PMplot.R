@@ -24,7 +24,7 @@
 #'   pmatrix[lower.tri(pmatrix)] <- pvalues
 #'   round(pmatrix, 4)
 #'   PMplot(pmatrix)
-#'
+#'  #--------------------------------------------------------
 #'   Oats$nitro <- factor(Oats$nitro)
 #'   fm <- lmer(yield ~ nitro*Variety+(1|Block/Variety), data=Oats)
 #'   predictout <- predictmeans(fm, "nitro:Variety", atvar="Variety", adj="BH", barplot=TRUE)
@@ -36,7 +36,13 @@
 #' @importFrom ggplot2 theme theme_minimal
 #'
 #' @export
-PMplot <- function(pmatrix, level=0.05, mtitle=NULL, xylabel=NULL, margin=5, legendx=0.73, newwd=FALSE) {
+PMplot <- function(pmatrix,
+                   level=0.05,
+                   mtitle=NULL,
+                   xylabel=NULL,
+                   margin=5,
+                   legendx=0.73,
+                   newwd=FALSE) {
 
   # Simple block diagonal function to replace adiag
   # block_diag <- function(mat_list) {
@@ -156,7 +162,7 @@ PMplot <- function(pmatrix, level=0.05, mtitle=NULL, xylabel=NULL, margin=5, leg
   plot_data <- plot_data[!is.na(plot_data$category), ]
 
   # Create the plot
-  p <- ggplot(plot_data, aes(x = x, y = y, fill = category)) +
+  pmPlot <- ggplot(plot_data, aes(x = x, y = y, fill = category)) +
     geom_tile(color = "white", size = 0.5) +
     scale_fill_manual(values = pcolr,
                       name = if (level == 0.05) "p-value" else paste("At", round(level, 4), "level")) +
@@ -208,6 +214,6 @@ PMplot <- function(pmatrix, level=0.05, mtitle=NULL, xylabel=NULL, margin=5, leg
   if (newwd) {
     dev.new()
   }
- # print(p)
-  return(invisible(p))
+ # print(pmPlot)
+  return(pmPlot)
 }

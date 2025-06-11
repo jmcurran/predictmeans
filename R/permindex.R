@@ -27,7 +27,12 @@
 #'                         # then permute obs within each group.
 #'   cbind(data, permindex(data, nsim=5))  # Free permutation.
 #' @export
-permindex <- function(data, block=NULL, group=NULL, nsim=4999, seed) {
+
+permindex <- function(data,
+                      block=NULL,
+                      group=NULL,
+                      nsim=4999,
+                      seed) {
   if (any(!is.null(block), !is.null(group))) {
     data <- data[do.call(order, data[, c(block, group), drop=FALSE]),]
   }

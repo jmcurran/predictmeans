@@ -42,7 +42,13 @@
 #' @importFrom stats as.formula delete.response formula get_all_vars
 #' @importFrom stats na.omit na.pass
 #' @export
-Kmatrix <- function(model, modelterm, covariate=NULL, covariateV=NULL, data=NULL, prtnum=FALSE) {
+
+Kmatrix <- function(model,
+                    modelterm,
+                    covariate=NULL,
+                    covariateV=NULL,
+                    data=NULL,
+                    prtnum=FALSE) {
   if (inherits(model, "mer") || inherits(model, "merMod")) {
     if(!lme4::isLMM(model) && !lme4::isGLMM(model)) {
       stop("Can't handle a nonlinear mixed model")

@@ -77,7 +77,7 @@ knots <- c(0.3, 0.5, 0.6)
 zosuMat <- smZ(x, intKnots = knots)
 bsMat <- smZ(x, intKnots = knots, degree = 2, type="bs")
 isMat <- smZ(x, intKnots = knots, degree = 2, type="iSpline")
-
+#--------------------------------------------------------
 splst <- list(zosuMat, bsMat, isMat)
 for (i in splst) {
 op <- par(mar = c(2.5, 2.5, 0.2, 0.1), mgp = c(1.5, 0.5, 0))
@@ -86,13 +86,14 @@ abline(v = knots, lty = 2, col = "gray")
 ## reset to previous plotting settings
 par(op)
 }
-
+#--------------------------------------------------------
 f <- gl(4, 25, length=length(x))
 zosuMat_by <- smZ(x, intKnots = knots, by=f) # one sparse matrix
 str(zosuMat_by)
 
 zosuMat_by <- smZ(x, intKnots = knots, by=f, group=TRUE) # a list of sparse matrix
 str(zosuMat_by)
+
 }
 \references{
 O'Sullivan, F. (1986). A statistical perspective on ill-posed

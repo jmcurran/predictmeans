@@ -33,7 +33,11 @@
 #' @importFrom utils combn
 #'
 #' @export
-varcomp <- function(model, ci=TRUE, level=0.95) {
+
+varcomp <- function(model,
+                    ci=TRUE,
+                    level=0.95) {
+
   # vcov_lmerMod(model, full = TRUE, ranpar = "var"), vcov_lmerMod(model, full = TRUE, ranpar = "sd")?
   if (any(inherits(model, "lmerMod"), inherits(model, "glmerMod"), inherits(model, "lmerModLmerTest"))) {
     varcomp <- as.data.frame(VarCorr(model), order = "lower.tri")

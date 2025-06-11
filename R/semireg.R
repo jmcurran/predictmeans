@@ -90,6 +90,7 @@
 #'  data(WarsawApts)
 #'  help(WarsawApts)
 #'  str(WarsawApts)
+#'  #--------------------------------------------------------
 #'  fit1 <- semireg(areaPerMzloty ~ construction.date,
 #'                  smoothZ=list(
 #'                    grp=smZ(construction.date, k=25)
@@ -98,13 +99,14 @@
 #'  sp_out1 <- semipred(fit1, "construction.date", "construction.date")
 #'
 #'  WarsawApts$district <- factor(WarsawApts$district)
+#'  #--------------------------------------------------------
 #'  fit2 <- semireg(areaPerMzloty ~ construction.date*district, resp_scale = TRUE,
 #'                  smoothZ=list(group=smZ(construction.date, k=15,
 #'                                         by = district, group=TRUE)),
 #'                  data=WarsawApts)
 #'  sp_out2_1 <- semipred(fit2, "district", "construction.date")
 #'  sp_out2_2 <- semipred(fit2, "district", "construction.date", contr=c(2,1))
-#'
+#' #--------------------------------------------------------
 #'  data(indonRespir)
 #'  help(indonRespir)
 #'  str(indonRespir)
@@ -115,6 +117,7 @@
 #'                  ),
 #'                  family = binomial,
 #'                  data = indonRespir)
+#'  #--------------------------------------------------------
 #'  sp_out3 <- semipred(fit3, "age", "age")
 #'  library(ggplot2)
 #'  sp_out3$plt+
@@ -128,12 +131,26 @@
 #' @importFrom Matrix .bdiag Matrix nearPD
 #' @importFrom stats fitted model.response
 #' @export
-semireg <- function(formula, data, family = NULL, ngbinomial=FALSE, REML = TRUE,
-                    smoothZ = list(), ncenter=TRUE, nscale=FALSE, resp_scale=FALSE,
-                    control = lmerControl(optimizer="bobyqa"), start = NULL,
-                    verbose = FALSE, drop.unused.levels=TRUE, subset, weights,
-                    offset, contrasts = NULL, prt=TRUE, predict_info=TRUE, ...)
-{
+semireg <- function(formula,
+                    data,
+                    family = NULL,
+                    ngbinomial=FALSE,
+                    REML = TRUE,
+                    smoothZ = list(),
+                    ncenter=TRUE,
+                    nscale=FALSE,
+                    resp_scale=FALSE,
+                    control = lmerControl(optimizer="bobyqa"),
+                    start = NULL,
+                    verbose = FALSE,
+                    drop.unused.levels=TRUE,
+                    subset,
+                    weights,
+                    offset,
+                    contrasts = NULL,
+                    prt=TRUE,
+                    predict_info=TRUE, ...) {
+
   mc <- match.call()
   environment(formula) <- parent.frame()
   mc$formula <- formula

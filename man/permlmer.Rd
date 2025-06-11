@@ -40,7 +40,6 @@ fm3 <- update(fm1, . ~ . - (Days | Subject) + (1 | Subject))
 anova(fm1, fm2, fm3)
 permlmer(fm3, fm2)
 permlmer(fm2, fm1)
-
 # Test fixed effects
 Oats$nitro <- factor(Oats$nitro)
 fm0 <- lmer(yield ~ nitro+Variety+(1|Block/Variety), data=Oats)
