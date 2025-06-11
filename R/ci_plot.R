@@ -1,5 +1,39 @@
+#' Produce a confidence interval (CI) plot for predicted means
+#'
+#'
+#' @param plot_mt Data frame of the mean table which is the output of \code{mean_table} or \code{mean_table$Table} from function \code{predictmeans}.
+#'
+#' @param mod_df Data frame of the data used in the modelling. The default is NULL, then plot will has CIs only.
+#' @param resp_name Name (in "quotes") for the (original) response variable used in the modelling.
+#' @param jitterv A degree of jitter in x and y direction in the back transformed means graph. The default is 0.2.
+#' @param basesz Base font size, given in pts.
+#'
+#' @author Dongwen Luo
+#'
+#' @examples
+#'
+#'library(predictmeans)
+#' ftable(xtabs(yield ~ Block+Variety+nitro, data=Oats))
+#' Oats$nitro <- factor(Oats$nitro)
+#' fm <- lme(yield ~ nitro*Variety, random=~1|Block/Variety, data=Oats)
+#' #--------------------------------------------------------
+#' predm_out <- predictmeansN(fm, "nitro", adj="BH")
+#' ci_plot(predm_out$mean_table$Table)
+#' ci_plot(predm_out$mean_table$Table, mod_df = Oats, resp_name = "yield")
+#' # Use plot method
+#' plot(predm_out, mod_df = Oats, resp_name = "yield")
+#' #--------------------------------------------------------
+#' predictout <- predictmeansN(fm, "nitro:Variety", atvar="Variety", adj="BH")
+#' plot(predictout, mod_df = Oats, resp_name = "yield", line=FALSE)
+#'
 #' @importFrom ggplot2 scale_y_discrete
-ci_plot <- function(plot_mt, mod_df=NULL, resp_name=NULL, jitterv=0.2, basesz = 12) {
+#' @export
+
+ci_plot <- function(plot_mt,
+                    mod_df=NULL,
+                    resp_name=NULL,
+                    jitterv=0.2,
+                    basesz = 12) {
 
   plot_mt <- na.omit(plot_mt)
   LL <- Mean_v <- Treat <- UL <- NULL
@@ -28,7 +62,6 @@ ci_plot <- function(plot_mt, mod_df=NULL, resp_name=NULL, jitterv=0.2, basesz = 
   }
   xoffSet <- 0.15 * (xMax - xMin)
   xlimv <- c(xMin - xoffSet, xMax + xoffSet)
-
 
   ciPlot <- ggplot(plot_mt, aes(Mean_v, Treat)) +
     labs(title=mtitle, x="", y="") + # paste0("\n", resp_name)

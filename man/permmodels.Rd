@@ -66,22 +66,22 @@ effects and permutation F-tests for the terms in a linear model such as
 
 # # Not run for simplifying process of submiting pkg to CRAN
 # library(predictmeans)
-# Oats$nitro <- factor(Oats$nitro) 
+# Oats$nitro <- factor(Oats$nitro)
 # fm <- lme(yield ~ nitro*Variety, random=~1|Block/Variety, data=Oats)
 # # library(lme4)
 # # fm <- lmer(yield ~ nitro*Variety+(1|Block/Variety), data=Oats)
-# 
+#
 # # Permutation Test for model terms
 # system.time(
 #   permlme <- permmodels(model=fm, nperm=999)
-# )  
-# 
+# )
+#
 # # Permutation Test for multiple comparisons
-# predictmeans(model=fm, modelterm="nitro:Variety", atvar="Variety", adj="BH", 
+# predictmeans(model=fm, modelterm="nitro:Variety", atvar="Variety", adj="BH",
 #              permlist=permlme, plot=FALSE)
-# 
+#
 # # Permutation Test for specified contrasts
-# cm <- rbind(c(-1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0), 
+# cm <- rbind(c(-1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0),
 #             c(0, 0, 1, 0, 0, 0, 0, -1, 0, 0, 0, 0))
 # contrastmeans(model=fm, modelterm="nitro:Variety", ctrmatrix=cm, permlist=permlme)
 

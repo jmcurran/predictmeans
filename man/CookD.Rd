@@ -33,9 +33,7 @@ from functions \code{aov}, \code{lm}, \code{glm}, \code{gls}, \code{lme}, or
 
 library(predictmeans)
 Oats$nitro <- factor(Oats$nitro)
-fm <- lme(yield ~ nitro*Variety, random=~1|Block/Variety, data=Oats)
-# library(lme4)
-# fm <- lmer(yield ~ nitro*Variety+(1|Block/Variety), data=Oats)
+fm <- lmer(yield ~ nitro*Variety+(1|Block/Variety), data=Oats)
 CookD(fm)
 
 }

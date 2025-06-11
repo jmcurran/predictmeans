@@ -51,17 +51,34 @@
 #' @author Dongwen Luo, Siva Ganesh and John Koolaard
 #' @examples
 #'
-#'   library(predictmeans)
-#'   data(Oats, package="nlme")
-#'   fm <- lme(yield ~ nitro*Variety, random=~1|Block/Variety, data=Oats)
-#' # library(lme4)
-#' # fm <- lmer(yield ~ nitro*Variety+(1|Block/Variety), data=Oats)
+#' library(predictmeans)
+#' data(Oats, package="nlme")
+#' fm <- lme(yield ~ nitro*Variety, random=~1|Block/Variety, data=Oats)
 #'   covariatemeans(fm, "Variety", covariate="nitro")
 #'   covariatemeans(fm, "Variety", covariate="nitro", covariateV=seq(0, 0.6, 0.1))$pltdf
+#'
 #' @importFrom stats aggregate
 #' @importFrom utils edit
 #' @export
-covariatemeans <- function (model, modelterm=NULL, covariate, as.is=FALSE, covariateV=NULL, data=NULL, level=0.05, Df=NULL, trans=NULL, transOff=0, responsen=NULL, trellis=TRUE, plotord=NULL, mtitle=NULL, ci=TRUE, point=TRUE, jitterv=0, newwd=FALSE) {
+
+covariatemeans <- function (model,
+                            modelterm=NULL,
+                            covariate,
+                            as.is=FALSE,
+                            covariateV=NULL,
+                            data=NULL,
+                            level=0.05,
+                            Df=NULL,
+                            trans=NULL,
+                            transOff=0,
+                            responsen=NULL,
+                            trellis=TRUE,
+                            plotord=NULL,
+                            mtitle=NULL,
+                            ci=TRUE,
+                            point=TRUE,
+                            jitterv=0,
+                            newwd=FALSE) {
 
   if (is.null(modelterm) || all(modelterm  %in%  c("NULL", ""))) {
     modelterm <- covariate

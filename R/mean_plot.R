@@ -1,6 +1,57 @@
+#' Produce a mean value plot for predicted means
+#'
+#'
+#' @param plot_mt Data frame of the mean table which is the output of \code{mean_table} or \code{mean_table$Table} from function \code{predictmeans}.
+#'
+#' @param x_var Name (in "quotes") for the x axis variable on the plot.
+#' @param y_var Name (in "quotes") for the y axis variable on the plot.
+#' @param col_var Name (in "quotes") for the color group variable on the plot.
+#' @param panel_var Name (in "quotes") for the panel variable on the plot.
+#' @param title The text for the title.
+#' @param xlab The title of the respective axis (for xlab() or ylab()) or of the plot (for ggtitle()).
+#' @param ylab The title of the respective axis (for xlab() or ylab()) or of the plot (for ggtitle()).
+#' @param scales Should scales be fixed ("fixed", the default), free ("free"), or free in one dimension ("free_x", "free_y") in a trellis graph?
+#' @param bar_value The length of the bar with default value of zero.
+#' @param bar_label Should bar label be "Aveg.LSD" (the default) or "Aveg.SED"?
+#' @param level A significant level for calculating LSD, CI etc. The default value is 0.05.
+#' @param basesz Base font size, given in pts.
+#' @param line An option for drawing a line chart, or dot chart. The default is TRUE.
+#'
+#' @author Dongwen Luo
+#'
+#' @examples
+#'
+#'library(predictmeans)
+#' data(ATP, package="predictmeans")
+#' str(ATP)
+#'
+#' mod <- lmer(ATP^1.5 ~ A*B*time+(1| heart), ATP)
+#' # residplot(mod)
+#' #--------------------------------------------------------
+#' predm_out <- predictmeansN(mod, "A:B:time", atvar=c("time"), adj="BH", trans=function(x) x^(1/1.5))
+#'
+#' mean_plot(predm_out$mean_table$Table, x_var="time", y_var="Mean", col_var="A", panel_var ="B",
+#' bar_value = 118.06)
+#' # Use plot method
+#' plot(predm_out, mod_df = ATP, resp_name = "ATP")
+#'
 #' @importFrom ggplot2 lims
 #' @importFrom rlang .data
-mean_plot <- function(plot_mt, x_var, y_var, col_var = NULL, panel_var = NULL, title = NULL, xlab=NULL, ylab=NULL, scales="fixed", bar_value = 0, bar_label = c("Aveg.LSD", "Aveg.SED"), level = 0.05, basesz = 12, line = TRUE){
+#' @export
+
+mean_plot <- function(plot_mt,
+                      x_var, y_var,
+                      col_var = NULL,
+                      panel_var = NULL,
+                      title = NULL,
+                      xlab=NULL,
+                      ylab=NULL,
+                      scales = c("fixed", "free", "free_x", "free_y"),
+                      bar_value = 0,
+                      bar_label = c("Aveg.LSD", "Aveg.SED"),
+                      level = 0.05,
+                      basesz = 12,
+                      line = TRUE) {
 
   plot_mt <- na.omit(plot_mt)
   yMin <- min(plot_mt[, y_var])
@@ -11,6 +62,7 @@ mean_plot <- function(plot_mt, x_var, y_var, col_var = NULL, panel_var = NULL, t
   bar_label <- match.arg(bar_label)
   barMin <- yMin
   barMax <- barMin + bar_value
+  scales <- match.arg(scales)
 
   if (bar_value > 0) {
     barMin <- yMin

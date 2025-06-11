@@ -138,7 +138,7 @@
 #'   ftable(xtabs(yield ~ Block+Variety+nitro, data=Oats))
 #'   Oats$nitro <- factor(Oats$nitro)
 #'   fm <- lme(yield ~ nitro*Variety, random=~1|Block/Variety, data=Oats)
-#' # fm <- lmer(yield ~ nitro*Variety+(1|Block/Variety), data=Oats)
+#'   #--------------------------------------------------------
 #'   predictmeans(fm, "nitro", adj="BH")
 #'   predictmeans(fm, "nitro:Variety", atvar="Variety", adj="BH", line=FALSE)
 #'   predictout <- predictmeans(fm, "nitro:Variety", atvar="Variety", adj="BH",
@@ -147,11 +147,41 @@
 #'   print(predictout$predictmeansPlot)
 #'   print(predictout$predictmeansBarPlot)
 #' @export
-predictmeans <- function (model, modelterm, data=NULL, pairwise=FALSE, atvar=NULL, adj="none", Df=NULL, lsd_bar=TRUE,
-                          level=0.05, covariate=NULL, meandecr=NULL, letterCI=FALSE, trans = I, transOff=0,
-                          responsen=NULL, count=FALSE, plotord=NULL, lineplot=TRUE, plottitle=NULL, plotxlab=NULL,
-                          plotylab=NULL, mplot=TRUE, barplot=FALSE, pplot=TRUE, bkplot=TRUE, plot=TRUE, jitterv=0.2,
-                          basesz=12L, prtnum=TRUE, prtplt=TRUE, newwd=FALSE, permlist=NULL, ncore=3L, ndecimal=4L) {
+
+predictmeans <- function (model,
+                          modelterm,
+                          data=NULL,
+                          pairwise=FALSE,
+                          atvar=NULL,
+                          adj="none",
+                          Df=NULL,
+                          lsd_bar=TRUE,
+                          level=0.05,
+                          covariate=NULL,
+                          meandecr=NULL,
+                          letterCI=FALSE,
+                          trans = I,
+                          transOff=0,
+                          responsen=NULL,
+                          count=FALSE,
+                          plotord=NULL,
+                          lineplot=TRUE,
+                          plottitle=NULL,
+                          plotxlab=NULL,
+                          plotylab=NULL,
+                          mplot=TRUE,
+                          barplot=FALSE,
+                          pplot=TRUE,
+                          bkplot=TRUE,
+                          plot=TRUE,
+                          jitterv=0.2,
+                          basesz=12L,
+                          prtnum=TRUE,
+                          prtplt=TRUE,
+                          newwd=FALSE,
+                          permlist=NULL,
+                          ncore=3L,
+                          ndecimal=4L) {
   options(scipen=6)
   if (any(missing(model), missing(modelterm))) {
     stop("The arguments 'model', and 'modelterm' must be provided!")

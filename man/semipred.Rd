@@ -107,7 +107,7 @@ library(ggplot2)
 ggplot(Dialyzer, aes(x=pressure, y=rate, col=QB)) +
   geom_line() +
   facet_wrap(vars(Subject))
-
+#--------------------------------------------------------
 fm <- semireg(rate ~ pressure*QB+(pressure|Subject),
               smoothZ=list(
                 qb_grp=smZ(pressure, k=4, by=QB, group=TRUE)
@@ -115,15 +115,17 @@ fm <- semireg(rate ~ pressure*QB+(pressure|Subject),
               data=Dialyzer)
 str(fm$data)
 summary(fm$semer)
+#--------------------------------------------------------
 residplot(fm$semer, group="QB")
 anova(fm$semer)
 ranova(fm$semer)
 R2_glmm(fm$semer)
+#--------------------------------------------------------
 ap_out1 <- semipred(fm, "QB", "pressure")
 str(ap_out1$pred_df)
 ap_out2 <- semipred(fm, "QB", "pressure", contr=c(1,2))
 str(ap_out2$pred_df)
-
+#--------------------------------------------------------
 data(sleepstudy, package="lme4")
 help(sleepstudy)
 str(sleepstudy)
@@ -134,7 +136,7 @@ xyplot(Reaction ~ Days | Subject, sleepstudy, aspect = "xy",
        xlab = "Days of sleep deprivation",
        ylab = "Average reaction time (ms)",
        as.table = TRUE)
-
+#--------------------------------------------------------
 sleep.semi <- semireg(Reaction ~ Days*Subject,
                       smoothZ=list(
                         sub_grp=smZ(Days, by=Subject, group=TRUE)
@@ -142,10 +144,11 @@ sleep.semi <- semireg(Reaction ~ Days*Subject,
                       data=sleepstudy)
 residplot(sleep.semi$semer)
 summary(sleep.semi$semer)
+#--------------------------------------------------------
 anova(sleep.semi$semer)
 ranova(sleep.semi$semer)
 R2_glmm(sleep.semi$semer)
-
+#--------------------------------------------------------
 predout1 <- semipred(sleep.semi, "Subject", "Days")
 str(predout1$pred_df)
 predout2 <- semipred(sleep.semi, "Subject", "Days", contr = c(6,1))

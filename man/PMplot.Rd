@@ -45,7 +45,7 @@ Creates a plot of p-values of pairwise comparisons.
   pmatrix[lower.tri(pmatrix)] <- pvalues
   round(pmatrix, 4)
   PMplot(pmatrix)
-
+ #--------------------------------------------------------
   Oats$nitro <- factor(Oats$nitro)
   fm <- lmer(yield ~ nitro*Variety+(1|Block/Variety), data=Oats)
   predictout <- predictmeans(fm, "nitro:Variety", atvar="Variety", adj="BH", barplot=TRUE)

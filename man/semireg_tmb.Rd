@@ -175,7 +175,7 @@ O'Sullivan-type of Z.
                      ),
                      data = WarsawApts)
  sp_out1 <- semipred(fit1, "construction.date", "construction.date")
-
+ #--------------------------------------------------------
  WarsawApts$district <- factor(WarsawApts$district)
  fit2 <- semireg_tmb(areaPerMzloty ~ construction.date*district, resp_scale = TRUE,
                      smoothZ=list(group=smZ(construction.date, k=15,
@@ -183,7 +183,7 @@ O'Sullivan-type of Z.
                      data=WarsawApts)
  sp_out2_1 <- semipred(fit2, "district", "construction.date")
  sp_out2_2 <- semipred(fit2, "district", "construction.date", contr=c(2,1))
-
+ #--------------------------------------------------------
  data(indonRespir)
  help(indonRespir)
  str(indonRespir)

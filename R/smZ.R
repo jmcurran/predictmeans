@@ -48,7 +48,7 @@
 #' zosuMat <- smZ(x, intKnots = knots)
 #' bsMat <- smZ(x, intKnots = knots, degree = 2, type="bs")
 #' isMat <- smZ(x, intKnots = knots, degree = 2, type="iSpline")
-#'
+#' #--------------------------------------------------------
 #' splst <- list(zosuMat, bsMat, isMat)
 #' for (i in splst) {
 #' op <- par(mar = c(2.5, 2.5, 0.2, 0.1), mgp = c(1.5, 0.5, 0))
@@ -57,20 +57,31 @@
 #' ## reset to previous plotting settings
 #' par(op)
 #' }
-#'
+#'#--------------------------------------------------------
 #' f <- gl(4, 25, length=length(x))
 #' zosuMat_by <- smZ(x, intKnots = knots, by=f) # one sparse matrix
 #' str(zosuMat_by)
 #'
 #' zosuMat_by <- smZ(x, intKnots = knots, by=f, group=TRUE) # a list of sparse matrix
 #' str(zosuMat_by)
+#'
 #' @importFrom methods as
 #' @importFrom stats quantile
 #' @export
-smZ <- function(x, k=6, intKnots=NULL, range.x=NULL, degree=3,
-                type=c("ZOSull", "Ztps", "ns", "bs", "bernstein", "bSpline",
-                       "nSpline", "cSpline", "iSpline", "mSpline", "smspline"),
-                by=NULL, group=FALSE, intercept=FALSE, pred=FALSE, ...){
+
+smZ <- function(x,
+                k=6,
+                intKnots=NULL,
+                range.x=NULL,
+                degree=3,
+                type=c("ZOSull", "Ztps", "ns", "bs", "bernstein",
+                       "bSpline","nSpline", "cSpline", "iSpline",
+                       "mSpline", "smspline"),
+                by=NULL,
+                group=FALSE,
+                intercept=FALSE,
+                pred=FALSE,
+                ...) {
 
   type <- as.character(type)
   type <- match.arg(type)
