@@ -433,7 +433,7 @@ permmodels <- function(model,
     # round(abs(model_tTable[, Tvalue]), 6)) + !exact) / (nperm + !exact)
     # }
 
-    ## NOTE: This code simplifies the block above. May need testing.
+    ## NOTE: This code simplifies the block above. May need testiinstang.
     model_tTable <- coef(summary(model))
     Tvalue <- grep("value", colnames(model_tTable), value = TRUE)[1]
 
