@@ -1,0 +1,128 @@
+#' Checks to see if the user has selected a valid model term
+#'
+#' A more user friendly check to see if the user has selected a valid model to
+#' compute means for. As well as doing a simple check on presence in the model
+#' the function also checks to see if the term is actually a legal model term in
+#' terms of syntactical correctness, case, ordering of factors within
+#' interactions, and both case and ordering. The function will still stop but
+#' the user is provided with a valid option to call the function again.
+#'
+#' @examples
+#' f <- formula(y ~ A * B)
+#' predictmeans:::isValidTerm(f, "A")
+#' predictmeans:::isValidTerm(f, "a")
+#' predictmeans:::isValidTerm(f, "A:B")
+#' predictmeans:::isValidTerm(f, "B:A")
+#' predictmeans:::isValidTerm(f, "a:b")
+#' predictmeans:::isValidTerm(f, "b:a")
+#'
+#' ## A more complex example with a fitted \code{lmerMod} object
+#' Oats$nitro <- factor(Oats$nitro)
+#' model <- lmer(yield ~ nitro * Variety + (1 | Block / Variety), data = Oats)
+#' predictmeans:::isValidTerm(model, "nitro:variety")
+#' ## Random effects are not valid terms for predictmeans
+#' predictmeans:::isValidTerm(model, "Block")
+#'
+#' @keywords internal#'
+#'
+#' @importFrom combinat permn
+isValidTerm <- function(model, modelterm) {
+  ## First check that modelterm is scalar.
+  if (length(modelterm) > 1) {
+    warning("modelterm must be a scalar. Only using first element.")
+    modelterm <- modelterm[1]
+  }
+
+  ## Now test to see if the user is asking for a valid
+  ## model term
+  isValidModelTermName <- function(modelterm) {
+    tryCatch(
+      {
+        terms(as.formula(paste("y ~", modelterm)))
+        TRUE
+      },
+      error = function(e) {
+        FALSE
+      }
+    )
+  }
+
+  if (!isValidModelTermName(modelterm)) {
+    stop(
+      paste0(
+        modelterm,
+        " is not a syntactically correct model term.",
+        " Perhaps you made a typo?"
+      )
+    )
+  }
+
+  ModelTerms <- getTerms(model)
+
+  ## First simple check
+  if (modelterm %in% ModelTerms) {
+    return(TRUE)
+  } else {
+    cat(paste0(
+      "I can't find ",
+      modelterm,
+      ". I am going to try some other checks.\n"
+    ))
+  }
+
+  ## Check case sensitivity
+  if (tolower(modelterm) %in% tolower(ModelTerms)) {
+    correctCase <- ModelTerms[match(tolower(modelterm), tolower(ModelTerms))]
+    msg <- paste0(
+      "I found your model term, but the case is not the same.",
+      " Perhaps you meant ",
+      correctCase,
+      "?\n",
+      "If you did call the function again with \"",
+      correctCase,
+      "\""
+    )
+    stop(msg)
+  }
+
+  ## Is it an interaction?
+  if (grepl(":", modelterm)) {
+    ## check against the permuations
+    Factors <- unlist(strsplit(modelterm, ":"))
+    Perms <- permn(Factors)
+    Perms <- lapply(Perms, paste0, collapse = ":")
+    Perms <- as.vector(do.call(rbind, Perms))
+    Interactions <- ModelTerms[grepl(":", ModelTerms)]
+
+    if (any(Perms %in% Interactions)) {
+      correctOrder <- Perms[match(Interactions, Perms)]
+      msg <- paste0(
+        "I found your model term, but the order is not the same as",
+        " the model. Perhaps you meant ",
+        correctOrder,
+        "?\n",
+        "If you did, then call the function again with \"",
+        correctOrder,
+        "\"."
+      )
+      stop(msg)
+      ## check case as well
+    } else if (any(tolower(Perms) %in% tolower(Interactions))) {
+      correctOrder <- Perms[match(tolower(Interactions), tolower(Perms))]
+      correctCase <- Interactions[match(tolower(correctOrder), tolower(Interactions))]
+
+      msg <- paste0(
+        "I found your model term, but the case is not the same and",
+        " the order is incorrect. Perhaps you meant ",
+        correctCase,
+        "?\n",
+        "If you did, then call the function again with \"",
+        correctCase,
+        "\"."
+      )
+      stop(msg)
+    }
+  } else {
+    return(FALSE)
+  }
+}
