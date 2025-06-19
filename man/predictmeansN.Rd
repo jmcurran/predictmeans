@@ -135,16 +135,16 @@ available for \code{model}.
 }
 \examples{
 
-  library(predictmeans)
-  ftable(xtabs(yield ~ Block+Variety+nitro, data=Oats))
-  Oats$nitro <- factor(Oats$nitro)
-  fm <- lmer(yield ~ nitro*Variety+(1|Block/Variety), data=Oats)
-  #--------------------------------------------------------
-  predictmeansN(fm, "nitro", adj="BH")
-  predictmeansN(fm, "nitro:Variety", atvar="Variety", adj="BH")
-  predictout <- predictmeansN(fm, "nitro:Variety", atvar="Variety", adj="BH")
-  names(predictout)
-  plot(predictout)
+library(predictmeans)
+ftable(xtabs(yield ~ Block + Variety + nitro, data = Oats))
+Oats$nitro <- factor(Oats$nitro)
+fm <- lmer(yield ~ nitro * Variety + (1 | Block / Variety), data = Oats)
+#--------------------------------------------------------
+predictmeansN(fm, "nitro", adj = "BH")
+predictmeansN(fm, "nitro:Variety", atvar = "Variety", adj = "BH")
+predictout <- predictmeansN(fm, "nitro:Variety", atvar = "Variety", adj = "BH")
+names(predictout)
+plot(predictout)
 
 }
 \references{

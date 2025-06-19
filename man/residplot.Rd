@@ -49,12 +49,12 @@ This function produces diagnostic plots for linear models including 'aov',
 
 library(predictmeans)
 Oats$nitro <- factor(Oats$nitro)
-fm <- lme(yield ~ nitro*Variety, random=~1|Block/Variety, data=Oats)
-residplot(fm, level=2)    #lme: level=2 for random effect "Block:Variety"
+fm <- lme(yield ~ nitro * Variety, random = ~ 1 | Block / Variety, data = Oats)
+residplot(fm, level = 2) # lme: level=2 for random effect "Block:Variety"
 
 \dontrun{
 library(lme4)
-fm <- lmer(yield ~ nitro*Variety+(1|Block/Variety), data=Oats)
+fm <- lmer(yield ~ nitro * Variety + (1 | Block / Variety), data = Oats)
 residplot(fm) # lmer: By default level=1 for random effect "Block:Variety"
 }
 
