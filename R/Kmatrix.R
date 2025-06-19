@@ -258,11 +258,13 @@ Kmatrix <- function(model,
   }
 
   # create the grid of factor combinations
-  levs <- list()
   ## TODO: Can we remove this loop? It looks like it
-  for (f in facs) {
-    levs[[f]] <- baselevs[[f]]
-  }
+  ## for (f in facs) {
+  ##  levs[[f]] <- baselevs[[f]]
+  ##}
+  levs <- baselevs[facs]
+
+
   combs <- do.call("expand.grid", levs)
 
   fctnames <- do.call("expand.grid", levs[rev(names(levs))])
@@ -287,9 +289,10 @@ Kmatrix <- function(model,
   extra_covn <- setdiff(covlevname, names(fctnames))
   if (length(extra_covn) > 0) {
     ## TODO: Can we remove this loop? It looks like it
-    for (i in extra_covn){
-      fctnames[[i]] <- baselevs[[i]]
-    }
+    ## for (i in extra_covn){
+    ##  fctnames[[i]] <- baselevs[[i]]
+    ## }
+    fctnames <- c(fctnames, baselevs[extra_covn])
   }
 
   return(list(
