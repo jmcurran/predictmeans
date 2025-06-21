@@ -750,18 +750,36 @@ predictmeansN <- function(model,
         return(outputlist)
       }
     } else {
-      outputlist <- vector("list", listlength + 7)
-      outputlist[[1]] <- mean.table
-      outputlist[[2]] <- se.table
-      outputlist[[3]] <- SED.out
-      outputlist[[4]] <- LSD
-      outputlist[[5]] <- paste("For variable '", paste(resvar, collapse = " and "), "' at each level of '",
-        paste(atvar, collapse = " and "), "'",
-        sep = ""
+      # outputlist <- vector("list", listlength + 7)
+      # outputlist[[1]] <- mean.table
+      # outputlist[[2]] <- se.table
+      # outputlist[[3]] <- SED.out
+      # outputlist[[4]] <- LSD
+      # outputlist[[5]] <- paste("For variable '", paste(resvar, collapse = " and "), "' at each level of '",
+      #   paste(atvar, collapse = " and "), "'",
+      #   sep = ""
+      # )
+      # for (i in 6:(listlength + 5)) outputlist[[i]] <- pmlistTab[[i - 5]]
+      # outputlist[[listlength + 6]] <- meanTable
+      # outputlist[[listlength + 7]] <- p_valueMatrix
+      outputlist <- c(
+        list(
+          mean.table,
+          se.table,
+          SED.out,
+          LSD,
+          paste("For variable '", paste(resvar, collapse = " and "), "' at each level of '",
+            paste(atvar, collapse = " and "), "'",
+            sep = ""
+          )
+        ),
+        pmlistTab[seq_len(listlength)],
+        list(
+          meanTable,
+          p_valueMatrix
+        )
       )
-      for (i in 6:(listlength + 5)) outputlist[[i]] <- pmlistTab[[i - 5]]
-      outputlist[[listlength + 6]] <- meanTable
-      outputlist[[listlength + 7]] <- p_valueMatrix
+
       if (is.null(permlist) || any(c("NULL", "") %in% permlist)) {
         names(outputlist) <- c(
           "Predicted Means", "Standard Error of Means", "Standard Error of Differences",
