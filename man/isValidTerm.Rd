@@ -6,6 +6,16 @@
 \usage{
 isValidTerm(model, modelterm)
 }
+\arguments{
+\item{model}{A fitted object from one of \code{aov}, \code{glm},
+\code{glmm_TMB}, \code{gls}, \code{lm}, \code{lmer}, or \code{nlme}.}
+
+\item{modelterm}{a character string containing one of the terms in the fitted
+model. Note that this means the possibly expanded model in Wilkinson Rogers (1973)
+notation. For example, \code{Y ~ A * B} expands to \code{Y ~ A + B + A:B}, so
+legitimate choices for \code{modelterm} in this model would be \code{"A"},
+\code{"B"}, and \code{"A:B"}.}
+}
 \description{
 A more user friendly check to see if the user has selected a valid model to
 compute means for. As well as doing a simple check on presence in the model
@@ -15,20 +25,29 @@ interactions, and both case and ordering. The function will still stop but
 the user is provided with a valid option to call the function again.
 }
 \examples{
-f <- formula(y ~ A*B)
+f <- formula(y ~ A * B)
 predictmeans:::isValidTerm(f, "A")
+\dontrun{
+## This causes an error so not is not run during R CHECK
 predictmeans:::isValidTerm(f, "a")
+}
 predictmeans:::isValidTerm(f, "A:B")
+\dontrun{
+## These cause errors so not is not run during R CHECK
 predictmeans:::isValidTerm(f, "B:A")
 predictmeans:::isValidTerm(f, "a:b")
 predictmeans:::isValidTerm(f, "b:a")
+}
 
 ## A more complex example with a fitted \code{lmerMod} object
 Oats$nitro <- factor(Oats$nitro)
 model <- lmer(yield ~ nitro * Variety + (1 | Block / Variety), data = Oats)
-predictmeans:::isValidTerm(model, "nitro:variety")
+predictmeans:::isValidTerm(model, "nitro:Variety")
+\dontrun{
+## This causes an error so not is not run during R CHECK
 ## Random effects are not valid terms for predictmeans
 predictmeans:::isValidTerm(model, "Block")
+}
 
 }
 \keyword{internal#'}
