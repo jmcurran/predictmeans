@@ -141,8 +141,14 @@ predictmeansN <- function(model,
   if (any(missing(model), missing(modelterm))) {
     stop("The arguments 'model', and 'modelterm' must be provided!")
   }
-  if (!(modelterm %in% attr(terms(model), "term.labels"))) {
-    stop(paste("The", modelterm, "must be exactly a term in the model (especially check the order of interaction)."))
+  #if (!(modelterm %in% attr(terms(model), "term.labels"))) {
+  #  stop(paste("The", modelterm, "must be exactly a term in the model (especially check the order of interaction)."))
+  #}
+  ## This should provide the user with friendlier feedback about the model
+  ## terms.
+  ## DONGWEN: We could change this so it also prints a list of valid choices?
+  if (!isValidTerm(model, modelterm)) {
+    stop("")
   }
 
   # if (inherits(model, "aovlist")) stop("Plese use model 'lme' instead of ???'aov'!")
