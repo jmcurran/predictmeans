@@ -124,7 +124,8 @@ predictmeansN <- function(model,
                           data = NULL,
                           pairwise = FALSE,
                           atvar = NULL,
-                          adj = "none",
+                          adj = c("none", "tukey", "holm", "hochberg", "hommel",
+                                  "bonferroni", "BH", "BY", "fdr"),
                           Df = NULL,
                           level = 0.05,
                           covariate = NULL,
@@ -142,6 +143,7 @@ predictmeansN <- function(model,
   if (any(missing(model), missing(modelterm))) {
     stop("The arguments 'model', and 'modelterm' must be provided!")
   }
+
   # if (!(modelterm %in% attr(terms(model), "term.labels"))) {
   #  stop(paste("The", modelterm, "must be exactly a term in the model (especially check the order of interaction)."))
   # }
@@ -156,18 +158,21 @@ predictmeansN <- function(model,
   if (inherits(model, "aovlist")) {
     model <- aovlist_lmer(model)
   }
+
   if (identical(trans, I) && inherits(model, "glm")) {
     trans <- model$family$linkinv # identical(trans, make.link("log")$linkinv)
     if (model$family$family %in% c("poisson", "quasipoisson")) {
       count <- TRUE
     }
   }
+
   if (identical(trans, I) && inherits(model, "glmerMod")) {
     trans <- slot(model, "resp")$family$linkinv
     if (slot(model, "resp")$family$family %in% c("poisson", "quasipoisson")) {
       count <- TRUE
     }
   }
+
   if (identical(trans, I) && inherits(model, "glmmTMB")) {
     trans <- model$modelInfo$family$linkinv
     if (model$modelInfo$family$family %in% c("poisson", "quasipoisson")) {
@@ -180,10 +185,14 @@ predictmeansN <- function(model,
   if (any(!base::is.element(vars, names(mdf)[sapply(mdf, is.factor)]))) {
     stop(paste(vars, "must be factor(s)!"))
   }
+
+  adj = match.arg(adj)
+
   # option checking
   if (length(vars) == 1) {
     atvar <- NULL
   }
+
   if (!is.null(permlist) && !any(c("NULL", "") %in% permlist)) {
     pairwise <- TRUE
     if (adj == "tukey") {
@@ -818,7 +827,8 @@ pm <- function(model,
                data = NULL,
                pairwise = FALSE,
                atvar = NULL,
-               adj = "none",
+               adj = c("none", "tukey", "holm", "hochberg", "hommel",
+                       "bonferroni", "BH", "BY", "fdr"),
                Df = NULL,
                level = 0.05,
                covariate = NULL,
@@ -838,7 +848,7 @@ pm <- function(model,
     data,
     pairwise,
     atvar,
-    adj,
+    adj = match.arg(adj),
     Df,
     level,
     covariate,
@@ -862,7 +872,8 @@ predmeans <- function(model,
                       data = NULL,
                       pairwise = FALSE,
                       atvar = NULL,
-                      adj = "none",
+                      adj = c("none", "tukey", "holm", "hochberg", "hommel",
+                              "bonferroni", "BH", "BY", "fdr"),
                       Df = NULL,
                       level = 0.05,
                       covariate = NULL,
@@ -882,7 +893,7 @@ predmeans <- function(model,
     data,
     pairwise,
     atvar,
-    adj,
+    adj = match.arg(adj),
     Df,
     level,
     covariate,
