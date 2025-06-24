@@ -186,7 +186,7 @@ predictmeansN <- function(model,
     stop(paste(vars, "must be factor(s)!"))
   }
 
-  adj = match.arg(adj)
+  adj <- match.arg(adj)
 
   # option checking
   if (length(vars) == 1) {
